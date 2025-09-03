@@ -3,24 +3,43 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width" />
-  <title>Obsidiana | Login</title>
+  <title>Obsidiana | Cadastro</title>
 </head>
 <body>
   <main>
-    <h1>Faça seu Login</h1>
+    <h1>Cadastro</h1>
     <form>
+      <label>
+        <span>Nome completo</span>
+        <input id="input_email" placeholder="exemplo@email.com" />
+      </label>
+
+      <label>
+        <span>E-mail</span>
+        <input id="input_email" placeholder="exemplo@email.com" />
+      </label>
+
       <div>
-        <input id="input_nome" placeholder="Seu nome" />
-        <input id="input_email" placeholder="E-mail" />
-        <input id="input_senha" placeholder="Senha" />
-        <input id="input_confirmar_senha" placeholder="Confirmar senha" />
+        <label>
+          <span>Senha</span>
+          <input id="input_senha" type="password" placeholder="•••••" />
+        </label>
+        
+        <label>
+          <span>Confirmar senha</span>
+          <input id="input_confirmar_senha" type="password" placeholder="•••••" />
+        </label>
       </div>
-      
-      <button>Logar</button>
+
+      <button>Cadastrar</button>
+
+      <button>
+        <img src="./assets/images/google_icon.svg" alt="Ícone do Google">
+        Entrar com o Google
+      </button>
     </form>
     
-    <a>Esqueci minha senha</a>
-    <a href="cadastro.html">Não tem conta? Cadastre-se</a>
+    <a href="login.html">Já tem conta? Faça login</a>
   </main>
 </body>
 </html>
