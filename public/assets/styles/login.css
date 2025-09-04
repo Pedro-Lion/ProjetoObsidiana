@@ -1,0 +1,90 @@
+@import url(./main.css);
+
+body {
+  display: flex;
+  justify-content: center;
+
+  height: 100vh;
+  width: 100vw;
+}
+
+main, form, label {
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  height: 100%;
+  width: 100%;
+  max-width: 80rem;
+  padding: 0 6rem;
+
+  gap: 5rem;
+  justify-content: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: 3.5rem;
+}
+
+form {
+  gap: 3rem;
+}
+
+label {
+  width: 100%;
+}
+
+label span {
+  margin-bottom: .7rem;
+  font-size: 1.5rem;
+}
+
+label input {
+  box-sizing: border-box;
+  height: 4rem;
+  padding: 0 1rem;
+  border: 0;
+
+  background-color: #e6e6e6;
+  font-size: 1.3rem;  
+  color: black;
+}
+
+
+form div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+button {
+  height: 5rem;
+  border: 0;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: black;
+
+  color: white;
+  font-size: 1.5rem;
+}
+
+button:last-child {
+  border: .1rem solid black;
+  background-color: unset;
+  color: black;
+}
+
+button img {
+  width: 2rem;
+  margin-right: 1rem;
+}
+
+a {
+  font-size: 1.3rem;
+  color: black;
+}

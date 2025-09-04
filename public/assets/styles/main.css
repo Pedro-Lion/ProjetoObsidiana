@@ -1,0 +1,26 @@
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
+
+html {
+  font-size: 62.5%;
+}
+
+:root {
+  --fonte: 'Open Sans';
+}
+
+* {
+  font-family: var(--fonte);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+a:visited {
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
