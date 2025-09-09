@@ -1,36 +1,46 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width" />
-  <link rel="stylesheet" href="./assets/styles/login.css">
-  <title>Obsidiana | Login</title>
-</head>
-<body>
-  <main>
-    <h1>Login</h1>
-    <form>
-      <label>
-        <span>E-mail</span>
-        <input id="input_email" placeholder="exemplo@email.com" />
-      </label>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="./assets/styles/login.css" />
+    <title>Obsidiana | Login</title>
+  </head>
+  <body>
+    <main>
+      <form>
+        <label>
+          <span>E-mail</span>
 
-      <label>
-        <span>Senha</span>
-        <input id="input_senha" type="password" placeholder="•••••" />
-      </label>
-      
-      <a href="#">Esqueceu sua senha?</a>
+          <div class="label-group">
+            <input id="email" placeholder="exemplo@email.com" />
+            <div><img src="./assets/icons/email.svg" alt="Ícone de e-mail"></div>
+          </div>
+        </label>
 
-      <button>Entrar</button>
+        <label>
+          <span>Senha</span>
 
-      <button>
-        <img src="./assets/images/google_icon.svg" alt="Ícone do Google">
-        Entrar com o Google
-      </button>
-    </form>
-    
-    <a href="cadastro.html">Não tem conta? Cadastre-se</a>
-  </main>
-</body>
+          <div class="label-group">
+            <input id="senha" type="password" placeholder="•••••" />
+            <div><img src="./assets/icons/cadeado.svg" alt="Ícone de cadeado"></div>
+          </div>
+        </label>
+
+        <a href="#">Esqueceu sua senha?</a>
+        
+        <button>Entrar</button>
+        <button>
+          <img src="./assets/icons/google.svg" alt="Ícone do Google" />
+          Entrar com o Google
+        </button>
+      </form>
+
+      <a href="cadastro.html">Não tem conta? Cadastre-se</a>
+    </main>
+
+    <section>
+      <div></div>
+    </section>
+  </body>
 </html>

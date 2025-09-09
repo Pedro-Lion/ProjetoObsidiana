@@ -1,11 +1,20 @@
 @import url(./main.css);
 
-body {
-  display: flex;
-  justify-content: center;
+:root {
+  --raio: 1rem;
+  --borda: .1rem solid var(--cor-cinza);
+  --degrade: var(--cor-rosa), var(--cor-roxo), var(--cor-azul-0);
+}
 
+body {
   height: 100vh;
   width: 100vw;
+  padding: 2.9rem;
+  box-sizing: border-box;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 main, form, label {
@@ -14,13 +23,36 @@ main, form, label {
 }
 
 main {
+  width: 48rem;
   height: 100%;
-  width: 100%;
-  max-width: 80rem;
-  padding: 0 6rem;
+  margin-right: 2.9rem;
 
-  gap: 5rem;
+  flex: none;
   justify-content: center;
+}
+
+section {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 3rem;
+  overflow: hidden;
+}
+
+section div {
+  position: absolute;
+  bottom: 0;
+
+  width: 100%;
+  height: 50%;
+
+  --r: 100%;
+  border-top-left-radius: var(--r);
+  border-top-right-radius: var(--r);
+
+  filter: blur(7rem);
+  background: var(--cor-roxo) linear-gradient(to left, var(--degrade));
+  opacity: 90%;
 }
 
 h1 {
@@ -28,55 +60,93 @@ h1 {
   font-size: 3.5rem;
 }
 
-form {
-  gap: 3rem;
-}
-
 label {
   width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+form label:last-of-type {
+  margin-top: 2.3rem;
 }
 
 label span {
-  margin-bottom: .7rem;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
+  margin-bottom: .6rem;
 }
 
-label input {
-  box-sizing: border-box;
-  height: 4rem;
-  padding: 0 1rem;
+.label-group {
+  height: 5rem;
+  border: var(--borda);
+  border-radius: var(--raio);
+  display: flex;
+}
+
+.label-group input {
+  width: 100%;
+  padding: 0 1.9rem;
   border: 0;
 
-  background-color: #e6e6e6;
-  font-size: 1.3rem;  
+  font-size: 1.6rem;  
   color: black;
+  background-color: transparent;
 }
 
+.label-group input:focus {
+  outline: .1rem solid black;
+  border-radius: var(--raio);
+}
 
-form div {
+.label-group div {
+  width: 5rem;
+  aspect-ratio: 0;
+  border-radius: var(--raio);
+
+  flex: none;
   display: flex;
-  justify-content: space-between;
-  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+  
+  background-color: var(--cor-azul-1);
+}
+
+.label-group img {
+  width: 2rem;
+}
+
+form a {
+  margin-top: 1.3rem;
+  align-self: flex-end;
+
+  color: var(--cor-azul-1);
+  font-size: 1.4rem;
 }
 
 button {
   height: 5rem;
-  border: 0;
+  border: var(--borda);
+  border-radius: var(--raio);
   
   display: flex;
   align-items: center;
   justify-content: center;
 
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+button:first-of-type {
+  color: white;
+  background-image: linear-gradient(
+    to right, var(--degrade) 64%, white 76% 
+  );
   background-color: black;
 
-  color: white;
-  font-size: 1.5rem;
+  margin: 2.5rem 0;
 }
 
 button:last-child {
-  border: .1rem solid black;
-  background-color: unset;
-  color: black;
+  background-color: transparent;
 }
 
 button img {
