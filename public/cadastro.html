@@ -1,46 +1,61 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width" />
-  <link rel="stylesheet" href="./assets/styles/login.css">
-  <title>Obsidiana | Cadastro</title>
-</head>
-<body>
-  <main>
-    <h1>Cadastro</h1>
-    <form>
-      <label>
-        <span>Nome completo</span>
-        <input id="input_nome" placeholder="Pessoa da Silva" />
-      </label>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="./assets/styles/login.css" />
+    <link rel="shortcut icon" href="./assets/favicon.ico" type="image/x-icon">
+    <title>Obsidiana | Cadastro</title>
+  </head>
+  <body>
+    <section>
+      <div></div>
+    </section>
 
-      <label>
-        <span>E-mail</span>
-        <input id="input_email" placeholder="exemplo@email.com" />
-      </label>
+    <main>
+      <img src="./assets/logo.png" alt="Logo Obsidiana" style="right: 0;">
 
-      <div>
+      <form>
+        <label>
+          <span>Nome completo</span>
+
+          <div class="label-group">
+            <input id="nome" placeholder="Fulano da Silva" />
+            <div><img src="./assets/icons/pessoa.svg" alt="Ícone de pessoa"></div>
+          </div>
+        </label>
+
+        <label>
+          <span>E-mail</span>
+
+          <div class="label-group">
+            <input id="email" placeholder="fulano@email.com" />
+            <div><img src="./assets/icons/email.svg" alt="Ícone de e-mail"></div>
+          </div>
+        </label>
+
         <label>
           <span>Senha</span>
-          <input id="input_senha" type="password" placeholder="•••••" />
+
+          <div class="label-group">
+            <input id="senha" type="password" placeholder="••••••••••••" />
+            <div><img src="./assets/icons/cadeado.svg" alt="Ícone de cadeado"></div>
+          </div>
+        </label>
+
+        <label>
+          <span>Confirmar Senha</span>
+
+          <div class="label-group">
+            <input id="confirmar_senha" type="password" placeholder="••••••••••••" />
+            <div><img src="./assets/icons/cadeado.svg" alt="Ícone de cadeado"></div>
+          </div>
         </label>
         
-        <label>
-          <span>Confirmar senha</span>
-          <input id="input_confirmar_senha" type="password" placeholder="•••••" />
-        </label>
-      </div>
+        <button>Cadastrar</button>
+      </form>
 
-      <button>Cadastrar</button>
-
-      <button>
-        <img src="./assets/images/google_icon.svg" alt="Ícone do Google">
-        Entrar com o Google
-      </button>
-    </form>
-    
-    <a href="login.html">Já tem conta? Faça login</a>
-  </main>
-</body>
+      <a style="align-self: flex-end;" href="login.html">Já tem conta? Faça login</a>
+    </main>
+  </body>
 </html>

@@ -3,7 +3,9 @@
 :root {
   --raio: 1rem;
   --borda: .1rem solid var(--cor-cinza);
-  --degrade: var(--cor-rosa), var(--cor-roxo), var(--cor-azul-0);
+  --degrade: 
+    var(--cor-rosa), var(--cor-roxo), var(--cor-azul-0)
+  ;
 }
 
 body {
@@ -15,6 +17,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 2.9rem;;
 }
 
 main, form, label {
@@ -25,49 +28,27 @@ main, form, label {
 main {
   width: 48rem;
   height: 100%;
-  margin-right: 2.9rem;
+  position: relative;
 
   flex: none;
   justify-content: center;
 }
 
-section {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 3rem;
-  overflow: hidden;
-}
-
-section div {
+main > img {
   position: absolute;
-  bottom: 0;
-
-  width: 100%;
-  height: 50%;
-
-  --r: 100%;
-  border-top-left-radius: var(--r);
-  border-top-right-radius: var(--r);
-
-  filter: blur(7rem);
-  background: var(--cor-roxo) linear-gradient(to left, var(--degrade));
-  opacity: 90%;
-}
-
-h1 {
-  margin: 0;
-  font-size: 3.5rem;
+  top: 1.5rem;
+  height: 4rem;
 }
 
 label {
+  margin-top: 2.3rem;
   width: 100%;
   display: flex;
   justify-content: space-between;
 }
 
-form label:last-of-type {
-  margin-top: 2.3rem;
+label:first-of-type {
+  margin: 0;
 }
 
 label span {
@@ -90,6 +71,10 @@ label span {
   font-size: 1.6rem;  
   color: black;
   background-color: transparent;
+}
+
+.label-group input::placeholder {
+  color: var(--cor-cinza);
 }
 
 .label-group input:focus {
@@ -136,16 +121,16 @@ button {
 }
 
 button:first-of-type {
+  margin-top: 3rem !important;
+
   color: white;
-  background-image: linear-gradient(
+  background: black linear-gradient(
     to right, var(--degrade) 64%, white 76% 
   );
-  background-color: black;
-
-  margin: 2.5rem 0;
 }
 
-button:last-child {
+button:last-of-type {
+  margin-top: 1rem;
   background-color: transparent;
 }
 
@@ -154,7 +139,32 @@ button img {
   margin-right: 1rem;
 }
 
-a {
+main > a {
+  margin-top: 3rem;
   font-size: 1.3rem;
   color: black;
+}
+
+section {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 3rem;
+  overflow: hidden;
+}
+
+section div {
+  position: absolute;
+  bottom: 0;
+
+  width: 100%;
+  height: 50%;
+
+  --r: 100%;
+  border-top-left-radius: var(--r);
+  border-top-right-radius: var(--r);
+
+  filter: blur(7rem);
+  background: var(--cor-roxo) linear-gradient(to left, var(--degrade));
+  opacity: 90%;
 }
