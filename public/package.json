@@ -1,0 +1,25 @@
+{
+  "name": "projeto-obsidiana",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "concurrently \"http-server\" \"json-server --watch ./assets/db.json --port  3000\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pedro-Lion/ProjetoObsidiana.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pedro-Lion/ProjetoObsidiana/issues"
+  },
+  "homepage": "https://github.com/Pedro-Lion/ProjetoObsidiana#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "http-server": "^14.1.1",
+    "json-server": "^0.17.4"
+  }
+}
