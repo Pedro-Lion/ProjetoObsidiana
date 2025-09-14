@@ -16,4 +16,6 @@ function cadastrar() {
   u.fazerRequisicao("POST", {
     nome, email, senha
   });
+
+  alert("Cadastro realizado com sucesso!");
 }

@@ -5,18 +5,6 @@
       "nome": "Mikki",
       "email": "mikki@email.com",
       "senha": "@Mikki123"
-    },
-    {
-      "id": 2,
-      "nome": "Rafael Pires",
-      "email": "rafael.pires@email.com",
-      "senha": "Senha123"
-    },
-    {
-      "nome": "Shelly",
-      "email": "shelly@email",
-      "senha": "",
-      "id": 3
     }
   ]
 }
