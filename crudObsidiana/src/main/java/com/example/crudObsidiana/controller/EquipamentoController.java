@@ -37,8 +37,11 @@ public class EquipamentoController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Equipamento> excluir(@PathVariable("id") Long id) {
         if (repository.existsById(id)) {
+            ResponseEntity<Equipamento> deletado = repository.findById(id)
+                    .map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.notFound().build());
             repository.deleteById(id);
-            return ResponseEntity.ok().build();
+            return deletado;
         }
         return ResponseEntity.notFound().build();
     }
