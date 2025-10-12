@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavbarBotao } from "./NavbarBotao.jsx";
 
 export function NavbarGrupo(props) {
@@ -7,24 +8,39 @@ export function NavbarGrupo(props) {
     : tituloLower.slice(0, tituloLower.length - 1)
   ;
 
+  const [dropado, setDropado] = useState(false);
+  const [estiloDrop, setEstiloDrop] = useState({});
+
+  function alterarDrop() {
+    if (dropado) {
+      setDropado(false);
+      setEstiloDrop({});
+    } else {
+      setDropado(true);
+      setEstiloDrop({transform: "rotate(0.5turn)"});
+    }
+  }
+
   return (
     <li>
-      <NavbarBotao temDrop={true}>
-        {props.children[0]}
+      <NavbarBotao onClick={alterarDrop} estiloDrop={estiloDrop} temDrop={true}>
+        {props.icones[0]}
         <span>{props.titulo}</span>
       </NavbarBotao>
 
-      <div className="p-2 pl-4 pr-0 flex flex-col gap-3">
-        <NavbarBotao>
-          {props.children[1]}
-          <span>Todos os {tituloLower}</span>
-        </NavbarBotao>
+      {dropado && (
+        <div className="p-2 pl-4 pr-0 flex flex-col gap-3">
+          <NavbarBotao link={props.links[0]}>
+            {props.icones[1]}
+            <span>Todos os {tituloLower}</span>
+          </NavbarBotao>
 
-        <NavbarBotao>
-          {props.children[2]}
-          <span>Novo {tituloSingular}</span>
-        </NavbarBotao>
-      </div>
+          <NavbarBotao link={props.links[1]}>
+            {props.icones[2]}
+            <span>Novo {tituloSingular}</span>
+          </NavbarBotao>
+        </div>
+      )}
     </li>
   );
 }
