@@ -4,22 +4,8 @@ html {
   font-size: 62.5%;
 }
 
-:root {
-  --cor-rosa: #FCA5FE;
-  --cor-roxo: #9747FF;
-  --cor-azul-0: #A5CCFE; 
-  --cor-azul-1: #0A0840;
-
-  --cor-cinza: #D4D4D8;
-}
-
 * {
   font-family: "Poppins";
-}
-
-body {
-  margin: 0;
-  padding: 0;
 }
 
 a:visited {
