@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 
 import { App } from "./App";
 import { Erro404 } from "./routes/Erro404";
+import { Login } from "./routes/Login";
 
 import { Home } from "./routes/Home";
 import { Novo } from "./routes/Novo";
@@ -42,4 +43,14 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  {
+    path: "/login",
+    element: <Login />,
+    errorElement: <Erro404 />
+  },
+  {
+    path: "/cadastro",
+    element: <Login funcao="cadastro" />,
+    errorElement: <Erro404 />
+  }
 ]);
