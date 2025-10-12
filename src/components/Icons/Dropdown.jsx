@@ -1,6 +1,7 @@
 export function Dropdown(props) {
   return (
     <svg
+      style={props.style}
       className={props.className}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
