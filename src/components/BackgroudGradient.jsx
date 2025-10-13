@@ -1,5 +1,3 @@
-import { BotaoBordaGradiente } from "./Buttons/BotaoBordaGradiente";
-
 export function BackgroundGradient() {
     return (
         <>
