@@ -8,16 +8,7 @@ import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 
 export function Home() {
   return (
-    <div className="flex flex-col gap-5
-    h-[94vh]
-    w-[77vw]
-    overflow-y-scroll
-    p-20
-    my-10
-    mr-10
-    absolut
-    rounded-[2rem]
-    bg-white/90">
+    <>
       <div className="w-[30rem]">
         <InputBordaLabel
           type="text"
@@ -47,6 +38,6 @@ export function Home() {
         <BotaoSecundario
         titulo="Meus equipamentos"/>
       </div>
-    </div>
+    </>
   )
 }
