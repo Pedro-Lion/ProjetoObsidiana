@@ -47,6 +47,7 @@ public class UsuarioController {
 
         if (usuario.isEmpty()){
             Usuario newUser = new Usuario();
+            newUser.setNome(body.nome());
             newUser.setEmail(body.email());
             newUser.setSenha(passwordEncoder.encode(body.senha()));
             this.usuarioRepository.save(newUser);

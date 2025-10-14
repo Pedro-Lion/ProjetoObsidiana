@@ -9,15 +9,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
+// Classe que gera e valida tokens JWT para autenticação de usuários na aplicação.
+
 @Service
 public class TokenService {
+    // Recupera do application.properties
     @Value("${api.security.token.secret}")
     private String secret;
 
+    // Gera o Token
     public String generateToken(Usuario usuario) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
@@ -32,6 +35,7 @@ public class TokenService {
         }
     }
 
+    // Valida o token
     public String validateToken(String token){
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
@@ -45,6 +49,7 @@ public class TokenService {
         }
     }
 
+    // Duração do token (2 horas)
     private Instant generateExpirationDate(){
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
     }

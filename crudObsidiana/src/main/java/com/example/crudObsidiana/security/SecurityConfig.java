@@ -14,6 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+// Classe de configuração que define as regras de segurança da aplicação, liberando login e cadastro
+// e exigindo autenticação para as demais rotas com JWT.
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {

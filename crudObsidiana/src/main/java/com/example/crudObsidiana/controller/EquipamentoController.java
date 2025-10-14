@@ -57,9 +57,5 @@ public class EquipamentoController {
         return ResponseEntity.notFound().build();
     }
 
-
-
-
-
     private final EquipamentoRepository repository;
 }
