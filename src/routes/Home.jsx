@@ -5,10 +5,13 @@ import { InputFoto } from "../components/Inputs/InputFoto";
 import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
+import { InputSelect } from "../components/Inputs/InputSelect";
 
 export function Home() {
   return (
     <>
+    <InputSelect></InputSelect>
+    
       <InputBordaLabel
         type="text"
         titulo="Nome completo"
