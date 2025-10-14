@@ -1,10 +1,5 @@
 body {
-  /* background-image: linear-gradient(
-    to top,
-    #a78bfa,
-    #818cf8 40%,
-    #f8fafc 
-  );*/
+  /* background-image: linear-gradient(to top,#a78bfa,#818cf8 40%,#f8fafc); */
   background-color:#f0f0f0;
   box-sizing: border-box;
   height: 100vh;

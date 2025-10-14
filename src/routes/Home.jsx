@@ -2,6 +2,7 @@ import { BotaoBordaGradiente } from "../components/Buttons/BotaoBordaGradiente";
 import { BackgroundGradient } from "../components/BackgroudGradient";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { InputFundoCor } from "../components/Inputs/InputFundoCor";
+import { InputFoto } from "../components/Inputs/InputFoto";
 import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
@@ -23,21 +24,27 @@ export function Home() {
       </div>
       <div className="w-[20rem]">
         <InputCheckbox
-        texto="Diária" />
+          texto="Diária" />
       </div>
       <div>
-      <BotaoPrimario
-      titulo="Pesquisar"
-      />
+        <BotaoPrimario
+          titulo="Pesquisar"
+        />
       </div>
       <div>
         <BotaoBordaGradiente
-        titulo="Clique aqui"/>
+          titulo="Clique aqui" />
       </div>
       <div>
         <BotaoSecundario
-        titulo="Meus equipamentos"/>
+          titulo="Meus equipamentos" />
       </div>
+      
+        <InputFoto
+        icone="bi bi-person-up"
+        >
+        </InputFoto>
+      
     </>
   )
 }

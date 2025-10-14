@@ -46,7 +46,7 @@ const navGruposInfos = [
     ],
   },
   {
-    titulo: "Profisionais",
+    titulo: "Profissionais",
     tituloSingular: "profissional",
     links: ["/profissionais", "/novo/profisional"],
     icones: [
