@@ -1,4 +1,4 @@
-import { BotaoBordaGradiente } from "./components/Buttons/BotaoBordaGradiente.jsx";
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import { Navbar } from "./components/Navbar/Navbar.jsx";
 import { Outlet } from "react-router-dom";
 import './App.css';
@@ -8,9 +8,8 @@ export function App() {
     <div>
       <header
         style={{ height: "100vh" }}
-        className="w-114 py-6 fixed -translate-y-1/2 top-1/2 left-15 text-gray-50
-        bg-gradient-to-t from-zinc-950 to-zinc-900 shadow-md"
-      >
+        className="w-114 py-6 fixed -translate-y-1/2 top-1/2 left-15 text-gray-50 shadow-md
+        bg-gradient-to-t from-zinc-950 to-zinc-900">
         <div className="flex
         justify-start
         items-center
