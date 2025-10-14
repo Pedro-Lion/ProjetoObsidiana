@@ -12,29 +12,37 @@ export function Home() {
       <InputBordaLabel
         type="text"
         titulo="Nome completo"
-        placeholder="Insira o nome aqui" 
+        placeholder="Insira o nome aqui"
         className="w-80" />
+
       <InputFundoCor
         type="number"
         titulo="Telefone"
         placeholder="Somente números" />
+
       <InputCheckbox
-      texto="Diária" />
-      <div>
-        <BotaoPrimario
+        texto="Diária"
+      />
+
+      <BotaoBordaGradiente
+        titulo="Clique aqui"
+      />
+
+      <BotaoPrimario
         titulo="Pesquisar"
-        />
-        <BotaoBordaGradiente
-        titulo="Clique aqui"/>
-        <BotaoSecundario
-          titulo="Meus equipamentos" />
-      </div>
-      
-        <InputFoto
+        className="w-30"
+      />
+
+      <BotaoSecundario
+        titulo="Meus equipamentos"
+        className="w-60"
+      />
+
+      <InputFoto
         icone="bi bi-person-up"
-        >
-        </InputFoto>
-      
+      >
+      </InputFoto>
+
     </>
   )
 }
