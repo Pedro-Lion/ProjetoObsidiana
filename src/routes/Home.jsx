@@ -1,5 +1,4 @@
 import { BotaoBordaGradiente } from "../components/Buttons/BotaoBordaGradiente";
-import { BackgroundGradient } from "../components/BackgroudGradient";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { InputFundoCor } from "../components/Inputs/InputFundoCor";
 import { InputFoto } from "../components/Inputs/InputFoto";
@@ -10,32 +9,23 @@ import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 export function Home() {
   return (
     <>
-      <div className="w-[30rem]">
-        <InputBordaLabel
-          type="text"
-          titulo="Nome completo"
-          placeholder="Insira o nome aqui" />
-      </div>
-      <div className="w-[20rem]">
-        <InputFundoCor
-          type="number"
-          titulo="Telefone"
-          placeholder="Somente números" />
-      </div>
-      <div className="w-[20rem]">
-        <InputCheckbox
-          texto="Diária" />
-      </div>
+      <InputBordaLabel
+        type="text"
+        titulo="Nome completo"
+        placeholder="Insira o nome aqui" 
+        className="w-80" />
+      <InputFundoCor
+        type="number"
+        titulo="Telefone"
+        placeholder="Somente números" />
+      <InputCheckbox
+      texto="Diária" />
       <div>
         <BotaoPrimario
-          titulo="Pesquisar"
+        titulo="Pesquisar"
         />
-      </div>
-      <div>
         <BotaoBordaGradiente
-          titulo="Clique aqui" />
-      </div>
-      <div>
+        titulo="Clique aqui"/>
         <BotaoSecundario
           titulo="Meus equipamentos" />
       </div>

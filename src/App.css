@@ -6,3 +6,12 @@ body {
   overflow: hidden;
   /* padding: 5rem; */
 }
+
+#root {
+  height: 100%;
+  width: 100%;
+  padding: 0rem 2rem;
+
+  display: flex;
+  gap: 2rem;
+}
