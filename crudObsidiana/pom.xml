@@ -8,10 +8,10 @@
 		<version>3.5.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.exemplo.BD</groupId>
-	<artifactId>projetoBanco</artifactId>
+	<groupId>com.obsidian.g9</groupId>
+	<artifactId>projetoOM</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>projetoBanco</name>
+	<name>projetoObsidiana</name>
 	<description>Aula 3 - Backend</description>
 	<url/>
 	<licenses>
@@ -62,6 +62,14 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>8</source>
+					<target>8</target>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
