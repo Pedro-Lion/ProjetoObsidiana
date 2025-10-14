@@ -11,7 +11,7 @@ import { Pessoas } from "../Icons/Pessoa.jsx";
 const estiloIcone = "size-8.5 fill-gray-50";
 
 export const navGrupos = [
-  <NavbarBotao key={"nav_home"} link="/">
+  <NavbarBotao key="nav_home">
     <Home className={estiloIcone} />
     <span>Página principal</span>
   </NavbarBotao>,
