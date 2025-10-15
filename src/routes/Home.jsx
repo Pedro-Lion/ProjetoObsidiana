@@ -7,6 +7,7 @@ import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { ContainerSelectTags } from "../components/Containers/ContainerSelectTags";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
+import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 
 export function Home() {
   return (
@@ -28,6 +29,13 @@ export function Home() {
         titulo="Nome completo"
         placeholder="Insira o nome aqui"
         className="w-80" />
+      
+      <TextareaBordaLabel
+        type="text"
+        titulo="Nome completo"
+        placeholder="Insira o nome aqui"
+        larguraCampo="w-80"
+        rows="4" />
 
       <InputFundoCor
         type="number"
