@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Select, { components } from "react-select";
 
-export function InputSelect() {
+export function InputSelect({placeholder="Selecione",titulo}) {
   const [itensSelecionados, setItensSelecionados] = useState([]);
 
   const itens = [
@@ -18,39 +18,96 @@ export function InputSelect() {
     );
   };
 
-  // Esconde as tags internas do react-select
   const MultiValue = () => null;
 
+  const estilizacao = {
+    control: (base, state) => ({
+      ...base,
+      fontSize:"1.1rem",
+      backgroundColor: "white",
+      borderRadius: "0.5rem",
+      borderColor: state.isFocused ? "#6366f1" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 0 2px rgba(99, 102, 241, 0.3)" : "none",
+      "&:hover": { borderColor: "#6366f1" },
+      minHeight: "4rem",
+      width:`100%`
+    }),
+    container:(base) => ({
+        ...base,
+        marginTop:"0.4rem",
+    }),
+    input: (base) => ({
+      ...base,
+      cursor:"text"
+    }),
+    dropdownIndicator: (base,state) => ({
+      ...base,
+      color: state.isFocused ? "#c4b5fd" : "#ddd6ff",
+      cursor:"pointer",
+      "&:hover": { color: "#a78bfa" }
+    }),
+    indicatorSeparator: (base) => ({
+      ...base,
+      backgroundColor: "#ddd6ff",
+    }),
+    clearIndicator: (base) => ({
+      ...base,
+      cursor:"pointer",
+      color:"#ddd6ff",
+      "&:hover": { color: "#a78bfa" }
+    }),
+    menu: (base) => ({
+      ...base,
+      borderRadius: "0.5rem",
+      overflow: "hidden",
+      zIndex: 20,
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize:"1.1rem",
+      backgroundColor: state.isSelected ? "#ede9fe" : state.isFocused ? "#e0e7ff" : "white",
+      color: state.isSelected ? "white" : "#374151",
+      cursor: "pointer",
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: "#9ca3af",
+    }),
+  };
+
   return (
-    <div className="w-72 space-y-4">
-      <Select
+    <div style={{ width:"100%", marginBlock:"1rem"}}>
+    <label className="text-slate-700 text-[1.1rem] bg-transparent w-fit mb-1">
+        {titulo}
+    </label>
+    <Select
         isMulti
         isSearchable
         options={itens}
         value={itensSelecionados}
         onChange={setItensSelecionados}
-        placeholder="Escolha personagens..."
+        placeholder={placeholder}
         closeMenuOnSelect={true}
         components={{ MultiValue }}
+        styles={estilizacao}
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 mt-4">
         {itensSelecionados.length > 0 ? 
         (
           itensSelecionados.map((selecionado) => (
             <div
             onClick={() => handleRemove(selecionado)}
-              key={selecionado.value}
-              className="flex items-center bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm cursor-pointer">
+            key={selecionado.value}
+            className="flex items-center px-3 py-2 rounded-md text-[1.1rem] cursor-pointer
+            bg-violet-200 text-slate-700">
               {selecionado.label}
-              <span className="ml-2">
-                ×
-              </span>
+              <span className="ml-2">×</span>
             </div>
           ))
         ) : (
-          <p className="text-gray-400 text-sm">
-            Nenhum personagem selecionado.
+          <p className="text-gray-400 text-[1.1rem]">
+            Nenhuma opção selecionada.
           </p>
         )}
       </div>

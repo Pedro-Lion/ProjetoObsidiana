@@ -10,8 +10,13 @@ import { InputSelect } from "../components/Inputs/InputSelect";
 export function Home() {
   return (
     <>
-    <InputSelect></InputSelect>
-    
+
+      <div className="w-250">
+        <InputSelect
+        titulo="Equipamentos"
+        placeholder="Escolha uma opção"/>
+      </div>
+
       <InputBordaLabel
         type="text"
         titulo="Nome completo"

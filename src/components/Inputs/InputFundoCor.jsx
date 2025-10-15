@@ -2,7 +2,7 @@ export function InputFundoCor({titulo, type = "text",placeholder = "Digite aqui"
   return (
     <div className={"flex flex-col overflow-x-auto " + className}>
       <label
-        className="text-slate-700 font-medium text-[1.1rem]
+        className="text-slate-700 text-[1.1rem]
         bg-transparent w-fit pb-1"
       >
         {titulo}
