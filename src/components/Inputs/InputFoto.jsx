@@ -34,7 +34,7 @@ export function InputFoto({ onChange, icone = "bi bi-camera", tamanho = "8" }) {
 
                 <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100
                 rounded-full transition-all flex items-center justify-center text-white
-                m-[0.25rem] text-sm">
+                m-[0.25rem] text-sm text-center">
                     {preview ? "Alterar foto" : "Escolher foto"}
                 </div>
             </label>

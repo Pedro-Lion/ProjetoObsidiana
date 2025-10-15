@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Select, { components } from "react-select";
 
-export function InputSelect({placeholder="Selecione",titulo}) {
+export function ContainerSelectTags({placeholder="Selecione",titulo}) {
   const [itensSelecionados, setItensSelecionados] = useState([]);
 
   const itens = [
@@ -76,10 +76,20 @@ export function InputSelect({placeholder="Selecione",titulo}) {
   };
 
   return (
-    <div style={{ width:"100%", marginBlock:"1rem"}}>
-    <label className="text-slate-700 text-[1.1rem] bg-transparent w-fit mb-1">
-        {titulo}
-    </label>
+    <div style={{
+    width:"100%", marginBlock:"1rem",
+    backgroundColor:"#f5f3ff",
+    padding:"1rem 2rem",
+    borderRadius:"0.5rem"
+    }}>
+    <div className="flex flex-row justify-between items-baseline">
+        <label className="text-slate-700 text-xl w-fit mb-2 px-7 py-1 rounded-full border-2 border-violet-200 bg-white">
+            {titulo}
+        </label>
+        <label className="text-slate-700 text-[1.1rem] bg-transparent w-fit mb-1">
+            Selecionados: {itensSelecionados.length}
+        </label>
+    </div>
     <Select
         isMulti
         isSearchable
@@ -90,6 +100,7 @@ export function InputSelect({placeholder="Selecione",titulo}) {
         closeMenuOnSelect={true}
         components={{ MultiValue }}
         styles={estilizacao}
+        noOptionsMessage={() => "Nenhum resultado encontrado"}
       />
 
       <div className="flex flex-wrap gap-2 mt-4">

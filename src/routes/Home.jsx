@@ -5,14 +5,20 @@ import { InputFoto } from "../components/Inputs/InputFoto";
 import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
-import { InputSelect } from "../components/Inputs/InputSelect";
+import { ContainerSelectTags } from "../components/Containers/ContainerSelectTags";
+import { ContainerListagem } from "../components/Containers/ContainerListagem";
 
 export function Home() {
   return (
     <>
 
-      <div className="w-250">
-        <InputSelect
+      <div>
+        <ContainerListagem
+        titulo="Câmera 01"/>
+      </div>
+
+      <div className="w-150">
+        <ContainerSelectTags
         titulo="Equipamentos"
         placeholder="Escolha uma opção"/>
       </div>
