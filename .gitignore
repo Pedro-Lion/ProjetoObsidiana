@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Logs
 logs
 *.log
@@ -15,6 +16,24 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+=======
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+>>>>>>> origin/crud-java
 .idea
 .DS_Store
 *.suo
