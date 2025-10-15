@@ -31,9 +31,8 @@ export function Home() {
         className="w-80" />
       
       <TextareaBordaLabel
-        type="text"
-        titulo="Nome completo"
-        placeholder="Insira o nome aqui"
+        titulo="Observações"
+        placeholder="Digite aqui informações importantes"
         larguraCampo="w-80"
         rows="4" />
 
