@@ -25,7 +25,7 @@ public class Servico {
     private int horas;
 
     @Schema(description = "Valor total do serviço em reais", example = "250")
-    private int valor;
+    private int valorPorHora;
 
     public Servico() {}
 
@@ -33,7 +33,7 @@ public class Servico {
         this.id = id;
         this.nome = nome;
         this.horas = horas;
-        this.valor = valor;
+        this.valorPorHora = valor;
     }
 
     public Long getId() { return id; }
@@ -48,6 +48,6 @@ public class Servico {
     public int getHoras() { return horas; }
     public void setHoras(int horas) { this.horas = horas; }
 
-    public int getValor() { return valor; }
-    public void setValor(int valor) { this.valor = valor; }
+    public int getValorPorHora() { return valorPorHora; }
+    public void setValorPorHora(int valorPorHora) { this.valorPorHora = valorPorHora; }
 }
