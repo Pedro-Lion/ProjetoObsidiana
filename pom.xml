@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.exemplo.BD</groupId>
-	<artifactId>projetoBanco</artifactId>
+	<artifactId>projetoObsidiana</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>projetoBanco</name>
+	<name>projetoObsidiana</name>
 	<description>Aula 3 - Backend</description>
 	<url/>
 	<licenses>
@@ -58,13 +58,13 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-        <dependency>
-        <groupId>org.springdoc</groupId>
-        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-        <version>2.2.0</version>
-    </dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.2.0</version>
+		</dependency>
 
-    </dependencies>
+	</dependencies>
 
 	<build>
 		<plugins>
