@@ -10,6 +10,7 @@ import { Equipamentos } from "./routes/Equipamentos";
 import { Servicos } from "./routes/Servicos";
 import { Orcamentos } from "./routes/Orcamentos";
 import { Profissionais } from "./routes/Profissionais";
+import { Perfil } from "./routes/Perfil";
 
 export const router = createBrowserRouter([
   {
@@ -52,5 +53,10 @@ export const router = createBrowserRouter([
     path: "/cadastro",
     element: <Login funcao="cadastro" />,
     errorElement: <Erro404 />
-  }
+  },
+  {
+    path: "/perfil",
+    element: <Perfil />,
+    errorElement: <Erro404 />
+  },
 ]);
