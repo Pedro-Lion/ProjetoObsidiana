@@ -7,7 +7,7 @@ export function InputCheckbox(props) {
   };
 
   return (
-    <div className={"flex flex-row items-center" + props.className}>
+    <div className={"flex flex-row items-center " + props.className}>
       <input
         type="checkbox"
         checked={isChecked}
