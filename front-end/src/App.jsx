@@ -1,11 +1,12 @@
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { Navbar } from "./components/Navbar/Navbar.jsx";
-import { Outlet } from "react-router-dom";
-import { InputFoto } from "./components/Inputs/InputFoto.jsx"
-import { Link } from 'react-router-dom';
+import { Outlet, useNavigate } from "react-router-dom";
+import { Foto } from "./components/Foto.jsx"
 import "./App.css";
 
 export function App() {
+  const navigate = useNavigate();
+
   return (
     <>
       <header
@@ -20,12 +21,14 @@ export function App() {
 
         <Navbar />
 
-        <Link className="relative before:contents before:absolute before:z-1 before:size-full" to="/perfil">
-          <div className="px-6 flex items-center gap-3.5 text-2xl">
-            <InputFoto icone="bi bi-person" tamanho="5" />
-            <span>Olá, Usuário</span>
-          </div>
-        </Link>
+        
+        <section 
+          onClick={() => navigate("/perfil")} 
+          className="px-6 flex items-center gap-3.5 text-2xl cursor-pointer"
+        >
+          <Foto icone="bi bi-person" tamanho="5" />
+          <span>Olá, Usuário</span>
+        </section>
       </header>
 
       <main className="w-full min-w-0 p-20 overflow-y-auto overflow-x-hidden flex flex-col gap-5 shadow-md bg-white/90">
