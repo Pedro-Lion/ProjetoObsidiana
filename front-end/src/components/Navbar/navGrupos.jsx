@@ -49,6 +49,7 @@ const navGruposInfos = [
     titulo: "Profissionais",
     tituloSingular: "profissional",
     links: ["/profissionais", "/novo/profisional"],
+    links: ["/profissionais", "/cadastro/profissionais"],
     icones: [
       <Pessoas className={estiloIcone} />,
       <Pessoas variacao="grupo" className={estiloIcone} />,

@@ -11,6 +11,7 @@ import { CadastroEquipamentos } from "./routes/CadastroEquipamento";
 import { Servicos } from "./routes/Servicos";
 import { Orcamentos } from "./routes/Orcamentos";
 import { Profissionais } from "./routes/Profissionais";
+import { CadastroProfissionais } from "./routes/CadastroProfissionais";
 
 export const router = createBrowserRouter([
   {
@@ -45,6 +46,10 @@ export const router = createBrowserRouter([
       {
         path: "/profissionais",
         element: <Profissionais />,
+      },
+      {
+        path: "/cadastro/profissionais",
+        element: <CadastroProfissionais />
       },
     ],
   },
