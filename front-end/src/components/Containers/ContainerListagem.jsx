@@ -73,11 +73,11 @@ export function ContainerListagem({ titulo = "Nome do item" }) {
                     </div>
                     <div className="h-15 border-l-1 border-violet-200 pl-9
                     flex flex-row gap-9 self-center">
-                    <i class="bi bi-pencil-square
+                    <i className="bi bi-pencil-square
                     text-slate-700 text-3xl self-center
                     cursor-pointer hover:text-indigo-300
                     "></i>
-                    <i class="bi bi-trash3
+                    <i className="bi bi-trash3
                     text-slate-700 text-3xl self-center
                     cursor-pointer hover:text-indigo-300
                     "></i>
