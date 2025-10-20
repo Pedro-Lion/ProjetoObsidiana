@@ -42,6 +42,10 @@ export const router = createBrowserRouter([
         path: "/profissionais",
         element: <Profissionais />,
       },
+      {
+        path: "/perfil",
+        element: <Perfil />
+      },
     ],
   },
   {
@@ -54,9 +58,5 @@ export const router = createBrowserRouter([
     element: <Login funcao="cadastro" />,
     errorElement: <Erro404 />
   },
-  {
-    path: "/perfil",
-    element: <Perfil />,
-    errorElement: <Erro404 />
-  },
+
 ]);
