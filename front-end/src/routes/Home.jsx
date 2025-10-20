@@ -12,57 +12,33 @@ import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 export function Home() {
   return (
     <>
+      <h1 className="">Boas-vindas!</h1>
 
-      <div>
-        <ContainerListagem
-        titulo="Câmera 01"/>
+      <div className="flex gap-3.5">
+        <BotaoSecundario
+          titulo="Novo orçamento"
+          className="w-60"
+        />
+        <BotaoSecundario
+          titulo="Novo serviço"
+          className="w-60"
+        />
+        <BotaoSecundario
+          titulo="Novo equipamento"
+          className="w-60"
+        />
+        <BotaoSecundario
+          titulo="Novo profissional"
+          className="w-60"
+        />
       </div>
 
-      <div className="w-150">
-        <ContainerSelectTags
-        titulo="Equipamentos"
-        placeholder="Escolha uma opção"/>
+      <h3>Próximos eventos</h3>
+
+      <div className="h-full w-full overflow-auto border-1 border-indigo-200 p-1.5">
+        <iframe src="https://outlook.office365.com/calendar/published/05caa2e2759545539d3d0baaf1160008@sptech.school/79f2802dcb82431ebc51f3fc61e6114a3537960576227375636/calendar.html"
+          className="h-full w-full"></iframe>
       </div>
-
-      <InputBordaLabel
-        type="text"
-        titulo="Nome completo"
-        placeholder="Insira o nome aqui"
-        className="w-80" />
-      
-      <TextareaBordaLabel
-        titulo="Observações"
-        placeholder="Digite aqui informações importantes"
-        larguraCampo="w-80"
-        rows="4" />
-
-      <InputFundoCor
-        type="number"
-        titulo="Telefone"
-        placeholder="Somente números" />
-
-      <InputCheckbox
-        texto="Diária"
-      />
-
-      <BotaoBordaGradiente
-        titulo="Clique aqui"
-      />
-
-      <BotaoPrimario
-        titulo="Pesquisar"
-        className="w-30"
-      />
-
-      <BotaoSecundario
-        titulo="Meus equipamentos"
-        className="w-60"
-      />
-
-      <InputFoto
-        icone="bi bi-person-up"
-      >
-      </InputFoto>
 
     </>
   )
