@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import java.util.List;
 
 import java.util.Date;
 
@@ -35,6 +36,7 @@ public class Orcamento {
     @Schema(description = "Valor Final do orçamento", example = "R$2.000,00")
     private Long valorTotal;
 
+    private List<Equipamento> equipamentos;
 
 
     public Orcamento() {}

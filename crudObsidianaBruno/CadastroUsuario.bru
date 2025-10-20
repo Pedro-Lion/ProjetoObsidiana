@@ -1,0 +1,23 @@
+meta {
+  name: CadastroUsuario
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/usuario/cadastrar
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nome": "teste",
+    "email": "teste@gmail.com",
+    "senha": "123456"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,22 @@
+meta {
+  name: LoginUsuario
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8080/usuario/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "teste@gmail.com",
+    "senha": "123456"
+  }
+}
+
+settings {
+  encodeUrl: true
+}
