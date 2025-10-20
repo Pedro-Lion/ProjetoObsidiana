@@ -20,7 +20,7 @@ export const navGrupos = [
 const navGruposInfos = [
   {
     titulo: "Equipamentos",
-    links: ["/equipamentos", "/novo/equipamento"],
+    links: ["/equipamentos", "/cadastro/equipamentos"],
     icones: [
       <Camera className={estiloIcone} />,
       <Camera className={estiloIcone} />,

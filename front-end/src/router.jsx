@@ -7,6 +7,7 @@ import { Login } from "./routes/Login";
 import { Home } from "./routes/Home";
 import { Novo } from "./routes/Novo";
 import { Equipamentos } from "./routes/Equipamentos";
+import { CadastroEquipamentos } from "./routes/CadastroEquipamento";
 import { Servicos } from "./routes/Servicos";
 import { Orcamentos } from "./routes/Orcamentos";
 import { Profissionais } from "./routes/Profissionais";
@@ -28,6 +29,10 @@ export const router = createBrowserRouter([
       {
         path: "/equipamentos",
         element: <Equipamentos />,
+      },
+      {
+        path: "/cadastro/equipamentos",
+        element: <CadastroEquipamentos />
       },
       {
         path: "/servicos",
