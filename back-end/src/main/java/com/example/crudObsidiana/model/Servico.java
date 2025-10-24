@@ -1,14 +1,18 @@
 package com.example.crudObsidiana.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.JoinColumn;
+import java.util.List;
+import java.util.ArrayList;
+
 
 @Schema(description = "Modelo de Serviço")
 @Entity
-public class Servico {
+public class Servico  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,6 +30,14 @@ public class Servico {
 
     @Schema(description = "Valor total do serviço em reais", example = "250")
     private int valorPorHora;
+
+    @ManyToMany
+    @JoinTable(
+            name = "servico_equipamento",
+            joinColumns = @JoinColumn(name = "servico_id"),
+            inverseJoinColumns = @JoinColumn(name = "equipamento_id")
+    )
+    private List<Equipamento> equipamentos = new ArrayList<>();
 
     public Servico() {}
 
@@ -50,4 +62,12 @@ public class Servico {
 
     public int getValorPorHora() { return valorPorHora; }
     public void setValorPorHora(int valorPorHora) { this.valorPorHora = valorPorHora; }
+
+    public List<Equipamento> getEquipamentos() {
+        return equipamentos;
+    }
+
+    public void setEquipamentos(List<Equipamento> equipamentos) {
+        this.equipamentos = equipamentos;
+    }
 }
