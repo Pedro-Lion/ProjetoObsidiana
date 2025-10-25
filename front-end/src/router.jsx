@@ -9,6 +9,7 @@ import { Novo } from "./routes/Novo";
 import { Equipamentos } from "./routes/Equipamentos";
 import { CadastroEquipamentos } from "./routes/CadastroEquipamento";
 import { Servicos } from "./routes/Servicos";
+import { CadastrarNovoServico } from "./routes/CadastrarNovoServico"
 import { Orcamentos } from "./routes/Orcamentos";
 import { Profissionais } from "./routes/Profissionais";
 import { CadastroProfissionais } from "./routes/CadastroProfissionais";
@@ -39,6 +40,10 @@ export const router = createBrowserRouter([
       {
         path: "/servicos",
         element: <Servicos />,
+      },
+      {
+        path: "/cadastro/servico",
+        element: <CadastrarNovoServico />
       },
       {
         path: "/orcamentos",

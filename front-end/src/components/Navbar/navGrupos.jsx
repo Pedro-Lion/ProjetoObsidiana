@@ -29,7 +29,7 @@ const navGruposInfos = [
   },
   {
     titulo: "Serviços",
-    links: ["/servicos", "/novo/servico"],
+    links: ["/servicos", "/cadastro/servico"],
     icones: [
       <Pasta className={estiloIcone} />,
       <Pasta variacao="aberta" className={estiloIcone} />,
@@ -48,7 +48,6 @@ const navGruposInfos = [
   {
     titulo: "Profissionais",
     tituloSingular: "profissional",
-    links: ["/profissionais", "/novo/profisional"],
     links: ["/profissionais", "/cadastro/profissionais"],
     icones: [
       <Pessoas className={estiloIcone} />,
