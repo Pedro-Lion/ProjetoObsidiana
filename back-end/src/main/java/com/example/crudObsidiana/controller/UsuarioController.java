@@ -1,6 +1,7 @@
 package com.example.crudObsidiana.controller;
 
 import com.example.crudObsidiana.dto.LoginRequestDTO;
+import com.example.crudObsidiana.dto.RegisterRequestDTO;
 import com.example.crudObsidiana.dto.ResponseDTO;
 import com.example.crudObsidiana.model.Usuario;
 import com.example.crudObsidiana.repository.UsuarioRepository;
@@ -22,7 +23,7 @@ import java.util.Map;
 
 @Tag(name = "Usuários", description = "Operações relacionadas aos usuários")
 @RestController
-@RequestMapping("/usuarios")
+@RequestMapping("/usuario")
 //@CrossOrigin(origins = "http://localhost:5173")
 public class UsuarioController {
   private final UsuarioRepository repository;
@@ -49,16 +50,16 @@ public class UsuarioController {
   @Operation(summary = "Cadastra um novo usuário")
   @ApiResponse(responseCode = "201", description = "Usuário cadastrado com sucesso",
           content = @Content(mediaType = "application/json", schema = @Schema(implementation = Usuario.class)))
-  @PostMapping("/cadastro")
-  public ResponseEntity<ResponseDTO> cadastro(@RequestBody Usuario body) {
-    if (repository.findByEmail(body.getEmail()) != null) {
+  @PostMapping("/cadastrar")
+  public ResponseEntity<ResponseDTO> cadastrar(@RequestBody RegisterRequestDTO body) {
+    if (repository.findByEmail(body.email()).orElse(null) != null) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 
     Usuario novoUsuario = new Usuario();
-    novoUsuario.setNome(body.getNome());
-    novoUsuario.setEmail(body.getEmail());
-    novoUsuario.setSenha(passwordEncoder.encode(body.getSenha()));
+    novoUsuario.setNome(body.nome());
+    novoUsuario.setEmail(body.email());
+    novoUsuario.setSenha(passwordEncoder.encode(body.senha()));
 
     repository.save(novoUsuario);
 
@@ -73,7 +74,7 @@ public class UsuarioController {
           content = @Content(mediaType = "application/json", schema = @Schema(implementation = Usuario.class)))
   @PostMapping("/login")
   public ResponseEntity<ResponseDTO> login(@RequestBody LoginRequestDTO body) {
-    Usuario usuario = repository.findByEmail(body.email());
+    Usuario usuario = repository.findByEmail(body.email()).orElse(null);
 
     if (usuario == null) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -88,7 +89,4 @@ public class UsuarioController {
       new ResponseDTO(usuario.getNome(), usuario.getEmail(), token);
     return ResponseEntity.ok(response);
   }
-
-
-
 }
