@@ -5,6 +5,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+// imports adicionais
+import jakarta.persistence.ManyToMany;
+import java.util.List;
 
 import java.util.Date;
 
@@ -35,10 +38,12 @@ public class Orcamento {
     @Schema(description = "Valor Final do orçamento", example = "R$2.000,00")
     private Long valorTotal;
 
+    @ManyToMany
+    @Schema(description = "Lista de equipamentos relacionados", example = "Câmera Canon, Tripé, Flash")
+    private List<Equipamento> equipamentos;
 
-
+    //CONSTRUCTORS
     public Orcamento() {}
-
     public Orcamento(Long id, Date dataEvento, Integer duracaoEvento, String localEvento, String descricao, String status, Long valorTotal) {
         this.id = id;
         this.dataEvento = dataEvento;
@@ -49,59 +54,53 @@ public class Orcamento {
         this.valorTotal = valorTotal;
     }
 
+    //GETTERS & SETTERS
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
-
     public Date getDataEvento() {
         return dataEvento;
     }
-
     public void setDataEvento(Date dataEvento) {
         this.dataEvento = dataEvento;
     }
-
     public Integer getDuracaoEvento() {
         return duracaoEvento;
     }
-
     public void setDuracaoEvento(Integer duracaoEvento) {
         this.duracaoEvento = duracaoEvento;
     }
-
     public String getLocalEvento() {
         return localEvento;
     }
-
     public void setLocalEvento(String localEvento) {
         this.localEvento = localEvento;
     }
-
     public String getDescricao() {
         return descricao;
     }
-
     public void setDescricao(String descricao) {
         this.descricao = descricao;
     }
-
     public String getStatus() {
         return status;
     }
-
     public void setStatus(String status) {
         this.status = status;
     }
-
     public Long getValorTotal() {
         return valorTotal;
     }
-
     public void setValorTotal(Long valorTotal) {
         this.valorTotal = valorTotal;
+    }
+    public List<Equipamento> getEquipamentos() {
+        return equipamentos;
+    }
+    public void setEquipamentos(List<Equipamento> equipamentos) {
+        this.equipamentos = equipamentos;
     }
 }
