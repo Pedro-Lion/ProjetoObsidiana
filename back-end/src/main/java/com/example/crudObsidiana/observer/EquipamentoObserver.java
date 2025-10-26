@@ -6,6 +6,10 @@ import com.example.crudObsidiana.repository.EquipamentoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * Observador responsável por reagir a alterações em orçamentos.
+ * Quando um orçamento é atualizado, reduz a quantidade disponível dos equipamentos utilizados.
+ */
 @Component
 public class EquipamentoObserver implements OrcamentoObserver {
 
@@ -14,20 +18,40 @@ public class EquipamentoObserver implements OrcamentoObserver {
 
     @Override
     public void onOrcamentoUpdated(Orcamento orcamento) {
-        System.out.println("🔔 [Observer] Orçamento atualizado: " + orcamento.getIdOrcamento());
-        System.out.println("Marcando equipamentos como indisponíveis...");
+        System.out.println("\n🔔 [Observer] Orçamento atualizado: " + orcamento.getId());
+        System.out.println("Atualizando estoque dos equipamentos associados...");
 
-        // Caso ainda não exista relação direta, criaremos um exemplo simulado:
-        if (orcamento.getEquipamentos() != null) {
-            for (Equipamento eq : orcamento.getEquipamentos()) {
-                eq.setDisponivel(false);
-                equipamentoRepository.save(eq);
-                System.out.println(" - Equipamento " + eq.getNome() + " atualizado para indisponível");
-            }
-        } else {
-            // Simulação caso o orçamento ainda não tenha equipamentos associados
-            System.out.println("Nenhuma lista de equipamentos associada — simulação de atualização completa!");
+        if (orcamento.getEquipamentos() == null || orcamento.getEquipamentos().isEmpty()) {
+            System.out.println("Nenhum equipamento vinculado a este orçamento.");
+            return;
         }
+
+        for (Equipamento eq : orcamento.getEquipamentos()) {
+
+            // Quantidade usada neste orçamento (por enquanto fixo — pode virar campo futuro)
+            int quantidadeUsada = 1;
+
+            int antes = eq.getQuantidadeDisponivel();
+
+            // Chamando o metodo reduzirQuantidade da classe Equipamento
+            eq.reduzirQuantidade(quantidadeUsada);
+
+            // Nunca ultrapassa o total nem fica negativo
+            if (eq.getQuantidadeDisponivel() > eq.getQuantidade()) {
+                eq.setQuantidadeDisponivel(eq.getQuantidade());
+            }
+            if (eq.getQuantidadeDisponivel() < 0) {
+                eq.setQuantidadeDisponivel(0);
+            }
+
+            equipamentoRepository.save(eq);
+
+            int depois = eq.getQuantidadeDisponivel();
+
+            System.out.printf(" - %s: disponível %d → %d (total: %d)%n",
+                    eq.getNome(), antes, depois, eq.getQuantidade());
+        }
+
+        System.out.println("✅ Estoque atualizado com sucesso.\n");
     }
 }
-
