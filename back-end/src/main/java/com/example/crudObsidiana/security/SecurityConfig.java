@@ -35,6 +35,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/usuario/login").permitAll() // Esse endpoint não precisa de autenticação
                         .requestMatchers(HttpMethod.POST, "/usuario/cadastrar").permitAll() // Esse endpoint não precisa de autenticação
+                        .requestMatchers(
+                                "/v3/api-docs/**",  // documentação Swagger
+                                "/swagger-ui/**",           // interface Swagger
+                                "/swagger-ui.html"         // acesso direto ao HTML
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);

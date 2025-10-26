@@ -1,0 +1,25 @@
+meta {
+  name: UsoEquipamento
+  type: http
+  seq: 10
+}
+
+post {
+  url: http://localhost:8080/uso-equipamento
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "quantidadeUsada": 3,
+    "equipamento": { "id": 1 },
+    "orcamento": { "id": 1 }
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

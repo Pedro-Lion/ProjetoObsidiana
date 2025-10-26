@@ -13,6 +13,7 @@ public class Equipamento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idEquipamento")
     @Schema(description = "ID do equipamento", example = "1")
     private Long id;
 
