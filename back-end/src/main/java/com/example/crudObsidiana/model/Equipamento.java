@@ -1,10 +1,10 @@
 package com.example.crudObsidiana.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Schema(description = "Modelo de Equipamento")
 @Entity
@@ -35,6 +35,9 @@ public class Equipamento {
 
     @Schema(description = "Valor unitário em reais", example = "1200")
     private int valorPorHora;
+
+    @ManyToMany(mappedBy = "equipamentos")
+    private List<Servico> servicos = new ArrayList<>();
 
 
 
