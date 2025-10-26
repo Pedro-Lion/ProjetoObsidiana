@@ -1,6 +1,7 @@
 package com.example.crudObsidiana.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
@@ -9,30 +10,31 @@ import jakarta.persistence.*;
 @Table(name = "uso_equipamento")
 public class UsoEquipamento {
 
-    @Schema(description = "Identificador único do registro de uso", example = "1")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usoEquipamento")
+    @Schema(description = "Identificador único do registro de uso", example = "1")
     private Long id;
 
-    @Schema(description = "Quantidade de unidades do equipamento utilizadas", example = "3")
+    @Schema(description = "Quantidade de unidades do equipamento utilizadas", example = "3", required = true)
     @Column(name = "quantidade_usada", nullable = false)
     private int quantidadeUsada;
 
-    @Schema(description = "Equipamento utilizado")
-    @ManyToOne(optional = false)
+    @Schema(description = "Equipamento utilizado", required = true)
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "fkEquipamento", referencedColumnName = "idEquipamento")
     private Equipamento equipamento;
 
     @Schema(description = "Orçamento ao qual este uso pertence (opcional)")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fkOrcamento", referencedColumnName = "idOrcamento")
     @JsonBackReference
     private Orcamento orcamento;
 
     @Schema(description = "Serviço ao qual este uso pertence (opcional)")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fkServico", referencedColumnName = "idServico")
+    @JsonBackReference
     private Servico servico;
 
     // --- Getters e Setters ---
@@ -51,14 +53,15 @@ public class UsoEquipamento {
     public Servico getServico() { return servico; }
     public void setServico(Servico servico) { this.servico = servico; }
 
+    // --- Regra de integridade ---
     @PrePersist
     @PreUpdate
     private void validarDonoUnico() {
         boolean temOrcamento = this.orcamento != null;
         boolean temServico = this.servico != null;
 
-        if (temOrcamento == temServico) {
-            throw new IllegalStateException("UsoEquipamento deve referenciar apenas ORÇAMENTO ou SERVIÇO (exatamente um).");
+        if (temOrcamento && temServico) {
+            throw new IllegalStateException("UsoEquipamento deve referenciar apenas ORÇAMENTO ou SERVIÇO, não ambos.");
         }
     }
 }

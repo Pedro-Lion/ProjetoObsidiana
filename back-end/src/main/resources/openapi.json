@@ -20,10 +20,6 @@
       "description": "Operações relacionadas aos equipamentos"
     },
     {
-      "name": "Uso de Equipamentos",
-      "description": "Gerencia o uso de equipamentos em orçamentos e serviços"
-    },
-    {
       "name": "Usuários",
       "description": "Operações relacionadas aos usuários"
     },
@@ -34,6 +30,10 @@
     {
       "name": "Serviços",
       "description": "Operações relacionadas aos serviços"
+    },
+    {
+      "name": "Uso de Equipamentos",
+      "description": "Operações relacionadas ao uso de equipamentos em orçamentos e serviços"
     }
   ],
   "paths": {
@@ -43,7 +43,7 @@
           "Serviços"
         ],
         "summary": "Recupera um serviço pelo ID",
-        "operationId": "recuperar",
+        "operationId": "recuperar_1",
         "parameters": [
           {
             "name": "id",
@@ -133,7 +133,7 @@
           "Serviços"
         ],
         "summary": "Remove um serviço pelo ID",
-        "operationId": "excluir",
+        "operationId": "excluir_1",
         "parameters": [
           {
             "name": "id",
@@ -161,7 +161,7 @@
           "Profissionais"
         ],
         "summary": "Recupera um profissional pelo ID",
-        "operationId": "recuperar_1",
+        "operationId": "recuperar_2",
         "parameters": [
           {
             "name": "id",
@@ -251,7 +251,7 @@
           "Profissionais"
         ],
         "summary": "Remove um profissional pelo ID",
-        "operationId": "excluir_1",
+        "operationId": "excluir_2",
         "parameters": [
           {
             "name": "id",
@@ -273,13 +273,13 @@
         }
       }
     },
-    "/orcamentos/{id}": {
+    "/orcamento/{id}": {
       "get": {
         "tags": [
           "Orçamentos"
         ],
         "summary": "Recupera um orçamento pelo ID",
-        "operationId": "recuperar_2",
+        "operationId": "recuperar_3",
         "parameters": [
           {
             "name": "id",
@@ -369,7 +369,7 @@
           "Orçamentos"
         ],
         "summary": "Remove um orçamento pelo ID",
-        "operationId": "excluir_2",
+        "operationId": "excluir_3",
         "parameters": [
           {
             "name": "id",
@@ -411,7 +411,7 @@
           "Equipamentos"
         ],
         "summary": "Recupera um equipamento pelo ID",
-        "operationId": "recuperar_3",
+        "operationId": "recuperar_4",
         "parameters": [
           {
             "name": "id",
@@ -474,20 +474,20 @@
           "required": true
         },
         "responses": {
-          "404": {
-            "description": "Equipamento não encontrado",
+          "200": {
+            "description": "Equipamento atualizado com sucesso",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Equipamento"
                 }
               }
             }
           },
-          "200": {
-            "description": "Equipamento atualizado com sucesso",
+          "404": {
+            "description": "Equipamento não encontrado",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/Equipamento"
                 }
@@ -501,7 +501,7 @@
           "Equipamentos"
         ],
         "summary": "Remove um equipamento pelo ID",
-        "operationId": "excluir_3",
+        "operationId": "excluir_4",
         "parameters": [
           {
             "name": "id",
@@ -514,20 +514,20 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Equipamento removido com sucesso",
+          "404": {
+            "description": "Equipamento não encontrado",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/Equipamento"
                 }
               }
             }
           },
-          "404": {
-            "description": "Equipamento não encontrado",
+          "200": {
+            "description": "Equipamento removido com sucesso",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Equipamento"
                 }
@@ -605,12 +605,12 @@
           "Uso de Equipamentos"
         ],
         "summary": "Lista todos os usos de equipamentos",
-        "operationId": "listar_1",
+        "operationId": "listarTodos",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Lista retornada com sucesso",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
@@ -626,21 +626,31 @@
         "tags": [
           "Uso de Equipamentos"
         ],
-        "summary": "Cria um novo vínculo de uso de equipamento",
-        "operationId": "criar",
+        "summary": "Registra o uso de um equipamento em um orçamento ou serviço",
+        "operationId": "criarUso",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UsoEquipamento"
+                "$ref": "#/components/schemas/UsoEquipamentoDTO"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "201": {
+            "description": "Uso de equipamento registrado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsoEquipamento"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos ou campos obrigatórios ausentes",
             "content": {
               "*/*": {
                 "schema": {
@@ -658,7 +668,7 @@
           "Serviços"
         ],
         "summary": "Lista todos os serviços",
-        "operationId": "listarTodos",
+        "operationId": "listarTodos_1",
         "responses": {
           "200": {
             "description": "Lista de serviços retornada com sucesso",
@@ -721,7 +731,7 @@
           "Profissionais"
         ],
         "summary": "Lista todos os profissionais",
-        "operationId": "listarTodos_1",
+        "operationId": "listarTodos_2",
         "responses": {
           "200": {
             "description": "Lista de profissional retornada com sucesso",
@@ -768,13 +778,13 @@
         }
       }
     },
-    "/orcamentos": {
+    "/orcamento": {
       "get": {
         "tags": [
           "Orçamentos"
         ],
         "summary": "Lista todos os orçamentos cadastrados",
-        "operationId": "listarTodos_2",
+        "operationId": "listarTodos_3",
         "responses": {
           "200": {
             "description": "Lista de orçamentos retornada com sucesso",
@@ -837,7 +847,7 @@
           "Equipamentos"
         ],
         "summary": "Lista todos os equipamentos",
-        "operationId": "listarTodos_3",
+        "operationId": "listarTodos_4",
         "responses": {
           "200": {
             "description": "Lista de equipamentos retornada com sucesso",
@@ -871,20 +881,20 @@
           "required": true
         },
         "responses": {
-          "400": {
-            "description": "Dados inválidos",
+          "201": {
+            "description": "Equipamento criado com sucesso",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Equipamento"
                 }
               }
             }
           },
-          "201": {
-            "description": "Equipamento criado com sucesso",
+          "400": {
+            "description": "Dados inválidos",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/Equipamento"
                 }
@@ -911,6 +921,88 @@
                   "items": {
                     "$ref": "#/components/schemas/Usuario"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uso-equipamento/{id}": {
+      "get": {
+        "tags": [
+          "Uso de Equipamentos"
+        ],
+        "summary": "Recupera um uso de equipamento pelo ID",
+        "operationId": "recuperar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Uso de equipamento não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsoEquipamento"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Uso de equipamento encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsoEquipamento"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Uso de Equipamentos"
+        ],
+        "summary": "Remove um registro de uso de equipamento pelo ID",
+        "operationId": "excluir",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Uso de equipamento não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsoEquipamento"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Uso de equipamento removido com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsoEquipamento"
                 }
               }
             }
@@ -1095,6 +1187,10 @@
         "description": "Modelo de orçamento"
       },
       "UsoEquipamento": {
+        "required": [
+          "equipamento",
+          "quantidadeUsada"
+        ],
         "type": "object",
         "properties": {
           "id": {
@@ -1171,6 +1267,40 @@
             "type": "string"
           }
         }
+      },
+      "UsoEquipamentoDTO": {
+        "required": [
+          "equipamentoId",
+          "quantidadeUsada"
+        ],
+        "type": "object",
+        "properties": {
+          "equipamentoId": {
+            "type": "integer",
+            "description": "ID do equipamento utilizado",
+            "format": "int64",
+            "example": 1
+          },
+          "orcamentoId": {
+            "type": "integer",
+            "description": "ID do orçamento ao qual o uso pertence (ou null se for serviço)",
+            "format": "int64",
+            "example": 1
+          },
+          "servicoId": {
+            "type": "integer",
+            "description": "ID do serviço ao qual o uso pertence (ou null se for orçamento)",
+            "format": "int64"
+          },
+          "quantidadeUsada": {
+            "minimum": 1,
+            "type": "integer",
+            "description": "Quantidade de unidades do equipamento utilizadas",
+            "format": "int32",
+            "example": 3
+          }
+        },
+        "description": "DTO para representar o uso de um equipamento em um orçamento ou serviço"
       },
       "ServicoDTO": {
         "type": "object",

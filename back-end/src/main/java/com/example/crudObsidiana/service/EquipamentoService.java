@@ -21,6 +21,7 @@ public class EquipamentoService {
         equipamento.setNumeroSerie(dto.getNumeroSerie());
         equipamento.setModelo(dto.getModelo());
         equipamento.setValorPorHora(dto.getValorPorHora());
+        equipamento.setQuantidadeDisponivel(dto.getQuantidade());
 
         return equipamentoRepository.save(equipamento);
     }
