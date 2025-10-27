@@ -19,12 +19,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Tag(name = "Usuários", description = "Operações relacionadas aos usuários")
 @RestController
 @RequestMapping("/usuario")
-//@CrossOrigin(origins = "http://localhost:5173")
 public class UsuarioController {
   private final UsuarioRepository repository;
   private final PasswordEncoder passwordEncoder;
