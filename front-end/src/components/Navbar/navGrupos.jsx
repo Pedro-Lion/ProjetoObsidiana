@@ -29,7 +29,7 @@ const navGruposInfos = [
   },
   {
     titulo: "Serviços",
-    links: ["/servicos", "/novo/servico"],
+    links: ["/servicos", "/cadastro/servico"],
     icones: [
       <Pasta className={estiloIcone} />,
       <Pasta variacao="aberta" className={estiloIcone} />,

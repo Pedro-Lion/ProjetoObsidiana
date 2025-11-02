@@ -1,0 +1,37 @@
+package com.example.crudObsidiana.service;
+
+import com.example.crudObsidiana.dto.ServicoDTO;
+import com.example.crudObsidiana.model.Equipamento;
+import com.example.crudObsidiana.model.Servico;
+import com.example.crudObsidiana.repository.EquipamentoRepository;
+import com.example.crudObsidiana.repository.ServicoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+
+@Service
+    public class ServicoService {
+
+        @Autowired
+        private ServicoRepository servicoRepository;
+
+        @Autowired
+        private EquipamentoRepository equipamentoRepository;
+
+        public Servico criarServico(ServicoDTO dto) {
+            Servico servico = new Servico();
+            servico.setNome(dto.getNome());
+            servico.setDescricao(dto.getDescricao());
+            servico.setHoras(dto.getHoras());
+            servico.setValorPorHora(dto.getValorPorHora());
+
+            List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentosIds());
+            servico.setEquipamentos(equipamentos);
+
+            return servicoRepository.save(servico);
+        }
+    }
+
+

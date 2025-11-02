@@ -1,107 +1,74 @@
 package com.example.crudObsidiana.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.util.Date;
+import java.util.List;
 
-@Schema(description = "Modelo de Orcamento")
+@Schema(description = "Modelo de orçamento")
 @Entity
+@Table(name = "orcamentos")
 public class Orcamento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idOrcamento")
     @Schema(description = "ID do orçamento", example = "1")
     private Long id;
 
-    @Schema(description = "Dia do serviço", example = "Câmera Canon")
+    @Schema(description = "Data do evento", example = "2025-11-05")
+    @Column(name = "data_evento")
     private Date dataEvento;
 
-    @Schema(description = "Definição da duração do evento/ serviços dentro do orçamento", example = "4 horas")
+    @Schema(description = "Duração do evento em horas", example = "8")
+    @Column(name = "duracao")
     private Integer duracaoEvento;
 
-    @Schema(description = "Campo para anotação de localidade do evento", example = "Parque Iberapuera Portão B")
+    @Schema(description = "Local do evento", example = "Estúdio Principal")
+    @Column(name = "local_evento")
     private String localEvento;
 
-    @Schema(description = "Descrição do evento ou do orçamento", example = "evento a céu aberto, considerar capa para equipe e equipamentos")
+    @Schema(description = "Descrição geral do orçamento", example = "Gravação de videoclipe publicitário")
+    @Column(columnDefinition = "TEXT")
     private String descricao;
 
-    @Schema(description = "Status atual do orçamento", example = "Pendente aprovação do cliente")
+    @Schema(description = "Status atual do orçamento", example = "Confirmado")
     private String status;
 
-    @Schema(description = "Valor Final do orçamento", example = "R$2.000,00")
-    private Long valorTotal;
+    @Schema(description = "Valor total estimado", example = "3500")
+    @Column(name = "valorTotal")
+    private Double valorTotal;
 
+    @OneToMany(mappedBy = "orcamento", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Schema(description = "Lista de usos de equipamentos vinculados a este orçamento")
+    @JsonManagedReference
+    private List<UsoEquipamento> usosEquipamentos;
 
+    // GETTERS & SETTERS
 
-    public Orcamento() {}
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Orcamento(Long id, Date dataEvento, Integer duracaoEvento, String localEvento, String descricao, String status, Long valorTotal) {
-        this.id = id;
-        this.dataEvento = dataEvento;
-        this.duracaoEvento = duracaoEvento;
-        this.localEvento = localEvento;
-        this.descricao = descricao;
-        this.status = status;
-        this.valorTotal = valorTotal;
-    }
+    public Date getDataEvento() { return dataEvento; }
+    public void setDataEvento(Date dataEvento) { this.dataEvento = dataEvento; }
 
-    public Long getId() {
-        return id;
-    }
+    public Integer getDuracaoEvento() { return duracaoEvento; }
+    public void setDuracaoEvento(Integer duracaoEvento) { this.duracaoEvento = duracaoEvento; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getLocalEvento() { return localEvento; }
+    public void setLocalEvento(String localEvento) { this.localEvento = localEvento; }
 
-    public Date getDataEvento() {
-        return dataEvento;
-    }
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
 
-    public void setDataEvento(Date dataEvento) {
-        this.dataEvento = dataEvento;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public Integer getDuracaoEvento() {
-        return duracaoEvento;
-    }
+    public Double getValorTotal() { return valorTotal; }
+    public void setValorTotal(Double valorTotal) { this.valorTotal = valorTotal; }
 
-    public void setDuracaoEvento(Integer duracaoEvento) {
-        this.duracaoEvento = duracaoEvento;
-    }
-
-    public String getLocalEvento() {
-        return localEvento;
-    }
-
-    public void setLocalEvento(String localEvento) {
-        this.localEvento = localEvento;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public Long getValorTotal() {
-        return valorTotal;
-    }
-
-    public void setValorTotal(Long valorTotal) {
-        this.valorTotal = valorTotal;
-    }
+    public List<UsoEquipamento> getUsosEquipamentos() { return usosEquipamentos; }
+    public void setUsosEquipamentos(List<UsoEquipamento> usosEquipamentos) { this.usosEquipamentos = usosEquipamentos; }
 }
