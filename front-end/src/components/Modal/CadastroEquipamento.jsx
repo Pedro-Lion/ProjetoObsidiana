@@ -15,7 +15,7 @@ export function CadastroEquipamento({ funcaoCancelar = undefined }) {
         }}
         className="
           absolute top-1/2 left-1/2 overflow-y-scroll
-          border-box w-[80%] max-w-230 h-[80%] max-h-150 p-10
+          border-box w-[80%] max-w-230 h-[80%] max-h-185 p-10
           flex flex-col justify-between gap-3
           bg-white rounded-2xl shadow-xl border border-gray-300
         "
