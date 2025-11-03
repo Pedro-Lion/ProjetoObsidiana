@@ -3,9 +3,11 @@ import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { useEffect, useState } from "react";
+import { CadastroEquipamento } from "../components/Modal/CadastroEquipamento";
 
 export function Equipamentos() {
   const [equipamentos, setEquipamentos] = useState("Buscando equipamentos...");
+  const [modal, setModal] = useState(false);
 
   useEffect(() => {
     async function buscarEquipamentos(params) {
@@ -38,6 +40,8 @@ export function Equipamentos() {
 
   return (
     <>
+      {modal && <CadastroEquipamento funcaoCancelar={() => setModal(false)} />}
+
       <h1 className="text-4xl font-medium">Equipamentos</h1>
 
       <div className="mt-3 flex justify-between">
@@ -53,6 +57,7 @@ export function Equipamentos() {
         <BotaoPrimario
           titulo="+ Novo equipamento"
           className="mt-0 mb-0 mr-5 flex-none"
+          onClick={() => setModal(true)}
         />
       </div>
 

@@ -40,7 +40,7 @@ export function App() {
         </section>
       </header>
 
-      <main className="w-full min-w-0 p-20 overflow-y-auto overflow-x-hidden flex flex-col gap-5 shadow-md bg-white/90">
+      <main className="relative w-full min-w-0 p-20 overflow-y-auto overflow-x-hidden flex flex-col gap-5 shadow-md bg-white/90">
         <Outlet />
       </main>
     </>
