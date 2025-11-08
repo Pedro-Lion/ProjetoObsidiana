@@ -2,27 +2,46 @@ import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
+import { useEffect, useState } from "react";
+import { CadastroEquipamento } from "../components/Modal/CadastroEquipamento";
 
 export function Equipamentos() {
-  const infoItens = [
-    { titulo: "Câmera Digital" },
-    { titulo: "Câmera Analógica" },
-    { titulo: "Led" },
-    { titulo: "Tripé" },
-    { titulo: "Cartão de memória" },
-    { titulo: "Kit Limpeza de lentes" },
-    { titulo: "Lentes" }
-  ];
+  const [equipamentos, setEquipamentos] = useState("Buscando equipamentos...");
+  const [modal, setModal] = useState(false);
 
-  const itens = infoItens.map((item, i) => (
-    <div className="pr-5 flex items-center" key={i}>
-      <InputCheckbox className="mr-3" />
-      <ContainerListagem titulo={item.titulo} />
-    </div>
-  ));
+  useEffect(() => {
+    async function buscarEquipamentos(params) {
+      try {
+        const resposta = await fetch("http://localhost:8080/equipamento", {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          },
+        });
+
+        if (resposta.ok) {
+          const dados = await resposta.json();
+          
+          setEquipamentos(
+            dados.map((equip) => (
+              <div className="pr-5 flex items-center" key={equip.id}>
+                <InputCheckbox className="mr-3" />
+                <ContainerListagem titulo={equip.nome} />
+              </div>
+            ))
+          );
+        }
+      } catch (erro) {
+        console.log(erro);
+      }
+    }
+
+    buscarEquipamentos();
+  }, []);
 
   return (
     <>
+      {modal && <CadastroEquipamento funcaoCancelar={() => setModal(false)} />}
+
       <h1 className="text-4xl font-medium">Equipamentos</h1>
 
       <div className="mt-3 flex justify-between">
@@ -38,10 +57,13 @@ export function Equipamentos() {
         <BotaoPrimario
           titulo="+ Novo equipamento"
           className="mt-0 mb-0 mr-5 flex-none"
+          onClick={() => setModal(true)}
         />
       </div>
 
-      <section className="h-full mt-5 -ml-10 overflow-y-scroll">{itens}</section>
+      <section className="h-full mt-5 -ml-10 overflow-y-scroll">
+        {equipamentos}
+      </section>
     </>
   );
 }

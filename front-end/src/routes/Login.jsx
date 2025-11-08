@@ -14,7 +14,7 @@ export function Login(props) {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:8080/usuarios/login", {
+      const res = await fetch("http://localhost:8080/usuario/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -25,11 +25,15 @@ export function Login(props) {
         }),
       });
 
-      const dados = await res.json();
-
       if (res.ok) {
-        alert("Login bem-sucedido!\n" + JSON.stringify(dados));
+        alert("Login bem-sucedido!");
+
+        const dados = await res.json()
+        sessionStorage.setItem("token", dados.token)
+        navigate("/")
       }
+
+      if (res.status == 404) alert("Usuário não encontrado")
 
     } catch (error) {
       console.log(error)
@@ -40,10 +44,10 @@ export function Login(props) {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:8080/usuarios/cadastro", {
+      const res = await fetch("http://localhost:8080/usuario/cadastrar", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           nome,

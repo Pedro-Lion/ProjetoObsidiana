@@ -1,7 +1,11 @@
 package com.example.crudObsidiana.controller;
 
+import com.example.crudObsidiana.dto.LoginRequestDTO;
+import com.example.crudObsidiana.dto.RegisterRequestDTO;
+import com.example.crudObsidiana.dto.ResponseDTO;
 import com.example.crudObsidiana.model.Usuario;
 import com.example.crudObsidiana.repository.UsuarioRepository;
+import com.example.crudObsidiana.security.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 //import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -9,21 +13,27 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Tag(name = "Usuários", description = "Operações relacionadas aos usuários")
 @RestController
-@RequestMapping("/usuarios")
-//@CrossOrigin(origins = "http://localhost:5173")
+@RequestMapping("/usuario")
 public class UsuarioController {
   private final UsuarioRepository repository;
+  private final PasswordEncoder passwordEncoder;
+  private final TokenService tokenService;
 
-  public UsuarioController(UsuarioRepository repository) {
+  public UsuarioController(
+    UsuarioRepository repository, PasswordEncoder passwordEncoder, TokenService tokenService
+  ) {
     this.repository = repository;
+    this.passwordEncoder = passwordEncoder;
+    this.tokenService = tokenService;
   }
 
   @Operation(summary = "Lista todos os usuários")
@@ -36,12 +46,24 @@ public class UsuarioController {
   }
 
   @Operation(summary = "Cadastra um novo usuário")
-  @ApiResponse(responseCode = "200", description = "Usuário cadastrado com sucesso",
+  @ApiResponse(responseCode = "201", description = "Usuário cadastrado com sucesso",
           content = @Content(mediaType = "application/json", schema = @Schema(implementation = Usuario.class)))
-  @PostMapping("/cadastro")
-  public ResponseEntity<Usuario> cadastro(@RequestBody Usuario usuario) {
-    Usuario novoUsuario = repository.save(usuario);
-    return ResponseEntity.ok(novoUsuario);
+  @PostMapping("/cadastrar")
+  public ResponseEntity<ResponseDTO> cadastrar(@RequestBody RegisterRequestDTO body) {
+    if (repository.findByEmail(body.email()).orElse(null) != null) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
+
+    Usuario novoUsuario = new Usuario();
+    novoUsuario.setNome(body.nome());
+    novoUsuario.setEmail(body.email());
+    novoUsuario.setSenha(passwordEncoder.encode(body.senha()));
+
+    repository.save(novoUsuario);
+
+    ResponseDTO response =
+      new ResponseDTO(novoUsuario.getNome(), novoUsuario.getEmail(), null);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
 
@@ -49,20 +71,20 @@ public class UsuarioController {
   @ApiResponse(responseCode = "200", description = "Usuário logado com sucesso",
           content = @Content(mediaType = "application/json", schema = @Schema(implementation = Usuario.class)))
   @PostMapping("/login")
-  public ResponseEntity<Usuario> login(@RequestBody Map<String, String> credenciais) {
-    Usuario usuario = repository.findByEmail(credenciais.get("email"));
+  public ResponseEntity<ResponseDTO> login(@RequestBody LoginRequestDTO body) {
+    Usuario usuario = repository.findByEmail(body.email()).orElse(null);
 
     if (usuario == null) {
-      return ResponseEntity.status(404).build();
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
-    if (!usuario.getSenha().equals(credenciais.get("senha"))) {
-      return ResponseEntity.status(401).build();
+    if (!passwordEncoder.matches(body.senha(), usuario.getSenha())) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    return ResponseEntity.ok(usuario);
+    String token = tokenService.generateToken(usuario);
+    ResponseDTO response =
+      new ResponseDTO(usuario.getNome(), usuario.getEmail(), token);
+    return ResponseEntity.ok(response);
   }
-
-
-
 }

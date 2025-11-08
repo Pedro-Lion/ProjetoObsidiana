@@ -1,7 +1,9 @@
 package com.example.crudObsidiana.controller;
 
+import com.example.crudObsidiana.dto.ServicoDTO;
 import com.example.crudObsidiana.model.Servico;
 import com.example.crudObsidiana.repository.ServicoRepository;
+import com.example.crudObsidiana.service.ServicoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -9,6 +11,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,14 +29,21 @@ public class ServicoController {
         this.repository = repository;
     }
 
-    @Operation(summary = "Cadastra um novo serviço")
-    @ApiResponse(responseCode = "200", description = "Serviço criado com sucesso",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = Servico.class)))
+    @Autowired
+    private ServicoService servicoService;
+
+    @Operation(summary = "Cadastra um novo serviço com equipamentos")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Serviço criado com sucesso",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Servico.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos")
+    })
     @PostMapping
-    public ResponseEntity<Servico> create(@RequestBody Servico servico) {
-        Servico salvo = repository.save(servico);
-        return ResponseEntity.ok(salvo);
+    public ResponseEntity<Servico> criarServico(@RequestBody ServicoDTO dto) {
+        Servico servicoCriado = servicoService.criarServico(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(servicoCriado);
     }
+
 
     @Operation(summary = "Lista todos os serviços")
     @ApiResponse(responseCode = "200", description = "Lista de serviços retornada com sucesso",
@@ -85,4 +96,6 @@ public class ServicoController {
         }
         return ResponseEntity.notFound().build();
     }
+
+
 }

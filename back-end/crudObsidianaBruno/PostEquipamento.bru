@@ -1,7 +1,7 @@
 meta {
   name: PostEquipamento
   type: http
-  seq: 3
+  seq: 2
 }
 
 post {
@@ -12,12 +12,15 @@ post {
 
 body:json {
   {
-    "nome":"Câmera Canon 20mm",
-    "quantidade": 1,
-    "valor": 15
+    "nome": "Câmera Sony A7SIII",
+    "quantidade": 10,
+    "quantidadeDisponivel": 10,
+    "valorPorHora": 250
   }
+  
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }
