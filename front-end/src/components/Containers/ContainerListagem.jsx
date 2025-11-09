@@ -51,20 +51,22 @@ export function ContainerListagem({ titulo = "Nome do item" }) {
             </style>
             <div className="container-item-lista">
                 <div className="flex flex-row justify-between items-baseline bg-violet-200 px-10 py-1.5 mb-5">
-                    <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-xl leading-5.5 font-bold uppercase">
+                    <label className="text-slate-700 text-xl leading-5.5 font-bold uppercase">
                         {titulo}
                     </label>
-                    <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-[1.1rem] w-fit leading-5.5 uppercase">
+                    <label className="text-slate-700 text-[1.1rem] w-fit leading-5.5 uppercase">
                         Câmeras digitais
                     </label>
-                    <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-[1.1rem] w-fit leading-5.5">
+                    <label className="text-slate-700 text-[1.1rem] w-fit leading-5.5">
                         <b>5</b> disponíveis
                     </label>
                 </div>
                     <div className="flex flex-row justify-between items-start
                     w-full
                     px-7
-                    lg:gap-10
+                    gap-10 max-md:gap-5
+                    max-md:bg-amber-400
+                    lg:bg-transparent
                     ">
                         <Foto tamanho="6" />
                         <div className="estilo-campos">
@@ -107,7 +109,7 @@ export function ContainerListagem({ titulo = "Nome do item" }) {
                                 R$800,00
                             </label>
                         </div>
-                        <div className="flex flex-col gap-3 lg:max-w-[45%] sm:max-w-[25%]">
+                        <div className="flex flex-col gap-3 lg:max-w-[45%] max-md:max-w-[25%]">
                             <label className="estilo-titulo-campo w-fit max-w-3/5">
                                 Observações
                             </label>
@@ -117,17 +119,17 @@ export function ContainerListagem({ titulo = "Nome do item" }) {
                         </div>
                         <div className="border-l-1 border-violet-200
                         flex flex-row self-center
-                        lg:pl-9 sm:pl-4
-                        lg:gap-9 sm:gap-4">
+                        lg:pl-9 max-md:pl-4
+                        lg:gap-9 max-md:gap-4">
                             <i className="bi bi-pencil-square
                         text-slate-700 self-center
                         cursor-pointer hover:text-indigo-300
-                        lg:text-3xl sm:text-2xl
+                        lg:text-3xl max-md:text-xl
                         "></i>
                             <i className="bi bi-trash3
                         text-slate-700 self-center
                         cursor-pointer hover:text-indigo-300
-                        lg:text-3xl sm:text-2xl
+                        lg:text-3xl max-md:text-xl
                         "></i>
                         </div>
                 </div>
