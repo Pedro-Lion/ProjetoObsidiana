@@ -5,7 +5,7 @@ import { Erro404 } from "./routes/Erro404";
 import { Login } from "./routes/Login";
 
 import { Home } from "./routes/Home";
-import { Novo } from "./routes/Novo";
+import { CadastroGenerico } from "./routes/CadastroGenerico";
 import { Equipamentos } from "./routes/Equipamentos";
 import { CadastroEquipamentos } from "./routes/CadastroEquipamento";
 import { Servicos } from "./routes/Servicos";
@@ -26,8 +26,8 @@ export const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "/novo/:item",
-        element: <Novo />,
+        path: "/cadastro/:item",
+        element: <CadastroGenerico />,
       },
       {
         path: "/equipamentos",
