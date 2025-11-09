@@ -3,7 +3,7 @@ import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { useEffect, useState } from "react";
-import { CadastroEquipamento } from "../components/Modal/CadastroEquipamento";
+import { Modal } from "../components/Modal/Modal.jsx";
 
 export function Equipamentos() {
   const [equipamentos, setEquipamentos] = useState("Buscando equipamentos...");
@@ -20,7 +20,7 @@ export function Equipamentos() {
 
         if (resposta.ok) {
           const dados = await resposta.json();
-          
+
           setEquipamentos(
             dados.map((equip) => (
               <div className="pr-5 flex items-center" key={equip.id}>
@@ -40,7 +40,14 @@ export function Equipamentos() {
 
   return (
     <>
-      {modal && <CadastroEquipamento funcaoCancelar={() => setModal(false)} />}
+      {modal && (
+        <Modal
+          titulo="Ocorreu um erro"
+          descricao="Ocorreu um erro deconhecido. Por favor, tente novamente mais tarde"
+        >
+          <BotaoPrimario titulo="Fechar" className="mb-0 mt-0" onClick={() => setModal(false)} />
+        </Modal>
+      )}
 
       <h1 className="text-4xl font-medium">Equipamentos</h1>
 
