@@ -1,0 +1,66 @@
+// Bootstrap Custom - Somente mixins, variáveis e breakpoints.
+
+// Importa base do Bootstrap via alias
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/mixins";
+@import "~bootstrap/scss/mixins/breakpoints";
+
+// (Opcional) Se quiser alinhar breakpoints com Tailwind, descomenta e ajusta:
+/*
+$grid-breakpoints: (
+  xs: 0,
+  sm: 640px,
+  md: 768px,
+  lg: 1024px,
+  xl: 1280px,
+  xxl: 1536px
+);
+*/
+
+// Expor como CSS vars pra usar no JS/CSS se quiser
+:root {
+  --bs-breakpoint-xs: #{map-get($grid-breakpoints, xs)};
+  --bs-breakpoint-sm: #{map-get($grid-breakpoints, sm)};
+  --bs-breakpoint-md: #{map-get($grid-breakpoints, md)};
+  --bs-breakpoint-lg: #{map-get($grid-breakpoints, lg)};
+  --bs-breakpoint-xl: #{map-get($grid-breakpoints, xl)};
+  --bs-breakpoint-xxl: #{map-get($grid-breakpoints, xxl)};
+}
+
+// Exemplo de uso dos mixins de breakpoint
+.example-responsive {
+  width: 8rem;
+
+  @include media-breakpoint-down(sm) {
+    width: 6rem;
+  }
+
+  @include media-breakpoint-up(lg) {
+    width: 10rem;
+  }
+}
+
+// Scrollbar custom SEM depender de arquivo do Bootstrap
+// (classe opt-in que você usa só onde quiser)
+.scrollable {
+  overflow-y: auto;
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #c084fc #f5f3ff;
+
+  /* WebKit (Chrome, Edge, etc.) */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f5f3ff;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c084fc;
+    border-radius: 999px;
+  }
+}
