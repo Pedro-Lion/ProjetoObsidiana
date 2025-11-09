@@ -9,14 +9,14 @@ export function Modal({ titulo, descricao, children }) {
         }}
         className="
           absolute top-1/2 left-1/2 overflow-y-scroll
-          border-box w-[80%] max-w-220 h-fit min-h-75 max-h-110 p-10
+          border-box w-[80%] max-w-220 h-fit min-h-75 p-10
           flex flex-col justify-between
           bg-white rounded-2xl shadow-xl border border-gray-300
         "
       >
         <div>
           <h2>{titulo}</h2>
-          <p className="text-2xl mt-4">{descricao}</p>
+          <p className="my-5 text-2xl">{descricao}</p>
         </div>
 
         <div className="flex items-center">
