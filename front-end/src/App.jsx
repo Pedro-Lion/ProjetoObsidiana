@@ -3,9 +3,18 @@ import { Navbar } from "./components/Navbar/Navbar.jsx";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Foto } from "./components/Foto.jsx"
 import "./App.css";
+import { Login } from './routes/Login.jsx';
+import { useEffect } from 'react';
 
 export function App() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if(!sessionStorage.getItem("token")) {
+      alert("Faça login para usar a aplicação!")
+      navigate("/login");
+    }
+  }, []) 
 
   return (
     <>

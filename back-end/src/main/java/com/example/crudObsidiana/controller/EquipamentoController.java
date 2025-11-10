@@ -1,7 +1,9 @@
 package com.example.crudObsidiana.controller;
 
+import com.example.crudObsidiana.dto.EquipamentoDTO;
 import com.example.crudObsidiana.model.Equipamento;
 import com.example.crudObsidiana.repository.EquipamentoRepository;
+import com.example.crudObsidiana.service.EquipamentoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -9,6 +11,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,14 +29,21 @@ public class EquipamentoController {
         this.repository = repository;
     }
 
-    @Operation(summary = "Cadastra um novo equipamento")
-    @ApiResponse(responseCode = "200", description = "Equipamento criado com sucesso",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = Equipamento.class)))
+    @Autowired
+    private EquipamentoService equipamentoService;
+
+    @Operation(summary = "Cadastra um novo equipamento multimídia")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Equipamento criado com sucesso",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Equipamento.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos")
+    })
     @PostMapping
-    public ResponseEntity<Equipamento> create(@RequestBody Equipamento equipamento) {
-        Equipamento salvo = repository.save(equipamento);
-        return ResponseEntity.ok(salvo);
+    public ResponseEntity<Equipamento> criarEquipamento(@RequestBody EquipamentoDTO dto) {
+        Equipamento equipamentoCriado = equipamentoService.criarEquipamento(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(equipamentoCriado);
     }
+
 
     @Operation(summary = "Lista todos os equipamentos")
     @ApiResponse(responseCode = "200", description = "Lista de equipamentos retornada com sucesso",
