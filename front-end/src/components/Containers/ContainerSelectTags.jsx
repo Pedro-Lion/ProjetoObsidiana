@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Select, { components } from "react-select";
 
-export function ContainerSelectTags({placeholder="Selecione",titulo}) {
+export function ContainerSelectTags({placeholder="Selecione",titulo, props}) {
   const [itensSelecionados, setItensSelecionados] = useState([]);
 
   const itens = [
@@ -11,6 +11,8 @@ export function ContainerSelectTags({placeholder="Selecione",titulo}) {
     { value: "ursula", label: "Úrsula" },
     { value: "eric", label: "Príncipe Eric" },
   ];
+
+  // const itens = [props.listaItens];
 
   const handleRemove = (removerEste) => {
     setItensSelecionados((prev) =>

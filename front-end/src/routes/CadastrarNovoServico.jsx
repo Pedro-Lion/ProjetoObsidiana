@@ -39,7 +39,8 @@ export function CadastrarNovoServico() {
                 <div className="w-full mt-10">
                     <ContainerSelectTags
                         titulo="Equipamentos"
-                        placeholder="Escolha uma opção" />
+                        placeholder="Escolha uma opção" 
+                        listaItens = {[]}/>
                 </div>
                 <div className="w-full mt-10">
                     <ContainerSelectTags
