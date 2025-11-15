@@ -12,6 +12,10 @@ public class OrcamentoService {
     @Autowired
     private OrcamentoRepository orcamentoRepository;
 
+    public OrcamentoService(OrcamentoRepository orcamentoRepository) {
+        this.orcamentoRepository = orcamentoRepository;
+    }
+
     public Orcamento criarOrcamento(OrcamentoDTO dto) {
         Orcamento orcamento = new Orcamento();
         orcamento.setDescricao(dto.getDescricao());

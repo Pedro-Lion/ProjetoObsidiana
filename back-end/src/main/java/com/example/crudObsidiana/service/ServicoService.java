@@ -20,7 +20,12 @@ import java.util.List;
         @Autowired
         private EquipamentoRepository equipamentoRepository;
 
-        public Servico criarServico(ServicoDTO dto) {
+    public ServicoService(ServicoRepository servicoRepository, EquipamentoRepository equipamentoRepository) {
+        this.servicoRepository = servicoRepository;
+        this.equipamentoRepository = equipamentoRepository;
+    }
+
+    public Servico criarServico(ServicoDTO dto) {
             Servico servico = new Servico();
             servico.setNome(dto.getNome());
             servico.setDescricao(dto.getDescricao());

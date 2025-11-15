@@ -27,6 +27,13 @@ public class UsoEquipamentoService {
     @Autowired
     private ServicoRepository servicoRepository;
 
+    public UsoEquipamentoService(UsoEquipamentoRepository usoEquipamentoRepository, EquipamentoRepository equipamentoRepository, OrcamentoRepository orcamentoRepository, ServicoRepository servicoRepository) {
+        this.usoEquipamentoRepository = usoEquipamentoRepository;
+        this.equipamentoRepository = equipamentoRepository;
+        this.orcamentoRepository = orcamentoRepository;
+        this.servicoRepository = servicoRepository;
+    }
+
     public UsoEquipamento registrarUso(UsoEquipamentoDTO dto) {
         Equipamento equipamento = equipamentoRepository.findById(dto.getIdEquipamento())
                 .orElseThrow(() -> new RuntimeException("Equipamento não encontrado (ID: " + dto.getIdEquipamento() + ")"));

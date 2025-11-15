@@ -24,7 +24,7 @@ public class EquipamentoDTO {
     private String modelo;
 
     @Schema(description = "Valor unitário por hora", example = "1200")
-    private int valorPorHora;
+    private Double valorPorHora;
 
     public String getNome() {
         return nome;
@@ -74,11 +74,11 @@ public class EquipamentoDTO {
         this.modelo = modelo;
     }
 
-    public int getValorPorHora() {
+    public double getValorPorHora() {
         return valorPorHora;
     }
 
-    public void setValorPorHora(int valorPorHora) {
+    public void setValorPorHora(Double valorPorHora) {
         this.valorPorHora = valorPorHora;
     }
 }

@@ -39,7 +39,7 @@ public class Equipamento {
     private String modelo;
 
     @Schema(description = "Valor unitário em reais", example = "1200")
-    private int valorPorHora;
+    private double valorPorHora;
 
     @ManyToMany(mappedBy = "equipamentos")
     private List<Servico> servicos = new ArrayList<>();
@@ -105,10 +105,10 @@ public class Equipamento {
     public void setModelo(String modelo) {
         this.modelo = modelo;
     }
-    public int getValorPorHora() {
+    public double getValorPorHora() {
         return valorPorHora;
     }
-    public void setValorPorHora(int valorPorHora) {
+    public void setValorPorHora(Double valorPorHora) {
         this.valorPorHora = valorPorHora;
     }
     public int getQuantidadeDisponivel() { return quantidadeDisponivel; }
