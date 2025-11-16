@@ -137,8 +137,8 @@ export function AplicacaoComponentes() {
           <span className="font-medium">Itens selecionados:</span>
 
           <ul className="list-disc list-inside">
-            {itensSelecionados.map((i) => (
-              <li>{i.label}</li>
+            {itensSelecionados.map((item, index) => (
+              <li key={index}>{item.label}</li>
             ))}
           </ul>
         </div>
