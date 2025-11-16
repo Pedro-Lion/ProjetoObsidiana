@@ -1,22 +1,20 @@
-import React, { useState } from "react";
-import Select, { components } from "react-select";
+import { useState } from "react";
+import Select from "react-select";
 
-export function ContainerSelectTags({placeholder="Selecione",titulo}) {
+export function ContainerSelectTags({titulo = "Container", placeholder="Escolha uma opção", itens = [{value: "", label: ""}], onChange}) {
   const [itensSelecionados, setItensSelecionados] = useState([]);
 
-  const itens = [
-    { value: "ariel", label: "Ariel" },
-    { value: "sebastian", label: "Sebastião" },
-    { value: "flounder", label: "Linguado" },
-    { value: "ursula", label: "Úrsula" },
-    { value: "eric", label: "Príncipe Eric" },
-  ];
-
   const handleRemove = (removerEste) => {
-    setItensSelecionados((prev) =>
-      prev.filter((opt) => opt.value !== removerEste.value)
-    );
+    const itens = itensSelecionados.filter((item) => item.value !== removerEste.value)
+
+    setItensSelecionados(itens);
+    if (onChange) onChange(itens)
   };
+
+  function handleChange(itens) {
+    setItensSelecionados(itens)
+    if (onChange) onChange(itens)
+  }
 
   const MultiValue = () => null;
 
@@ -95,7 +93,7 @@ export function ContainerSelectTags({placeholder="Selecione",titulo}) {
         isSearchable
         options={itens}
         value={itensSelecionados}
-        onChange={setItensSelecionados}
+        onChange={handleChange}
         placeholder={placeholder}
         closeMenuOnSelect={true}
         components={{ MultiValue }}
