@@ -1,4 +1,4 @@
-export function BotaoSecundario({ titulo = "Clique aqui", className = "w-32", onClick = undefined }) {
+export function BotaoSecundario({ titulo = "Clique aqui", icone = "", className = "w-32", onClick = undefined }) {
     return (
         <button type="button" className={`
         ${className}
@@ -11,6 +11,7 @@ export function BotaoSecundario({ titulo = "Clique aqui", className = "w-32", on
         `}
         onClick={onClick}
         >
+            <i className={icone + " mr-3"}></i>
             {titulo}
         </button>
     )
