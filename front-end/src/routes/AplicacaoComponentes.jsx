@@ -1,14 +1,19 @@
-import { BotaoBordaGradiente } from "../components/Buttons/BotaoBordaGradiente";
-import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
-import { InputFundoCor } from "../components/Inputs/InputFundoCor";
-import { InputFoto } from "../components/Inputs/InputFoto";
-import { InputCheckbox } from "../components/Inputs/InputCheckbox";
+import { useState } from "react";
+
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
-import { ContainerSelectTags } from "../components/Containers/ContainerSelectTags";
-import { ContainerListagem } from "../components/Containers/ContainerListagem";
+import { BotaoBordaGradiente } from "../components/Buttons/BotaoBordaGradiente";
+
+import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
-import { useState } from "react";
+import { InputFundoCor } from "../components/Inputs/InputFundoCor";
+import { InputCheckbox } from "../components/Inputs/InputCheckbox";
+import { InputFoto } from "../components/Inputs/InputFoto";
+
+import { ContainerListagem } from "../components/Containers/ContainerListagem";
+import { ContainerSelectTags } from "../components/Containers/ContainerSelectTags";
+
+import { CardServico } from "../components/Cards/CardServico";
 
 export function AplicacaoComponentes() {
   // botões
@@ -38,24 +43,24 @@ export function AplicacaoComponentes() {
     setUrlImagem(url);
   }
 
-  // contariner equipamento
-  function clickContainer(texto) {
+  // contariner equipamento e cards
+  function clickContainer(funcao, tipo) {
     let mensagem = "";
-    
-    if (texto == "editar") {
-      mensagem = "Esse botão deveria fazer uma navegação para a tela de editar um equipamento!";
+
+    if (funcao == "editar") {
+      mensagem = `Esse botão deveria fazer uma navegação para a tela de editar um ${tipo}!`;
     } else {
-      mensagem = "Esse botão deveria abrir um modal para confirmar a remoção do equipamento!"
+      mensagem = `Esse botão deveria abrir um modal para confirmar a remoção do ${tipo}!`;
     }
 
-    alert(mensagem)
+    alert(mensagem);
   }
 
   // container tags
   const [itensSelecionados, setItensSelecionados] = useState([]);
 
   return (
-    <main className="w-full p-3 bg-white flex flex-col gap-15">
+    <main className="w-full p-6 overflow-y-scroll bg-white flex flex-col gap-15">
       <section>
         <h2>Botões</h2>
 
@@ -118,8 +123,8 @@ export function AplicacaoComponentes() {
 
         <ContainerListagem
           titulo="Câmera 01"
-          onClickEdit={() => clickContainer("editar")}
-          onClickDel={() => clickContainer("remover")}
+          onClickEdit={() => clickContainer("editar", "equipamento")}
+          onClickDel={() => clickContainer("", "equipamento")}
         />
 
         <ContainerSelectTags
@@ -142,6 +147,15 @@ export function AplicacaoComponentes() {
             ))}
           </ul>
         </div>
+      </section>
+
+      <section>
+        <h2>Cards</h2>
+
+        <CardServico
+          onClickEdit={() => clickContainer("editar", "serviço")}
+          onClickDel={() => clickContainer("", "serviço")}
+        />
       </section>
     </main>
   );
