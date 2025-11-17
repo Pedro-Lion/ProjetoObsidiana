@@ -1,6 +1,17 @@
 import { Foto } from "../Foto";
 
-export function ContainerListagem({ titulo = "Nome do item", onClickEdit, onClickDel }) {
+export function ContainerListagem({
+  dados = {
+    nome: "Câmera 01",
+    quantidade: 5,
+    categoria: "Gravação",
+    marca: "Sony",
+    modelo: "C9-20mm DisplayHD",
+    numeroSerie: "N00123",
+    valorPorHora: 25.5,
+  },
+  onClickEdit, onClickDel
+}) {
   return (
     <div
       style={{
@@ -11,16 +22,16 @@ export function ContainerListagem({ titulo = "Nome do item", onClickEdit, onClic
         borderRadius: "0.5rem",
       }}
     >
-      <div className="flex flex-row justify-between items-baseline bg-violet-200 px-10 py-1.5 mb-5">
+      <div className="flex justify-between items-baseline bg-violet-200 px-10 py-1.5 mb-5">
         <label className="text-slate-700 text-xl font-bold leading-5.5 uppercase">
-          {titulo}
+          {dados.nome}
         </label>
 
         <label className="text-slate-700 text-[1.1rem] w-fit leading-5.5 uppercase">
-          Câmeras digitais
+          {dados.categoria}
         </label>
         <label className="text-slate-700 text-[1.1rem] w-fit leading-5.5">
-          <b>5</b> disponíveis
+          <b>{dados.quantidade}</b> disponíveis
         </label>
       </div>
       <div className="flex flex-row items-center gap-10 my-3 justify-start px-10">
@@ -31,7 +42,7 @@ export function ContainerListagem({ titulo = "Nome do item", onClickEdit, onClic
               Marca
             </label>
             <label className="text-slate-700 text-[1.1rem] leading-5.5">
-              Nome da Marca
+              {dados.marca}
             </label>
           </div>
           <div className="flex flex-col gap-3 max-w-[15%]">
@@ -39,7 +50,7 @@ export function ContainerListagem({ titulo = "Nome do item", onClickEdit, onClic
               Modelo
             </label>
             <label className="text-slate-700 text-[1.1rem] leading-5.5">
-              SEL135F18GM
+              {dados.modelo}
             </label>
           </div>
           <div className="flex flex-col gap-3 max-w-[15%]">
@@ -47,7 +58,7 @@ export function ContainerListagem({ titulo = "Nome do item", onClickEdit, onClic
               NºSerie
             </label>
             <label className="text-slate-700 text-[1.1rem] leading-5.5">
-              AB1AB123456
+              {dados.numeroSerie}
             </label>
           </div>
           <div className="flex flex-col gap-3 max-w-[15%]">
@@ -55,10 +66,10 @@ export function ContainerListagem({ titulo = "Nome do item", onClickEdit, onClic
               Valor/hora
             </label>
             <label className="text-slate-700 text-[1.1rem] leading-5.5">
-              R$100,00
+              {dados.valorPorHora}
             </label>
           </div>
-          <div className="flex flex-col gap-3 max-w-[15%]">
+          {/* <div className="flex flex-col gap-3 max-w-[15%]">
             <label className="text-slate-700 text-[1.1rem] font-medium leading-5.5">
               Diária
             </label>
@@ -73,7 +84,7 @@ export function ContainerListagem({ titulo = "Nome do item", onClickEdit, onClic
             <label className="text-slate-700 text-[1.1rem] w-auto leading-5.5">
               Máquina fotográfica específica para gravações diúrnas.
             </label>
-          </div>
+          </div> */}
           <div
             className="h-15 border-l-1 border-violet-200 pl-9
             flex flex-row gap-9 self-center"
