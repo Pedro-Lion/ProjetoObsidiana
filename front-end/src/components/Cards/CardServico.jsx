@@ -35,8 +35,7 @@ export function CardServico({
       },
     ],
   },
-  onClickEdit,
-  onClickDel,
+  onClickEdit, onClickDel,
 }) {
   const formatarValor = new Intl.NumberFormat("pt-br", {
     style: "currency",
@@ -45,8 +44,8 @@ export function CardServico({
     maximumFractionDigits: 2,
   }).format;
 
-  const equipamentos = dados.equipamentos.map((e) => (
-    <li className="p-2.5 flex justify-between items-center bg-violet-200 rounded-md text-xl">
+  const equipamentos = dados.equipamentos.map((e,i) => (
+    <li key={i} className="p-2.5 flex justify-between items-center bg-violet-200 rounded-md text-xl">
       <Foto tamanho="3.5" icone="bi bi-camera text-[2rem]" />
       <span className="ml-3">{e.nome}</span>
       <span className="m-auto">{e.categoria}</span>
@@ -66,8 +65,12 @@ export function CardServico({
     <div className="w-120 h-160 flex flex-col border rounded-xl">
       <div className="p-4 border-b">
         <div className="flex justify-between">
-          <span className="text-4xl font-medium flex-none">{dados.nome}</span>
-          <span className="text-2xl">{formatarValor(dados.valorPorHora + valorEquipamentos)}</span>
+          <span className="text-4xl font-medium">
+            {dados.nome}
+          </span>
+          <span className="text-2xl">
+            {formatarValor(dados.valorPorHora + valorEquipamentos)}
+          </span>
         </div>
         <p className="mt-4 text-xl">{dados.descricao}</p>
       </div>
