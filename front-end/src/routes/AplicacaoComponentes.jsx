@@ -14,6 +14,7 @@ import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { ContainerSelectTags } from "../components/Containers/ContainerSelectTags";
 
 import { CardServico } from "../components/Cards/CardServico";
+import { CardOrcamento } from "../components/Cards/CardOrcamento";
 
 export function AplicacaoComponentes() {
   // botões
@@ -150,12 +151,19 @@ export function AplicacaoComponentes() {
       </section>
 
       <section>
-        <h2>Cards</h2>
+        <h2 className="mb-3">Cards</h2>
 
-        <CardServico
-          onClickEdit={() => clickContainer("editar", "serviço")}
-          onClickDel={() => clickContainer("", "serviço")}
-        />
+        <div className="flex flex-wrap gap-7">
+          <CardServico
+            onClickEdit={() => clickContainer("editar", "serviço")}
+            onClickDel={() => clickContainer("", "serviço")}
+          />
+
+          <CardOrcamento
+            onClickEdit={() => clickContainer("editar", "serviço")}
+            onClickDel={() => clickContainer("", "serviço")}
+          />
+        </div>
       </section>
     </main>
   );
