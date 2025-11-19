@@ -4,6 +4,7 @@ import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { useEffect, useState } from "react";
 import { Modal } from "../components/Modal/Modal.jsx";
+import { api } from "../api.js";
 
 export function Equipamentos() {
   const [equipamentos, setEquipamentos] = useState("Buscando equipamentos...");
@@ -12,20 +13,16 @@ export function Equipamentos() {
   useEffect(() => {
     async function buscarEquipamentos(params) {
       try {
-        const resposta = await fetch("http://localhost:8080/equipamento", {
-          headers: {
-            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-          },
-        });
+        const resposta = await api.get("/equipamento");
 
-        if (resposta.ok) {
-          const dados = await resposta.json();
+        if (resposta.status == 200) {
+          const dados = resposta.data;
 
           setEquipamentos(
             dados.map((equip) => (
               <div className="pr-5 flex items-center" key={equip.id}>
                 <InputCheckbox className="mr-3" />
-                <ContainerListagem titulo={equip.nome} />
+                <ContainerListagem dados={equip} />
               </div>
             ))
           );
@@ -45,7 +42,11 @@ export function Equipamentos() {
           titulo="Ocorreu um erro"
           descricao="Ocorreu um erro deconhecido. Por favor, tente novamente mais tarde"
         >
-          <BotaoPrimario titulo="Fechar" className="mb-0 mt-0" onClick={() => setModal(false)} />
+          <BotaoPrimario
+            titulo="Fechar"
+            className="mb-0 mt-0"
+            onClick={() => setModal(false)}
+          />
         </Modal>
       )}
 
