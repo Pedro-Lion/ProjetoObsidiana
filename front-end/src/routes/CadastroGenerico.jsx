@@ -1,9 +1,9 @@
 import { useParams } from "react-router-dom"
 
-export function Novo() {
+export function CadastroGenerico() {
   const { item } = useParams()
 
   return (
-    <h1 className="text-2xl">Novo {item}</h1>
+    <h1 className="text-2xl">Cadastrar {item}</h1>
   )
 }

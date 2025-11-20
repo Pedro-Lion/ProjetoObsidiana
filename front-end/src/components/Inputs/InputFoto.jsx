@@ -9,7 +9,7 @@ export function InputFoto({ onChange, icone = "bi bi-camera", tamanho = "8" }) {
 
         const imageUrl = URL.createObjectURL(file);
         setPreview(imageUrl);
-        if (onChange) onChange(file);
+        if (onChange) onChange(e);
     }
 
     return (
@@ -42,7 +42,7 @@ export function InputFoto({ onChange, icone = "bi bi-camera", tamanho = "8" }) {
             <input
                 id="avatarUpload"
                 type="file"
-                accept="image/*"
+                accept=".png, .jpg, .jpeg"
                 onChange={handleFileChange}
                 className="hidden"
             />

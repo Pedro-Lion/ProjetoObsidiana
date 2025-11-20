@@ -3,27 +3,26 @@ import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { useEffect, useState } from "react";
+import { Modal } from "../components/Modal/Modal.jsx";
+import { api } from "../api.js";
 
 export function Equipamentos() {
   const [equipamentos, setEquipamentos] = useState("Buscando equipamentos...");
+  const [modal, setModal] = useState(false);
 
   useEffect(() => {
     async function buscarEquipamentos(params) {
       try {
-        const resposta = await fetch("http://localhost:8080/equipamento", {
-          headers: {
-            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-          },
-        });
+        const resposta = await api.get("/equipamento");
 
-        if (resposta.ok) {
-          const dados = await resposta.json();
-          
+        if (resposta.status == 200) {
+          const dados = resposta.data;
+
           setEquipamentos(
             dados.map((equip) => (
               <div className="pr-5 flex items-center" key={equip.id}>
                 <InputCheckbox className="mr-3" />
-                <ContainerListagem titulo={equip.nome} />
+                <ContainerListagem dados={equip} />
               </div>
             ))
           );
@@ -38,6 +37,19 @@ export function Equipamentos() {
 
   return (
     <>
+      {modal && (
+        <Modal
+          titulo="Ocorreu um erro"
+          descricao="Ocorreu um erro deconhecido. Por favor, tente novamente mais tarde"
+        >
+          <BotaoPrimario
+            titulo="Fechar"
+            className="mb-0 mt-0"
+            onClick={() => setModal(false)}
+          />
+        </Modal>
+      )}
+
       <h1 className="text-4xl font-medium">Equipamentos</h1>
 
       <div className="mt-3 flex justify-between">
@@ -53,6 +65,7 @@ export function Equipamentos() {
         <BotaoPrimario
           titulo="+ Novo equipamento"
           className="mt-0 mb-0 mr-5 flex-none"
+          onClick={() => setModal(true)}
         />
       </div>
 

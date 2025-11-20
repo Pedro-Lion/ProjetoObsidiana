@@ -1,4 +1,4 @@
-export function BotaoPrimario({ titulo = "Clique aqui", className = "w-32" }) {
+export function BotaoPrimario({ titulo = "Clique aqui", icone = "", className = "w-32", onClick = undefined }) {
     return (
         <button type="button" className={`
         ${className}
@@ -10,7 +10,10 @@ export function BotaoPrimario({ titulo = "Clique aqui", className = "w-32" }) {
         hover:text-shadow-2xs
         hover:text-shadow-indigo-400
         hover:bg-gradient-to-r hover:from-indigo-300 hover: via-violet-300 hover:to-indigo-100
-        `}>
+        `}
+        onClick={onClick}
+        >
+            <i className={icone + " mr-3"}></i>
             {titulo}
         </button>
     )
