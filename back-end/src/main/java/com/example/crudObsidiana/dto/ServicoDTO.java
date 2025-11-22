@@ -20,7 +20,7 @@ public class ServicoDTO {
     private int valorPorHora;
 
     @Schema(description = "Lista de IDs dos equipamentos usados", example = "[1, 2, 3]")
-    private List<Long> equipamentosIds;
+    private List<Long> equipamentos;
 
     public String getNome() {
         return nome;
@@ -54,11 +54,11 @@ public class ServicoDTO {
         this.valorPorHora = valorPorHora;
     }
 
-    public List<Long> getEquipamentosIds() {
-        return equipamentosIds;
+    public List<Long> getEquipamentos() {
+        return equipamentos;
     }
 
-    public void setEquipamentosIds(List<Long> equipamentosIds) {
-        this.equipamentosIds = equipamentosIds;
+    public void setEquipamentos(List<Long> equipamentos) {
+        this.equipamentos = equipamentos;
     }
 }

@@ -44,6 +44,9 @@ public class Equipamento {
     @ManyToMany(mappedBy = "equipamentos")
     private List<Servico> servicos = new ArrayList<>();
 
+    @ManyToMany(mappedBy = "equipamentos")
+    private List<Orcamento> orcamentos = new ArrayList<>();
+
 
     //CONSTRUCTORS
     public Equipamento() {}
