@@ -57,6 +57,38 @@ export function AplicacaoComponentes() {
     alert(mensagem);
   }
 
+  const dadosCardServico = {
+    nome: "Serviço 1",
+    descricao: "Descrição do serviço",
+    valorPorHora: 200.3,
+    equipamentos: [],
+  };
+
+  const dadosCardOrcamento = {
+    id: 1,
+    status: "Confirmado",
+    dataEvento: "2025-11-05",
+    localEvento: "Estúdio Principal",
+    duracaoEvento: 8,
+    descricao: "Gravação de videoclipe publicitário",
+    servicos: [],
+  };
+
+  for (let numero = 1; numero <= 6; numero++) {
+    if (numero <= 5) {
+      dadosCardServico.equipamentos.push({
+        nome: "Câmera 0" + numero,
+        categoria: "Fotografia",
+        valorPorHora: 20,
+      });
+    }
+
+    dadosCardOrcamento.servicos.push({
+      nome: "Serviço " + numero,
+      valorPorHora: 100,
+    });
+  }
+
   // container tags
   const [itensSelecionados, setItensSelecionados] = useState([]);
 
@@ -155,11 +187,13 @@ export function AplicacaoComponentes() {
 
         <div className="flex flex-wrap gap-7">
           <CardServico
+            dados={dadosCardServico}
             onClickEdit={() => clickContainer("editar", "serviço")}
             onClickDel={() => clickContainer("", "serviço")}
           />
 
           <CardOrcamento
+            dados={dadosCardOrcamento}
             onClickEdit={() => clickContainer("editar", "serviço")}
             onClickDel={() => clickContainer("", "serviço")}
           />
