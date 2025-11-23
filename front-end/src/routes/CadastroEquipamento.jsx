@@ -10,17 +10,22 @@ export function CadastroEquipamentos() {
 
   const equipamento = {
     nome: "",
-    quantidade: null,
+    quantidade: 0,
     categoria: "",
     marca: "",
     numeroSerie: "",
     modelo: "",
-    valorPorHora: null,
+    valorPorHora: 0,
   };
 
   async function cadastrar() {
     try {
-      const request = await api.post("/equipamento", equipamento);
+      const request = await api.post("/equipamento", equipamento, {
+        headers: {
+          Authorization: "Bearer " + sessionStorage.getItem("token"),
+        },
+      });
+
       if (request.status == 201) {
         const confirmacao = confirm(
           "Cadastrado com sucesso! Quer retornar à lista de equipamentos?"
@@ -31,6 +36,7 @@ export function CadastroEquipamentos() {
         }
         return;
       }
+
       alert("Equipamento não pode ser cadastrado. Tente novamente.");
     } catch (error) {
       console.log(error);
@@ -86,6 +92,7 @@ export function CadastroEquipamentos() {
               titulo="Valor"
               type="number"
               placeholder="Ex: 150.00"
+              onInput={(e) => (equipamento.valorPorHora = e.target.value)}
             />
             <BotaoPrimario
               titulo="Cadastrar"
