@@ -40,7 +40,9 @@ public class OrcamentoService implements OrcamentoSubject {
         orcamento.setDuracaoEvento(dto.getDuracaoEvento());
         orcamento.setLocalEvento(dto.getLocalEvento());
         orcamento.setValorTotal(dto.getValorTotal());
-        orcamento.setStatus(dto.getStatus());
+        orcamento.setStatus("Em análise"); // Coloca um status padrão,
+        // pois o Observer só entra em ação quando o endpoint de status é chamado.
+        // Dessa forma, a qtd de equipamentos não é modificada na criação do orçamento, evitando falhas futuras.
 
         return orcamentoRepository.save(orcamento);
     }

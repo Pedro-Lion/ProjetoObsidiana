@@ -10,33 +10,42 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+// Esse Observer atualiza o estoque de equipamentos sempre que um orçamento entra ou sai do status "Confirmado".
 @Component
 public class EquipamentoObserver implements OrcamentoObserver {
 
     @Autowired
     private EquipamentoRepository equipamentoRepository;
-
     @Autowired
     private UsoEquipamentoRepository usoEquipamentoRepository;
-
     @Override
     public void onOrcamentoUpdated(Orcamento orcamento,
                                    String statusAnterior,
                                    String novoStatus) {
 
-        boolean eraConfirmado = "Confirmado".equalsIgnoreCase(statusAnterior);
-        boolean ehConfirmado  = "Confirmado".equalsIgnoreCase(novoStatus);
+        // Normaliza para evitar NullPointer
+        boolean eraConfirmado = "Confirmado".equalsIgnoreCase(
+                statusAnterior != null ? statusAnterior : ""
+        );
+        boolean ehConfirmado = "Confirmado".equalsIgnoreCase(
+                novoStatus != null ? novoStatus : ""
+        );
 
-        // Se não houve transição de "confirmado" <-> "não confirmado", não faz nada
+        // Se não houve transição relativa a "Confirmado", não mexe em estoque
         if (eraConfirmado == ehConfirmado) {
-            System.out.println("\n[Observer] Status mudou, mas não afetou estoque (sem transição de confirmação).");
+            System.out.printf(
+                    "\n[Observer] Orçamento %d teve status alterado ('%s' -> '%s'), " +
+                            "mas não houve transição de/para 'Confirmado'. Estoque inalterado.%n",
+                    orcamento.getId(), statusAnterior, novoStatus
+            );
             return;
         }
 
-        System.out.println("\n[Observer] Orçamento atualizado: " + orcamento.getId());
-        System.out.printf("Status: '%s' ➜ '%s'%n", statusAnterior, novoStatus);
+        System.out.println("\n[Observer] Atualização de orçamento detectada para estoque.");
+        System.out.printf("Orçamento ID: %d | Status: '%s' ➜ '%s'%n",
+                orcamento.getId(), statusAnterior, novoStatus);
 
-        // Busca todos os usos vinculados a esse orçamento
+        // Busca todos os usos de equipamento vinculados a esse orçamento
         List<UsoEquipamento> usos = usoEquipamentoRepository.findByOrcamento_Id(orcamento.getId());
 
         if (usos == null || usos.isEmpty()) {
@@ -44,15 +53,16 @@ public class EquipamentoObserver implements OrcamentoObserver {
             return;
         }
 
-        // Define se vamos reservar (reduzir) ou devolver (aumentar)
-        boolean reservar = !eraConfirmado && ehConfirmado;   // virou confirmado
-        boolean devolver = eraConfirmado && !ehConfirmado;   // deixou de ser confirmado
+        boolean reservar = !eraConfirmado && ehConfirmado;   // entrou em Confirmado
+        boolean devolver = eraConfirmado && !ehConfirmado;   // saiu de Confirmado
 
         for (UsoEquipamento uso : usos) {
             Long idEquipamento = uso.getEquipamento().getId();
+
             Equipamento eq = equipamentoRepository.findById(idEquipamento)
                     .orElseThrow(() -> new RuntimeException(
-                            "Equipamento não encontrado (ID: " + idEquipamento + ")"));
+                            "Equipamento não encontrado (ID: " + idEquipamento + ")"
+                    ));
 
             int antes = eq.getQuantidadeDisponivel();
             int quantidadeUsada = uso.getQuantidadeUsada();
@@ -70,6 +80,7 @@ public class EquipamentoObserver implements OrcamentoObserver {
             equipamentoRepository.save(eq);
         }
 
-        System.out.println("✅ Estoque atualizado com sucesso.\n");
+        System.out.println("Estoque de equipamentos atualizado com sucesso.\n");
     }
-}
+
+} // FIM CLASSE
