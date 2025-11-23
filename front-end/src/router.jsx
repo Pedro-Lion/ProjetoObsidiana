@@ -14,6 +14,7 @@ import { Orcamentos } from "./routes/Orcamentos";
 import { Profissionais } from "./routes/Profissionais";
 import { CadastroProfissionais } from "./routes/CadastroProfissionais";
 import { Perfil } from "./routes/Perfil";
+import { AplicacaoComponentes } from "./routes/AplicacaoComponentes";
 
 export const router = createBrowserRouter([
   {
@@ -47,7 +48,8 @@ export const router = createBrowserRouter([
       },
       {
         path: "/orcamentos",
-        element: <Orcamentos />,
+        // element: <Orcamentos />,
+        element: <AplicacaoComponentes/>
       },
       {
         path: "/profissionais",

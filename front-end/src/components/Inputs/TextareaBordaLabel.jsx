@@ -13,7 +13,7 @@ export function TextareaBordaLabel({titulo, placeholder = "Digite aqui", largura
           rows={rows}
           className="border-indigo-500 text-slate-700
         px-3 py-3 text-[1.1rem] bg-transparent border-1 rounded-lg        
-        focus:outline-none resize-none placeholder:text-black/25"
+        focus:outline-none placeholder:text-black/25"
         />
     </div>
   );

@@ -1,4 +1,4 @@
-export function BotaoSecundario({ titulo = "Clique aqui", className = "w-32" }) {
+export function BotaoSecundario({ titulo = "Clique aqui", className = "w-32", onClick = undefined }) {
     return (
         <button type="button" className={`
         ${className}
@@ -8,7 +8,9 @@ export function BotaoSecundario({ titulo = "Clique aqui", className = "w-32" }) 
         hover:transition hover:ease-in-out hover:duration-400
         hover:bg-gradient-to-r hover:from-indigo-100 hover:to-sky-50
         hover:text-indigo-400 hover:border-sky-50
-        `}>
+        `}
+        onClick={onClick}
+        >
             {titulo}
         </button>
     )
