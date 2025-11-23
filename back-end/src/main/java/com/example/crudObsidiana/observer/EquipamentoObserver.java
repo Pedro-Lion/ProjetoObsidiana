@@ -20,9 +20,21 @@ public class EquipamentoObserver implements OrcamentoObserver {
     private UsoEquipamentoRepository usoEquipamentoRepository;
 
     @Override
-    public void onOrcamentoUpdated(Orcamento orcamento) {
-        System.out.println("\n🔔 [Observer] Orçamento atualizado: " + orcamento.getId());
-        System.out.println("Atualizando estoque com base em uso_equipamento...");
+    public void onOrcamentoUpdated(Orcamento orcamento,
+                                   String statusAnterior,
+                                   String novoStatus) {
+
+        boolean eraConfirmado = "Confirmado".equalsIgnoreCase(statusAnterior);
+        boolean ehConfirmado  = "Confirmado".equalsIgnoreCase(novoStatus);
+
+        // Se não houve transição de "confirmado" <-> "não confirmado", não faz nada
+        if (eraConfirmado == ehConfirmado) {
+            System.out.println("\n[Observer] Status mudou, mas não afetou estoque (sem transição de confirmação).");
+            return;
+        }
+
+        System.out.println("\n[Observer] Orçamento atualizado: " + orcamento.getId());
+        System.out.printf("Status: '%s' ➜ '%s'%n", statusAnterior, novoStatus);
 
         // Busca todos os usos vinculados a esse orçamento
         List<UsoEquipamento> usos = usoEquipamentoRepository.findByOrcamento_Id(orcamento.getId());
@@ -32,23 +44,30 @@ public class EquipamentoObserver implements OrcamentoObserver {
             return;
         }
 
-        // Processa cada uso encontrado
+        // Define se vamos reservar (reduzir) ou devolver (aumentar)
+        boolean reservar = !eraConfirmado && ehConfirmado;   // virou confirmado
+        boolean devolver = eraConfirmado && !ehConfirmado;   // deixou de ser confirmado
+
         for (UsoEquipamento uso : usos) {
             Long idEquipamento = uso.getEquipamento().getId();
             Equipamento eq = equipamentoRepository.findById(idEquipamento)
-                    .orElseThrow(() -> new RuntimeException("Equipamento não encontrado (ID: " + idEquipamento + ")"));
+                    .orElseThrow(() -> new RuntimeException(
+                            "Equipamento não encontrado (ID: " + idEquipamento + ")"));
 
             int antes = eq.getQuantidadeDisponivel();
             int quantidadeUsada = uso.getQuantidadeUsada();
 
-            // Reduz o estoque respeitando limites
-            int novaDisponivel = Math.max(0, antes - quantidadeUsada);
-            eq.setQuantidadeDisponivel(novaDisponivel);
+            if (reservar) {
+                eq.reduzirQuantidade(quantidadeUsada);
+                System.out.printf(" - RESERVA %s: disp. %d → %d (usou %d)%n",
+                        eq.getNome(), antes, eq.getQuantidadeDisponivel(), quantidadeUsada);
+            } else if (devolver) {
+                eq.devolverQuantidade(quantidadeUsada);
+                System.out.printf(" - DEVOLVE %s: disp. %d → %d (devolveu %d)%n",
+                        eq.getNome(), antes, eq.getQuantidadeDisponivel(), quantidadeUsada);
+            }
 
             equipamentoRepository.save(eq);
-
-            System.out.printf(" - %s: disponível %d → %d (usou %d)%n",
-                    eq.getNome(), antes, novaDisponivel, quantidadeUsada);
         }
 
         System.out.println("✅ Estoque atualizado com sucesso.\n");
