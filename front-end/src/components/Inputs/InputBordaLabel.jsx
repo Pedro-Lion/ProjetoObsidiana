@@ -1,4 +1,4 @@
-export function InputBordaLabel({ titulo = "nome", type = "text", placeholder = "Digite aqui", className = "w-80", onInput}) {
+export function InputBordaLabel({ titulo = "", type = "text", placeholder = "Digite aqui", className = "w-80", onInput}) {
   return (
     <div className={"flex flex-col overflow-x-auto " + className}>
       <label
