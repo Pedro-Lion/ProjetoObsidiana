@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/orcamentos")
+@RequestMapping("/orcamento")
 @Tag(
-        name = "Orçamentos",
+        name = "Orçamento",
         description = """
         Endpoints para criação, consulta e alteração de status de orçamentos.
         A alteração de status para 'Confirmado' (ou saída desse status)
@@ -52,7 +52,7 @@ public class OrcamentoController {
 
 
     // ----------------------------------------------------------------------
-    // POST /orcamentos → Criar um orçamento (sempre começa em "Em análise")
+    // POST /orcamento → Criar um orçamento (sempre começa em "Em análise")
     // ----------------------------------------------------------------------
     @PostMapping
     @Operation(
@@ -65,7 +65,7 @@ public class OrcamentoController {
                       o sistema irá sobrescrever para 'Em análise'.
                     - O estoque de equipamentos NÃO é atualizado nesta etapa.
                     - O controle de estoque só ocorre ao alterar o status via
-                      PUT /orcamentos/{id}/status.
+                      PUT /orcamento/{id}/status.
                     """
     )
     @ApiResponses({
@@ -88,7 +88,7 @@ public class OrcamentoController {
 
 
     // ----------------------------------------------------------------------
-    // GET /orcamentos → Listar todos
+    // GET /orcamento → Listar todos
     // ----------------------------------------------------------------------
     @GetMapping
     @Operation(
@@ -103,7 +103,7 @@ public class OrcamentoController {
 
 
     // ----------------------------------------------------------------------
-    // GET /orcamentos/{id} → Buscar por ID
+    // GET /orcamento/{id} → Buscar por ID
     // ----------------------------------------------------------------------
     @GetMapping("/{id}")
     @Operation(
@@ -126,7 +126,7 @@ public class OrcamentoController {
 
 
     // ----------------------------------------------------------------------
-    // PUT /orcamentos/{id}/status → Alterar status (DISPARA OBSERVER)
+    // PUT /orcamento/{id}/status → Alterar status (DISPARA OBSERVER)
     // ----------------------------------------------------------------------
     @PutMapping("/{id}/status")
     @Operation(
