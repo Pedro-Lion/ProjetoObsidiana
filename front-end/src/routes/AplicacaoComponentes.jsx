@@ -155,7 +155,15 @@ export function AplicacaoComponentes() {
         <h2>Containers</h2>
 
         <ContainerListagem
-          titulo="Câmera 01"
+          dados={{
+            nome: "Câmera 01",
+            quantidade: 5,
+            categoria: "Gravação",
+            marca: "Sony",
+            modelo: "C9-20mm DisplayHD",
+            numeroSerie: "N00123",
+            valorPorHora: 25.5,
+          }}
           onClickEdit={() => clickContainer("editar", "equipamento")}
           onClickDel={() => clickContainer("", "equipamento")}
         />
@@ -168,6 +176,7 @@ export function AplicacaoComponentes() {
             { value: "ursula", label: "Úrsula" },
             { value: "eric", label: "Príncipe Eric" },
           ]}
+          preSelecao={[{value: "ariel", label: "Ariel"}]}
           onChange={(itens) => setItensSelecionados(itens)}
         />
 
