@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { BotaoPrimario } from "../Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../Buttons/BotaoSecundario";
 import { Foto } from "../Foto";
@@ -17,8 +18,10 @@ export function CardServico({
       }
     ],
   },
-  onClickEdit, onClickDel,
+  onClickDel
 }) {
+  const navigate = useNavigate();
+
   const formatarValor = new Intl.NumberFormat("pt-br", {
     style: "currency",
     currency: "BRL",
@@ -75,7 +78,9 @@ export function CardServico({
           titulo="Editar"
           icone="bi bi-pencil"
           className="mt-0 mb-0"
-          onClick={onClickEdit}
+          onClick={() => navigate("/editar/servico/" + dados.id, {
+            state: dados
+          })}
         />
         <BotaoSecundario
           titulo="Excluir"

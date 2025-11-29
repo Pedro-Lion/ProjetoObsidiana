@@ -47,6 +47,10 @@ export const router = createBrowserRouter([
         element: <CadastrarNovoServico />
       },
       {
+        path: "/editar/servico/:id",
+        element: <CadastrarNovoServico />
+      },
+      {
         path: "/orcamentos",
         element: <Orcamentos />,
       },

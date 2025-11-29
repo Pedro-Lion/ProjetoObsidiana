@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
-import { ContainerListagem } from "../components/Containers/ContainerListagem.jsx";
-// import { Dropdown } from "../Icons/Dropdown.jsx";
 import { ContainerSelectTags } from "../components/Containers/ContainerSelectTags.jsx";
-import { InputFoto } from "../components/Inputs/InputFoto";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { api } from "../api.js";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 export function CadastrarNovoServico() {
-  const servico = {};
   const navigate = useNavigate();
+  const { id } = useParams();
+
+  const state = useLocation().state;
+  const servico = state ? state : {};
   const [equipamentos, setEquipamentos] = useState([]);
+
   useEffect(() => {
     async function getEquipamentos() {
       try {
@@ -56,7 +57,26 @@ export function CadastrarNovoServico() {
         return;
       }
 
-      alert("Serviço não pode ser cadastrado. Tente novamente.");
+      alert("Serviço não pôde ser cadastrado. Tente novamente.");
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function editar() {
+    try {
+      const request = await api.put("/servico/" + id, servico, {
+        headers: {
+          Authorization: "Bearer " + sessionStorage.getItem("token"),
+        },
+      });
+
+      if (request.status == 200) {
+        alert("Editado com sucesso! Retornando à lista de serviços.")
+        return navigate("/servicos");
+      }
+
+      alert("Serviço não pôde ser editado. Tente novamente.");
     } catch (error) {
       console.log(error);
     }
@@ -64,63 +84,70 @@ export function CadastrarNovoServico() {
 
   return (
     <>
-      <h1 className="">Cadastrar Serviço</h1>
+      {state ? <h1>Editar serviço</h1> : <h1>Cadastrar serviço</h1>}
 
-      <section className="flex items-center w-full flex-col gap-10 shadow-md p-5">
-        <div className="w-320">
-          <div className="flex justify-between gap-5 items-start mb-5">
-            <InputBordaLabel
-              type="text"
-              titulo="Nome do Serviço"
-              placeholder="Insira o nome aqui"
-              className="w-150"
-              onInput={(e) => (servico.nome = e.target.value)}
-            />
-            <InputBordaLabel
-              type="number"
-              titulo="Duração em Horas"
-              placeholder="Insira a duração aqui"
-              className="w-150"
-              onInput={(e) => (servico.horas = e.target.value)}
-            />
-            <InputBordaLabel
-              type="number"
-              titulo="Valor por Hora"
-              placeholder="Ex: 15.00"
-              className="w-150"
-              onInput={(e) => (servico.valorPorHora = e.target.value)}
-            />
-          </div>
-          <TextareaBordaLabel
-            titulo="Descrição do Serviço"
-            placeholder="Digite aqui informações do Serviço"
-            larguraCampo="w-full"
-            rows="4"
-            onInput={(e) => (servico.descricao = e.target.value)}
+      <section className="flex flex-col">
+        <div className="flex justify-between gap-3 items-start mb">
+          <InputBordaLabel
+            titulo="Nome do Serviço"
+            placeholder="Insira o nome aqui"
+            defaultValue={servico.nome}
+            className="w-full"
+            onInput={(e) => (servico.nome = e.target.value)}
           />
 
-          <div className="w-full mt-10">
-            <ContainerSelectTags
-              titulo="Equipamentos"
-              itens={equipamentos}
-              onChange={(itens) =>
-                (servico.equipamentos = itens.map((item) => item.value))
-              }
-              placeholder="Escolha uma opção"
-            />
-          </div>
-          {/* <div className="w-full mt-10">
-            <ContainerSelectTags
-              titulo="Profissionais"
-              placeholder="Escolha uma opção"
-            />
-          </div> */}
-          <BotaoPrimario
-            titulo="Cadastrar Serviço"
-            className="w-flex"
-            onClick={cadastrar}
+          <InputBordaLabel
+            type="number"
+            titulo="Duração em Horas"
+            placeholder="Insira a duração aqui"
+            defaultValue={servico.horas}
+            className="w-full"
+            onInput={(e) => (servico.horas = e.target.value)}
+          />
+
+          <InputBordaLabel
+            type="number"
+            titulo="Valor por Hora"
+            placeholder="Ex: 15.00"
+            defaultValue={servico.valorPorHora}
+            className="w-full"
+            onInput={(e) => (servico.valorPorHora = e.target.value)}
           />
         </div>
+
+        <TextareaBordaLabel
+          titulo="Descrição do Serviço"
+          placeholder="Digite aqui informações do Serviço"
+          defaultValue={servico.descricao}
+          onInput={(e) => (servico.descricao = e.target.value)}
+          className="mb-3 h-35"
+        />
+
+        <ContainerSelectTags
+          titulo="Equipamentos"
+          itens={equipamentos}
+          preSelecao={servico.equipamentos.map((s) => {
+            return { value: s.id, label: s.nome };
+          })}
+          onChange={(itens) =>
+            (servico.equipamentos = itens.map((item) => item.value))
+          }
+          className="mt-10"
+        />
+
+        {state ? (
+          <BotaoPrimario
+            titulo="Editar Serviço"
+            className="self-end"
+            onClick={editar}
+          />
+        ) : (
+          <BotaoPrimario
+            titulo="Cadastrar Serviço"
+            className="self-end"
+            onClick={cadastrar}
+          />
+        )}
       </section>
     </>
   );
