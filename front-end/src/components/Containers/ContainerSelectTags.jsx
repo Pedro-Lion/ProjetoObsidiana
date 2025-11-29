@@ -1,8 +1,8 @@
 import { useState } from "react";
 import Select from "react-select";
 
-export function ContainerSelectTags({titulo = "Container", placeholder="Escolha uma opção", itens = [{value: "", label: ""}], onChange}) {
-  const [itensSelecionados, setItensSelecionados] = useState([]);
+export function ContainerSelectTags({titulo = "Container", placeholder="Escolha uma opção", itens = [{value: "", label: ""}], preSelecao = [{value: "", label: ""}], onChange}) {
+  const [itensSelecionados, setItensSelecionados] = useState(preSelecao[0].value ? preSelecao : []);
 
   const handleRemove = (removerEste) => {
     const itens = itensSelecionados.filter((item) => item.value !== removerEste.value)
@@ -78,7 +78,7 @@ export function ContainerSelectTags({titulo = "Container", placeholder="Escolha 
     width:"100%", marginBlock:"1rem",
     backgroundColor:"#f5f3ff",
     padding:"1rem 2rem",
-    borderRadius:"0.5rem"
+    borderRadius:"0.5rem",
     }}>
     <div className="flex flex-row justify-between items-baseline">
         <label className="text-slate-700 text-xl w-fit mb-2 px-7 py-1 rounded-full border-2 border-violet-200 bg-white">
