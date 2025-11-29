@@ -14,6 +14,7 @@ import { Orcamentos } from "./routes/Orcamentos";
 import { Profissionais } from "./routes/Profissionais";
 import { CadastroProfissionais } from "./routes/CadastroProfissionais";
 import { Perfil } from "./routes/Perfil";
+import { Dashboard} from "./routes/Dashboard"
 
 export const router = createBrowserRouter([
   {
@@ -60,6 +61,10 @@ export const router = createBrowserRouter([
       {
         path: "/perfil",
         element: <Perfil />
+      },
+      {
+        path: "/dashboard",
+        element: <Dashboard />
       },
     ],
   },
