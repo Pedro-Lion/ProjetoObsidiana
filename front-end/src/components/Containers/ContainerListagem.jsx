@@ -2,13 +2,13 @@ import { Foto } from "../Foto";
 
 export function ContainerListagem({
   dados = {
-    nome: "Câmera 01",
-    quantidade: 5,
-    categoria: "Gravação",
-    marca: "Sony",
-    modelo: "C9-20mm DisplayHD",
-    numeroSerie: "N00123",
-    valorPorHora: 25.5,
+    nome: "",
+    quantidade: 0,
+    categoria: "",
+    marca: "",
+    modelo: "",
+    numeroSerie: "",
+    valorPorHora: 0,
   },
   onClickEdit, onClickDel
 }) {
