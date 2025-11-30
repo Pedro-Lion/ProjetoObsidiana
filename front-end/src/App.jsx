@@ -1,5 +1,4 @@
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import '../src/styles/bootstrap-custom.scss';
 import { Navbar } from "./components/Navbar/Navbar.jsx";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Foto } from "./components/Foto.jsx"
