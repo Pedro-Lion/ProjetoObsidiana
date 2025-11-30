@@ -1,10 +1,16 @@
 package com.example.crudObsidiana.service;
 
 import com.example.crudObsidiana.dto.OrcamentoDTO;
+import com.example.crudObsidiana.model.Equipamento;
 import com.example.crudObsidiana.model.Orcamento;
+import com.example.crudObsidiana.model.Servico;
+import com.example.crudObsidiana.repository.EquipamentoRepository;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
+import com.example.crudObsidiana.repository.ServicoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class OrcamentoService {
@@ -12,15 +18,28 @@ public class OrcamentoService {
     @Autowired
     private OrcamentoRepository orcamentoRepository;
 
-    public Orcamento criarOrcamento(OrcamentoDTO dto) {
-        Orcamento orcamento = new Orcamento();
-        orcamento.setDescricao(dto.getDescricao());
-        orcamento.setDataEvento(dto.getDataEvento());
-        orcamento.setDuracaoEvento(dto.getDuracaoEvento());
-        orcamento.setLocalEvento(dto.getLocalEvento());
-        orcamento.setValorTotal(dto.getValorTotal());
-        orcamento.setStatus(dto.getStatus());
+    @Autowired
+    private ServicoRepository servicoRepository;
 
-        return orcamentoRepository.save(orcamento);
+    @Autowired
+    private EquipamentoRepository equipamentoRepository;
+
+    public Orcamento criarOrcamento(OrcamentoDTO dto) {
+        Orcamento novoOrcamento = new Orcamento(
+            dto.getDataEvento(),
+            dto.getDuracaoEvento(),
+            dto.getLocalEvento(),
+            dto.getDescricao(),
+            dto.getStatus(),
+            dto.getValorTotal()
+        );
+
+        List<Servico> servicos = servicoRepository.findAllById(dto.getServicos());
+        novoOrcamento.setServicos(servicos);
+
+        List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
+        novoOrcamento.setEquipamentos(equipamentos);
+
+        return orcamentoRepository.save(novoOrcamento);
     }
 }

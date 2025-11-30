@@ -31,7 +31,6 @@ export function App() {
 
         <Navbar />
 
-        
         <section 
           onClick={() => navigate("/perfil")} 
           className="px-6 flex items-center gap-3.5 text-2xl cursor-pointer"
