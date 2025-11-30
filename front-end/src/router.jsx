@@ -52,7 +52,8 @@ export const router = createBrowserRouter([
       },
       {
         path: "/orcamentos",
-        element: <Orcamentos />,
+        // element: <Orcamentos />,
+        element: <AplicacaoComponentes/>
       },
       {
         path: "/profissionais",
