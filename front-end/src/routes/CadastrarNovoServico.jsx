@@ -14,6 +14,7 @@ export function CadastrarNovoServico() {
   const servico = state ? state : {};
   const [equipamentos, setEquipamentos] = useState([]);
   const [valor, setValor] = useState(servico.horas ?? 0);
+  const [valorHora, setValorHora] = useState(servico.valorPorHora ? servico.valorPorHora.toFixed(2) : "0.00");
 
   useEffect(() => {
     async function getEquipamentos() {
@@ -100,7 +101,6 @@ export function CadastrarNovoServico() {
           <InputBordaLabel
             type="number"
             titulo="Duração em Horas"
-            placeholder="Insira a duração aqui"
             className="w-full"
             value={valor}
             onChange={(e) => {
@@ -112,12 +112,23 @@ export function CadastrarNovoServico() {
           />
 
           <InputBordaLabel
-            type="number"
+            type="text"
             titulo="Valor por Hora"
-            placeholder="Ex: 15.00"
-            value={servico.valorPorHora}
             className="w-full"
-            onChange={(e) => (servico.valorPorHora = e.target.value)}
+            value={valorHora}
+            onChange={(e) => {
+              let v = e.target.value;
+              v = v.replace(/\D/g, ""); // remove tudo que não for número
+              // evita erro se vier vazio:
+              if (v === "") {
+                setValorHora("0.00");
+                servico.valorPorHora = 0;
+                return;
+              }
+              const valorNumerico = (Number(v) / 100).toFixed(2); // transforma em centavos
+              setValorHora(valorNumerico);
+              servico.valorPorHora = Number(valorNumerico); // salva no objeto servico como número (double)
+            }}
           />
         </div>
 
