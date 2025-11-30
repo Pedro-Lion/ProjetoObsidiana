@@ -1,4 +1,5 @@
 import { Foto } from "../Foto";
+import { formatarPreco } from "../../../formatarPreco";
 
 export function ContainerListagem({
   dados = {
@@ -8,13 +9,15 @@ export function ContainerListagem({
     marca: "",
     modelo: "",
     numeroSerie: "",
-    valorPorHora: 0,
+    valorPorHora: 0.00,
+    valorDiaria: 0.00,
+    observacoes: ""
   },
   onClickEdit, onClickDel
 }) {
-    return (
-        <>
-        <style>
+  return (
+    <>
+      <style>
         {`
                 .container-item-lista{
                 width: 100%;
@@ -59,90 +62,86 @@ export function ContainerListagem({
                 }
             }
         `}
-            </style>
-            <div className="container-item-lista">
-                <div className="flex flex-row justify-between items-baseline bg-violet-200 px-10 py-1.5 mb-5">
-                    <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-xl leading-5.5 font-bold uppercase">
-                        {dados.nome}
-                    </label>
-                    <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-[1.1rem] w-fit leading-5.5 uppercase">
-                        {dados.categoria}
-                    </label>
-                    <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-[1.1rem] w-fit leading-5.5">
-                        <b>{dados.quantidade}</b> disponíveis
-                    </label>
-                </div>
-                    <div className="flex flex-row justify-between items-start
-                    w-full
-                    px-7
-                    lg:gap-10
-                    ">
-                        <Foto tamanho="6" />
-                        <div className="estilo-campos">
-                            <label className="estilo-titulo-campo w-fit max-w-3/5">
-                                Marca
-                            </label>
-                            <label className="estilo-conteudo-campo">
-                                {dados.marca}
-                            </label>
-                        </div>
-                        <div className="estilo-campos">
-                            <label className="estilo-titulo-campo">
-                                Modelo
-                            </label>
-                            <label className="estilo-conteudo-campo">
-                                {dados.modelo}
-                            </label>
-                        </div>
-                        <div className="estilo-campos">
-                            <label className="estilo-titulo-campo">
-                                NºSerie
-                            </label>
-                            <label className="estilo-conteudo-campo">
-                                {dados.numeroSerie}
-                            </label>
-                        </div>
-                        <div className="estilo-campos">
-                            <label className="estilo-titulo-campo">
-                                Valor/hora
-                            </label>
-                            <label className="estilo-conteudo-campo">
-                                R${dados.valorPorHora}
-                            </label>
-                        </div>
-                        {/* <div className="estilo-campos">
-                            <label className="estilo-titulo-campo">
-                                Diária
-                            </label>
-                            <label className="estilo-conteudo-campo">
-                                R$800,00
-                            </label>
-                        </div>
-                        <div className="flex flex-col gap-3 lg:max-w-[45%] sm:max-w-[25%]">
-                            <label className="estilo-titulo-campo w-fit max-w-3/5">
-                                Observações
-                            </label>
-                            <label className="estilo-conteudo-campo">
-                                Máquina fotográfica específica para gravações diúrnas.
-                            </label>
-                        </div>*/}
-                        <div className="border-l-1 border-violet-200
+      </style>
+      <div className="container-item-lista">
+        <div className="flex flex-row justify-between items-baseline bg-violet-200 px-10 py-1.5 mb-5">
+          <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-xl leading-5.5 font-bold uppercase">
+            {dados.nome || 'N/A'}
+          </label>
+          <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-[1.1rem] w-fit leading-5.5 uppercase">
+            {dados.categoria || 'N/A'}
+          </label>
+          <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-[1.1rem] w-fit leading-5.5">
+            <b>{dados.quantidade || 'N/A'}</b> disponíveis
+          </label>
+        </div>
+        <div className="flex flex-row justify-between items-start w-full px-7 lg:gap-10">
+          <Foto tamanho="6" />
+          <div className="estilo-campos">
+            <label className="estilo-titulo-campo w-fit">
+              Marca
+            </label>
+            <label className="estilo-conteudo-campo">
+              {dados.marca || 'N/A'}
+            </label>
+          </div>
+          <div className="estilo-campos">
+            <label className="estilo-titulo-campo">
+              Modelo
+            </label>
+            <label className="estilo-conteudo-campo">
+              {dados.modelo || 'N/A'}
+            </label>
+          </div>
+          <div className="estilo-campos">
+            <label className="estilo-titulo-campo">
+              NºSerie
+            </label>
+            <label className="estilo-conteudo-campo">
+              {dados.numeroSerie || 'N/A'}
+            </label>
+          </div>
+          <div className="estilo-campos">
+            <label className="estilo-titulo-campo">
+              Valor/hora
+            </label>
+            <label className="estilo-conteudo-campo">
+              R$ {formatarPreco(dados.valorPorHora)}
+            </label>
+          </div>
+          <div className="estilo-campos">
+            <label className="estilo-titulo-campo">
+              Diária
+            </label>
+            <label className="estilo-conteudo-campo">
+              R$ {formatarPreco(dados.valorDiaria)}
+            </label>
+          </div>
+          <div className="flex flex-col gap-3 lg:max-w-[45%] sm:max-w-[25%]">
+            <label className="estilo-titulo-campo w-fit">
+              Observações
+            </label>
+            <label className="estilo-conteudo-campo">
+              {dados.observacoes || 'N/A'}
+            </label>
+          </div>
+          <div className="border-l-1 border-violet-200
                         flex flex-row self-center
                         lg:pl-9 sm:pl-4
                         lg:gap-9 sm:gap-4">
-                            <i className="bi bi-pencil-square
+            <i className="bi bi-pencil-square
                         text-slate-700 self-center
                         cursor-pointer hover:text-indigo-300
                         lg:text-3xl sm:text-2xl"
-                        onClick={onClickEdit}></i>
-                            <i className="bi bi-trash3
+              onClick={onClickEdit}></i>
+            <i className="bi bi-trash3
                         text-slate-700 self-center
                         cursor-pointer hover:text-indigo-300
                         lg:text-3xl sm:text-2xl"
-                        onClick={onClickDel}></i>
-                        </div>
-                </div>
-            </div>
-        </>
-    )
+              onClick={onClickDel}></i>
+          </div>
+        </div>
+      </div>
+    </>
+  )
 }
