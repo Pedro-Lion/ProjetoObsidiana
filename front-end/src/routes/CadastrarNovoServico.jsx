@@ -119,9 +119,9 @@ export function CadastrarNovoServico() {
             onChange={(e) => {
               let v = e.target.value;
               v = v.replace(/\D/g, ""); // remove tudo que não for número
-              const valorNumerico = (Number(v) / 100).toFixed(2); // transforma em centavos
-              setValorHora(valorNumerico); //atualiza a variável acima ↝ 
-              servico.valorPorHora = Number(valorNumerico); // salva no objeto servico como número (double)
+              const numero = (Number(v) / 100).toFixed(2); // transforma centavos → valor real
+              setValorHora(numero); // formata no input a variável acima ↝
+              servico.valorPorHora = Number(numero); // salva no objeto Servico como double
             }}
           />
         </div>
