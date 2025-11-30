@@ -30,6 +30,8 @@ public class OrcamentoDTO {
 
     private List<Long> equipamentos;
 
+    private List<Long> profissionais;
+
     // Getters e Setters
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
@@ -54,4 +56,7 @@ public class OrcamentoDTO {
 
     public List<Long> getEquipamentos() { return equipamentos; }
     public void setEquipamentos(List<Long> equipamentos) { this.equipamentos = equipamentos; }
+
+    public List<Long> getProfissionais() { return profissionais; }
+    public void setProfissionais(List<Long> profissionais) { this.profissionais = profissionais; }
 }

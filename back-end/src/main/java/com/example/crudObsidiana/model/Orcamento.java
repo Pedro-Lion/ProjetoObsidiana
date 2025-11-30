@@ -65,6 +65,14 @@ public class Orcamento {
     )
     private List<Equipamento> equipamentos = new ArrayList<>();
 
+    @ManyToMany
+    @JoinTable(
+    name = "orcamento_profissionais",
+    joinColumns = @JoinColumn(name = "orcamento_id"),
+    inverseJoinColumns = @JoinColumn(name = "profissional_id")
+    )
+    private List<Profissional> profissionais = new ArrayList<>();
+
     public Orcamento() {
     }
 
@@ -117,4 +125,7 @@ public class Orcamento {
 
     public List<Equipamento> getEquipamentos() { return equipamentos; }
     public void setEquipamentos(List<Equipamento> equipamentos) { this.equipamentos = equipamentos;}
+
+    public List<Profissional> getProfissionais() { return profissionais; }
+    public void setProfissionais(List<Profissional> profissionais) { this.profissionais = profissionais; }
 }

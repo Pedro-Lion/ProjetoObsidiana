@@ -3,9 +3,11 @@ package com.example.crudObsidiana.service;
 import com.example.crudObsidiana.dto.OrcamentoDTO;
 import com.example.crudObsidiana.model.Equipamento;
 import com.example.crudObsidiana.model.Orcamento;
+import com.example.crudObsidiana.model.Profissional;
 import com.example.crudObsidiana.model.Servico;
 import com.example.crudObsidiana.repository.EquipamentoRepository;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
+import com.example.crudObsidiana.repository.ProfissionalRepository;
 import com.example.crudObsidiana.repository.ServicoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,9 @@ public class OrcamentoService {
     @Autowired
     private EquipamentoRepository equipamentoRepository;
 
+    @Autowired
+    private ProfissionalRepository profissionalRepository;
+
     public Orcamento criarOrcamento(OrcamentoDTO dto) {
         Orcamento novoOrcamento = new Orcamento(
             dto.getDataEvento(),
@@ -39,6 +44,9 @@ public class OrcamentoService {
 
         List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
         novoOrcamento.setEquipamentos(equipamentos);
+
+        List<Profissional> profissionais = profissionalRepository.findAllById(dto.getProfissionais());
+        novoOrcamento.setProfissionais(profissionais);
 
         return orcamentoRepository.save(novoOrcamento);
     }
