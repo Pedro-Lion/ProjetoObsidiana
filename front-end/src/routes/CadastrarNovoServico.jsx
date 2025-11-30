@@ -13,6 +13,7 @@ export function CadastrarNovoServico() {
   const state = useLocation().state;
   const servico = state ? state : {};
   const [equipamentos, setEquipamentos] = useState([]);
+  const [valor, setValor] = useState(servico.horas ?? 0);
 
   useEffect(() => {
     async function getEquipamentos() {
@@ -91,27 +92,32 @@ export function CadastrarNovoServico() {
           <InputBordaLabel
             titulo="Nome do Serviço"
             placeholder="Insira o nome aqui"
-            defaultValue={servico.nome}
+            value={servico.nome}
             className="w-full"
-            onInput={(e) => (servico.nome = e.target.value)}
+            onChange={(e) => (servico.nome = e.target.value)}
           />
 
           <InputBordaLabel
             type="number"
             titulo="Duração em Horas"
             placeholder="Insira a duração aqui"
-            defaultValue={servico.horas}
             className="w-full"
-            onInput={(e) => (servico.horas = e.target.value)}
+            value={valor}
+            onChange={(e) => {
+              let v = Number(e.target.value);
+              if (v > 24) v = 24;
+              setValor(v);
+              servico.horas = v;
+            }}
           />
 
           <InputBordaLabel
             type="number"
             titulo="Valor por Hora"
             placeholder="Ex: 15.00"
-            defaultValue={servico.valorPorHora}
+            value={servico.valorPorHora}
             className="w-full"
-            onInput={(e) => (servico.valorPorHora = e.target.value)}
+            onChange={(e) => (servico.valorPorHora = e.target.value)}
           />
         </div>
 
@@ -119,7 +125,7 @@ export function CadastrarNovoServico() {
           titulo="Descrição do Serviço"
           placeholder="Digite aqui informações do Serviço"
           defaultValue={servico.descricao}
-          onInput={(e) => (servico.descricao = e.target.value)}
+          onChange={(e) => (servico.descricao = e.target.value)}
           className="mb-3 h-35"
         />
 

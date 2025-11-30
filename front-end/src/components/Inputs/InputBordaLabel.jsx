@@ -1,4 +1,4 @@
-export function InputBordaLabel({ titulo = "", type = "text", placeholder = "Digite aqui", defaultValue, className = "w-80", onInput}) {
+export function InputBordaLabel({ titulo = "", type = "text", placeholder = "Digite aqui", value, className = "w-80", onChange}) {
   return (
     <div className={"flex flex-col overflow-x-auto " + className}>
       <label
@@ -11,8 +11,8 @@ export function InputBordaLabel({ titulo = "", type = "text", placeholder = "Dig
       <input
         type={type}
         placeholder={placeholder}
-        defaultValue={defaultValue}
-        onInput={onInput}
+        value={value}
+        onChange={onChange}
         className="border-indigo-500 text-slate-700
         px-3 py-3 text-[1.1rem] bg-transparent border-1 rounded-lg        
         focus:outline-none placeholder:text-black/25"
