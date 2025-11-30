@@ -126,7 +126,7 @@ export function CadastrarNovoServico() {
         <ContainerSelectTags
           titulo="Equipamentos"
           itens={equipamentos}
-          preSelecao={servico.equipamentos.map((s) => {
+          preSelecao={servico?.equipamentos?.map((s) => {
             return { value: s.id, label: s.nome };
           })}
           onChange={(itens) =>
