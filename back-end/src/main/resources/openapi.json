@@ -1,0 +1,1426 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Profissionais",
+      "description": "Operações relacionadas aos profissionais"
+    },
+    {
+      "name": "Equipamentos",
+      "description": "Operações relacionadas aos equipamentos"
+    },
+    {
+      "name": "Usuários",
+      "description": "Operações relacionadas aos usuários"
+    },
+    {
+      "name": "Orçamentos",
+      "description": "Operações relacionadas aos orçamentos"
+    },
+    {
+      "name": "Serviços",
+      "description": "Operações relacionadas aos serviços"
+    },
+    {
+      "name": "Uso de Equipamentos",
+      "description": "Operações relacionadas ao uso de equipamentos em orçamentos e serviços"
+    }
+  ],
+  "paths": {
+    "/servico/{id}": {
+      "get": {
+        "tags": [
+          "Serviços"
+        ],
+        "summary": "Recupera um serviço pelo ID",
+        "operationId": "recuperar_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Serviço encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Servico"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Serviço não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Servico"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Serviços"
+        ],
+        "summary": "Atualiza um serviço existente",
+        "operationId": "atualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Servico"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Serviço atualizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Servico"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Serviço não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Servico"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Serviços"
+        ],
+        "summary": "Remove um serviço pelo ID",
+        "operationId": "excluir_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Serviço removido com sucesso"
+          },
+          "404": {
+            "description": "Serviço não encontrado"
+          }
+        }
+      }
+    },
+    "/profissionais/{id}": {
+      "get": {
+        "tags": [
+          "Profissionais"
+        ],
+        "summary": "Recupera um profissional pelo ID",
+        "operationId": "recuperar_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Profissional não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profissional"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Profissional encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profissional"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Profissionais"
+        ],
+        "summary": "Atualiza dados de um profissional existente",
+        "operationId": "atualizar_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Profissional"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "Profissional não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profissional"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Profissional atualizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profissional"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Profissionais"
+        ],
+        "summary": "Remove um profissional pelo ID",
+        "operationId": "excluir_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Profissional não encontrado"
+          },
+          "200": {
+            "description": "Profissional removido com sucesso"
+          }
+        }
+      }
+    },
+    "/orcamento/{id}": {
+      "get": {
+        "tags": [
+          "Orçamentos"
+        ],
+        "summary": "Recupera um orçamento pelo ID",
+        "operationId": "recuperar_3",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Orçamento encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Orcamento"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Orçamento não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Orcamento"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Orçamentos"
+        ],
+        "summary": "Atualiza um orçamento existente",
+        "operationId": "atualizar_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Orcamento"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Orçamento atualizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Orcamento"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Orçamento não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Orcamento"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Orçamentos"
+        ],
+        "summary": "Remove um orçamento pelo ID",
+        "operationId": "excluir_3",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Orçamento removido com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Orcamento"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Orçamento não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Orcamento"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/equipamento/{id}": {
+      "get": {
+        "tags": [
+          "Equipamentos"
+        ],
+        "summary": "Recupera um equipamento pelo ID",
+        "operationId": "recuperar_4",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Equipamento não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipamento"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Equipamento encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipamento"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Equipamentos"
+        ],
+        "summary": "Atualiza um equipamento existente",
+        "operationId": "atualizar_3",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Equipamento"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Equipamento atualizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipamento"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Equipamento não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipamento"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Equipamentos"
+        ],
+        "summary": "Remove um equipamento pelo ID",
+        "operationId": "excluir_4",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Equipamento não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipamento"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Equipamento removido com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipamento"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usuario/login": {
+      "post": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Login de um usuário",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Usuário logado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Usuario"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usuario/cadastrar": {
+      "post": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Cadastra um novo usuário",
+        "operationId": "cadastrar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário cadastrado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Usuario"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uso-equipamento": {
+      "get": {
+        "tags": [
+          "Uso de Equipamentos"
+        ],
+        "summary": "Lista todos os usos de equipamentos",
+        "operationId": "listarTodos",
+        "responses": {
+          "200": {
+            "description": "Lista retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UsoEquipamento"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Uso de Equipamentos"
+        ],
+        "summary": "Registra o uso de um equipamento em um orçamento ou serviço",
+        "operationId": "criarUso",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsoEquipamentoDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Uso de equipamento registrado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsoEquipamento"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos ou campos obrigatórios ausentes",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsoEquipamento"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/servico": {
+      "get": {
+        "tags": [
+          "Serviços"
+        ],
+        "summary": "Lista todos os serviços",
+        "operationId": "listarTodos_1",
+        "responses": {
+          "200": {
+            "description": "Lista de serviços retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Servico"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Serviços"
+        ],
+        "summary": "Cadastra um novo serviço com equipamentos",
+        "operationId": "criarServico",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServicoDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Serviço criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Servico"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Servico"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profissionais": {
+      "get": {
+        "tags": [
+          "Profissionais"
+        ],
+        "summary": "Lista todos os profissionais",
+        "operationId": "listarTodos_2",
+        "responses": {
+          "200": {
+            "description": "Lista de profissional retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Profissional"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Profissionais"
+        ],
+        "summary": "Cadastra um novo profissional",
+        "operationId": "create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Profissional"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Profissional criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profissional"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orcamento": {
+      "get": {
+        "tags": [
+          "Orçamentos"
+        ],
+        "summary": "Lista todos os orçamentos cadastrados",
+        "operationId": "listarTodos_3",
+        "responses": {
+          "200": {
+            "description": "Lista de orçamentos retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Orcamento"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Orçamentos"
+        ],
+        "summary": "Cadastra um novo orçamento audiovisual",
+        "operationId": "criarOrcamento",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrcamentoDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Orçamento criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Orcamento"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Orcamento"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/equipamento": {
+      "get": {
+        "tags": [
+          "Equipamentos"
+        ],
+        "summary": "Lista todos os equipamentos",
+        "operationId": "listarTodos_4",
+        "responses": {
+          "200": {
+            "description": "Lista de equipamentos retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Equipamento"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Equipamentos"
+        ],
+        "summary": "Cadastra um novo equipamento multimídia",
+        "operationId": "criarEquipamento",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EquipamentoDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Equipamento criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipamento"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipamento"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usuario": {
+      "get": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Lista todos os usuários",
+        "operationId": "listar",
+        "responses": {
+          "200": {
+            "description": "Lista de usuários retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Usuario"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uso-equipamento/{id}": {
+      "get": {
+        "tags": [
+          "Uso de Equipamentos"
+        ],
+        "summary": "Recupera um uso de equipamento pelo ID",
+        "operationId": "recuperar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Uso de equipamento não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsoEquipamento"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Uso de equipamento encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsoEquipamento"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Uso de Equipamentos"
+        ],
+        "summary": "Remove um registro de uso de equipamento pelo ID",
+        "operationId": "excluir",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Uso de equipamento não encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsoEquipamento"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Uso de equipamento removido com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsoEquipamento"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Equipamento": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID do equipamento",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "description": "Nome do equipamento",
+            "example": "Câmera Canon"
+          },
+          "quantidade": {
+            "type": "integer",
+            "description": "Quantidade total",
+            "format": "int32",
+            "example": 5
+          },
+          "quantidadeDisponivel": {
+            "type": "integer",
+            "description": "Quantidade disponível",
+            "format": "int32",
+            "example": 3
+          },
+          "categoria": {
+            "type": "string",
+            "description": "Categoria do Equipamento",
+            "example": "Câmeras"
+          },
+          "marca": {
+            "type": "string",
+            "description": "Marca do Equipamento",
+            "example": "Sony"
+          },
+          "numeroSerie": {
+            "type": "string",
+            "description": "Número de Série do Equipamento",
+            "example": "N00123"
+          },
+          "modelo": {
+            "type": "string",
+            "description": "Modelo do Equipamento",
+            "example": "C9-20mm DisplayHD"
+          },
+          "valorPorHora": {
+            "type": "integer",
+            "description": "Valor unitário em reais",
+            "format": "int32",
+            "example": 1200
+          }
+        },
+        "description": "Modelo de Equipamento"
+      },
+      "Servico": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID do serviço",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "description": "Nome do serviço",
+            "example": "Instalação de impressora"
+          },
+          "descricao": {
+            "type": "string",
+            "description": "Descrição detalhada do serviço",
+            "example": "Configuração e instalação de impressora multifuncional"
+          },
+          "horas": {
+            "type": "integer",
+            "description": "Quantidade de horas estimadas",
+            "format": "int32",
+            "example": 3
+          },
+          "valorPorHora": {
+            "type": "integer",
+            "description": "Valor total do serviço em reais",
+            "format": "int32",
+            "example": 250
+          },
+          "equipamentos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Equipamento"
+            }
+          }
+        },
+        "description": "Modelo de Serviço"
+      },
+      "Profissional": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID do profissional",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "description": "Nome do profissional",
+            "example": "Osvaldo"
+          },
+          "disponibilidade": {
+            "type": "string",
+            "description": "Disponibilidade do profissional",
+            "example": "Terça e quinta"
+          },
+          "contato": {
+            "type": "string",
+            "description": "Contato do profissional",
+            "example": "(11)883992883 // osv.filma@email.com"
+          }
+        },
+        "description": "Modelo do Profissional "
+      },
+      "Orcamento": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID do orçamento",
+            "format": "int64",
+            "example": 1
+          },
+          "dataEvento": {
+            "type": "string",
+            "description": "Data do evento",
+            "format": "date-time"
+          },
+          "duracaoEvento": {
+            "type": "integer",
+            "description": "Duração do evento em horas",
+            "format": "int32",
+            "example": 8
+          },
+          "localEvento": {
+            "type": "string",
+            "description": "Local do evento",
+            "example": "Estúdio Principal"
+          },
+          "descricao": {
+            "type": "string",
+            "description": "Descrição geral do orçamento",
+            "example": "Gravação de videoclipe publicitário"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status atual do orçamento",
+            "example": "Confirmado"
+          },
+          "valorTotal": {
+            "type": "number",
+            "description": "Valor total estimado",
+            "format": "double",
+            "example": 3500
+          },
+          "usosEquipamentos": {
+            "type": "array",
+            "description": "Lista de usos de equipamentos vinculados a este orçamento",
+            "items": {
+              "$ref": "#/components/schemas/UsoEquipamento"
+            }
+          }
+        },
+        "description": "Modelo de orçamento"
+      },
+      "UsoEquipamento": {
+        "required": [
+          "equipamento",
+          "quantidadeUsada"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Identificador único do registro de uso",
+            "format": "int64",
+            "example": 1
+          },
+          "quantidadeUsada": {
+            "type": "integer",
+            "description": "Quantidade de unidades do equipamento utilizadas",
+            "format": "int32",
+            "example": 3
+          },
+          "equipamento": {
+            "$ref": "#/components/schemas/Equipamento"
+          },
+          "orcamento": {
+            "$ref": "#/components/schemas/Orcamento"
+          },
+          "servico": {
+            "$ref": "#/components/schemas/Servico"
+          }
+        },
+        "description": "Representa o uso de um equipamento em um orçamento ou serviço"
+      },
+      "LoginRequestDTO": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "senha": {
+            "type": "string"
+          }
+        }
+      },
+      "Usuario": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID do Usuário",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "description": "Nome do usuário",
+            "example": "José da Silva ADM"
+          },
+          "email": {
+            "type": "string",
+            "description": "E-mail do Usuário",
+            "example": "js.multimidia@email.com"
+          },
+          "senha": {
+            "type": "string",
+            "description": "Senha de acesso",
+            "example": "123AcessarGestao@"
+          }
+        }
+      },
+      "RegisterRequestDTO": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "senha": {
+            "type": "string"
+          }
+        }
+      },
+      "UsoEquipamentoDTO": {
+        "required": [
+          "equipamentoId",
+          "quantidadeUsada"
+        ],
+        "type": "object",
+        "properties": {
+          "equipamentoId": {
+            "type": "integer",
+            "description": "ID do equipamento utilizado",
+            "format": "int64",
+            "example": 1
+          },
+          "orcamentoId": {
+            "type": "integer",
+            "description": "ID do orçamento ao qual o uso pertence (ou null se for serviço)",
+            "format": "int64",
+            "example": 1
+          },
+          "servicoId": {
+            "type": "integer",
+            "description": "ID do serviço ao qual o uso pertence (ou null se for orçamento)",
+            "format": "int64"
+          },
+          "quantidadeUsada": {
+            "minimum": 1,
+            "type": "integer",
+            "description": "Quantidade de unidades do equipamento utilizadas",
+            "format": "int32",
+            "example": 3
+          }
+        },
+        "description": "DTO para representar o uso de um equipamento em um orçamento ou serviço"
+      },
+      "ServicoDTO": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "description": "Nome do serviço",
+            "example": "Fotografia de Casamento"
+          },
+          "descricao": {
+            "type": "string",
+            "description": "Descrição do serviço",
+            "example": "Cobertura completa do evento"
+          },
+          "horas": {
+            "type": "integer",
+            "description": "Horas estimadas",
+            "format": "int32",
+            "example": 5
+          },
+          "valorPorHora": {
+            "type": "integer",
+            "description": "Valor por hora",
+            "format": "int32",
+            "example": 200
+          },
+          "equipamentosIds": {
+            "type": "array",
+            "description": "Lista de IDs dos equipamentos usados",
+            "example": [1, 2, 3],
+            "items": {
+              "type": "integer",
+              "description": "Lista de IDs dos equipamentos usados",
+              "format": "int64"
+            }
+          }
+        },
+        "description": "DTO para criação de serviço com equipamentos"
+      },
+      "OrcamentoDTO": {
+        "type": "object",
+        "properties": {
+          "descricao": {
+            "type": "string",
+            "description": "Descrição ou título do orçamento",
+            "example": "Gravação de vídeo institucional"
+          },
+          "dataEvento": {
+            "type": "string",
+            "description": "Data e hora do evento",
+            "format": "date-time"
+          },
+          "duracaoEvento": {
+            "type": "integer",
+            "description": "Duração do evento em horas",
+            "format": "int32",
+            "example": 8
+          },
+          "localEvento": {
+            "type": "string",
+            "description": "Local onde o evento ocorrerá",
+            "example": "Estúdio Central"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status atual do orçamento",
+            "example": "ATIVO"
+          },
+          "valorTotal": {
+            "type": "number",
+            "description": "Valor total calculado do orçamento",
+            "format": "double",
+            "example": 2500
+          }
+        },
+        "description": "Dados para criação de um novo orçamento"
+      },
+      "EquipamentoDTO": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "description": "Nome do equipamento",
+            "example": "Câmera Canon"
+          },
+          "quantidade": {
+            "type": "integer",
+            "description": "Quantidade disponível",
+            "format": "int32",
+            "example": 5
+          },
+          "categoria": {
+            "type": "string",
+            "description": "Categoria do equipamento",
+            "example": "Câmeras"
+          },
+          "marca": {
+            "type": "string",
+            "description": "Marca do equipamento",
+            "example": "Sony"
+          },
+          "numeroSerie": {
+            "type": "string",
+            "description": "Número de Série do equipamento",
+            "example": "N00123"
+          },
+          "modelo": {
+            "type": "string",
+            "description": "Modelo do equipamento",
+            "example": "C9-20mm DisplayHD"
+          },
+          "valorPorHora": {
+            "type": "integer",
+            "description": "Valor unitário por hora",
+            "format": "int32",
+            "example": 1200
+          }
+        },
+        "description": "DTO para criação de equipamento multimídia"
+      }
+    }
+  }
+}
