@@ -1,5 +1,22 @@
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
+
 export function Orcamentos() {
+  const navigate = useNavigate();
+  const [orcamentos, setoOrcamentos] = useState("Buscando orçamentos...");
+
   return (
-    <h1 className="text-2xl">Orcamentos</h1>
-  )
+    <>
+      <div className="flex justify-between">
+        <h1>Orçamentos</h1>
+        <BotaoPrimario
+          titulo="+ Novo orçamento"
+          onClick={() => navigate("/cadastro/orcamento")}
+        />
+      </div>
+
+      <section>{orcamentos}</section>
+    </>
+  );
 }
