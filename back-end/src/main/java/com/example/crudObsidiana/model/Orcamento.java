@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -74,7 +75,7 @@ public class Orcamento {
     }
 
     public Orcamento(
-        LocalDate dataEvento,
+        Date dataEvento,
         Integer duracaoEvento,
         String localEvento,
         String descricao,

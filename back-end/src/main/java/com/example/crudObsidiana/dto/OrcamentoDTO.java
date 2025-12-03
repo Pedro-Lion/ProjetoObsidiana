@@ -1,5 +1,6 @@
 package com.example.crudObsidiana.dto;
 import java.util.Date;
+import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

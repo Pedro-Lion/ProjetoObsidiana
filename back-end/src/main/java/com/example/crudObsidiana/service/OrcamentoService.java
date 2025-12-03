@@ -1,6 +1,7 @@
 package com.example.crudObsidiana.service;
 
 import com.example.crudObsidiana.dto.OrcamentoDTO;
+import com.example.crudObsidiana.model.Equipamento;
 import com.example.crudObsidiana.model.Orcamento;
 import com.example.crudObsidiana.model.Profissional;
 import com.example.crudObsidiana.model.Servico;
