@@ -5,7 +5,7 @@ export function InputCheckbox({ texto, className, onChange }) {
   
   function handleCheck(e) {
     setIsChecked(e.target.checked)
-    onChange(e)
+    if (onChange) onChange(e)
   }
 
   return (
