@@ -6,8 +6,6 @@ import jakarta.persistence.*;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.JoinColumn;
-import org.hibernate.mapping.Join;
-
 import java.util.List;
 import java.util.ArrayList;
 
@@ -41,9 +39,6 @@ public class Servico  {
             inverseJoinColumns = @JoinColumn(name = "equipamento_id")
     )
     private List<Equipamento> equipamentos = new ArrayList<>();
-
-    @ManyToMany(mappedBy = "servicos")
-    private List<Orcamento> orcamentos = new ArrayList<>();
 
     public Servico() {}
 

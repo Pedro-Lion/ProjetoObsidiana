@@ -13,6 +13,8 @@ export function CadastrarNovoServico() {
   const state = useLocation().state;
   const servico = state ? state : {};
   const [equipamentos, setEquipamentos] = useState([]);
+  const [valor, setValor] = useState(servico.horas ?? 0);
+  const [valorHora, setValorHora] = useState(servico.valorPorHora ? servico.valorPorHora.toFixed(2) : "0.00");
 
   useEffect(() => {
     async function getEquipamentos() {
@@ -91,27 +93,36 @@ export function CadastrarNovoServico() {
           <InputBordaLabel
             titulo="Nome do Serviço"
             placeholder="Insira o nome aqui"
-            defaultValue={servico.nome}
+            value={servico.nome}
             className="w-full"
-            onInput={(e) => (servico.nome = e.target.value)}
+            onChange={(e) => (servico.nome = e.target.value)}
           />
 
           <InputBordaLabel
             type="number"
             titulo="Duração em Horas"
-            placeholder="Insira a duração aqui"
-            defaultValue={servico.horas}
             className="w-full"
-            onInput={(e) => (servico.horas = e.target.value)}
+            value={valor}
+            onChange={(e) => {
+              let v = Number(e.target.value);
+              if (v > 24) v = 24;
+              setValor(v);
+              servico.horas = v;
+            }}
           />
 
           <InputBordaLabel
-            type="number"
+            type="text"
             titulo="Valor por Hora"
-            placeholder="Ex: 15.00"
-            defaultValue={servico.valorPorHora}
             className="w-full"
-            onInput={(e) => (servico.valorPorHora = e.target.value)}
+            value={valorHora}
+            onChange={(e) => {
+              let v = e.target.value;
+              v = v.replace(/\D/g, ""); // remove tudo que não for número
+              const numero = (Number(v) / 100).toFixed(2); // transforma centavos → valor real
+              setValorHora(numero); // formata no input a variável acima ↝
+              servico.valorPorHora = Number(numero); // salva no objeto Servico como double
+            }}
           />
         </div>
 
@@ -119,7 +130,7 @@ export function CadastrarNovoServico() {
           titulo="Descrição do Serviço"
           placeholder="Digite aqui informações do Serviço"
           defaultValue={servico.descricao}
-          onInput={(e) => (servico.descricao = e.target.value)}
+          onChange={(e) => (servico.descricao = e.target.value)}
           className="mb-3 h-35"
         />
 

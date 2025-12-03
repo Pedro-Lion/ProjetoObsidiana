@@ -10,9 +10,9 @@ export function Perfil() {
                 Foto de Perfil
             </h1>
 
-            <div class="flex items-center gap-10 border-r-4 border-indigo-50 mb-12">
+            <div className="flex items-center gap-10 border-r-4 border-indigo-50 mb-12">
                 <InputFoto />
-                <div class="flex flex-col">
+                <div className="flex flex-col">
                     <BotaoSecundario />
                     <span className="text-[1.1rem] text-center">Remover</span>
                 </div>

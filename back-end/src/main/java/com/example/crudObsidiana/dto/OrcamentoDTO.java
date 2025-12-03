@@ -1,6 +1,5 @@
 package com.example.crudObsidiana.dto;
-import java.time.LocalDate;
-import java.util.List;
+import java.util.Date;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -11,8 +10,8 @@ public class OrcamentoDTO {
     @Schema(description = "Descrição ou título do orçamento", example = "Gravação de vídeo institucional")
     private String descricao;
 
-    @Schema(description = "Data e hora do evento", example = "2025-11-10")
-    private LocalDate dataEvento;
+    @Schema(description = "Data e hora do evento", example = "2025-11-10T09:00:00")
+    private Date dataEvento;
 
     @Schema(description = "Duração do evento em horas", example = "8")
     private Integer duracaoEvento;
@@ -36,8 +35,8 @@ public class OrcamentoDTO {
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
 
-    public LocalDate getDataEvento() { return dataEvento; }
-    public void setDataEvento(LocalDate dataEvento) { this.dataEvento = dataEvento; }
+    public Date getDataEvento() { return dataEvento; }
+    public void setDataEvento(Date dataEvento) { this.dataEvento = dataEvento; }
 
     public Integer getDuracaoEvento() { return duracaoEvento; }
     public void setDuracaoEvento(Integer duracaoEvento) { this.duracaoEvento = duracaoEvento; }
