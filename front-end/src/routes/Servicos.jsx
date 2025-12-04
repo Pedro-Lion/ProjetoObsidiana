@@ -49,7 +49,7 @@ export function Servicos() {
         />
       </div>
 
-      <section>
+      <section className="flex flex-wrap gap-5">
         {servicos.length != 0 ? (
           servicos.map((s) => (
             <CardServico

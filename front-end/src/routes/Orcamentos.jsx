@@ -49,7 +49,7 @@ export function Orcamentos() {
         />
       </div>
 
-      <section>
+      <section className="flex flex-wrap gap-5">
         {orcamentos.length != 0 ? (
           orcamentos.map((o) => (
             <CardOrcamento
