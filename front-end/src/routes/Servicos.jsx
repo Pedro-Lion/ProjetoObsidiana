@@ -16,7 +16,7 @@ export function Servicos() {
         },
       });
 
-      if ((request.status = 200)) {
+      if (request.status = 200) {
         setServicos(request.data);
       }
     }
