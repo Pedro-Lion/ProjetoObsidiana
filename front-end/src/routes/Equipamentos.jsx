@@ -99,7 +99,16 @@ export function Equipamentos() {
   if (data.length === 0)
     return (
       <>
-        <h1 className="text-4xl font-medium">Equipamentos</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-4xl font-medium">Equipamentos</h1>
+
+          <BotaoPrimario
+            titulo="+ Novo equipamento"
+            className="mb-0 mt-0"
+            onClick={() => navigate("/cadastro/equipamentos")}
+          />
+        </div>
+
         <p className="mt-4">Nenhum equipamento cadastrado.</p>
       </>
     );

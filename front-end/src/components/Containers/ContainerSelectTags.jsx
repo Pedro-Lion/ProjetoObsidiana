@@ -1,8 +1,8 @@
 import { useState } from "react";
 import Select from "react-select";
 
-export function ContainerSelectTags({titulo = "Container", placeholder="Escolha uma opção", itens = [{value: "", label: ""}], preSelecao = [{value: "", label: ""}], onChange}) {
-  const [itensSelecionados, setItensSelecionados] = useState(preSelecao[0].value ? preSelecao : []);
+export function ContainerSelectTags({titulo = "Container", placeholder="Escolha uma opção", itens,  preSelecao, onChange}) {
+  const [itensSelecionados, setItensSelecionados] = useState(preSelecao ?? []);
 
   const handleRemove = (removerEste) => {
     const itens = itensSelecionados.filter((item) => item.value !== removerEste.value)
