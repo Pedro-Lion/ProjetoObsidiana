@@ -44,6 +44,16 @@ public class Equipamento {
     @ManyToMany(mappedBy = "equipamentos")
     private List<Servico> servicos = new ArrayList<>();
 
+//    Metadados da imagem
+    @Schema(description = "Nome do arquivo de imagem salvo", example = "1632938123456_camera.jpg")
+    private String nomeArquivoImagem;
+
+    @Schema(description = "Tipo MIME da imagem", example = "image/jpeg")
+    private String tipoImagem;
+
+    @Schema(description = "Caminho absoluto ou relativo da imagem no servidor", example = "upload/1632938123456_camera.jpg")
+    private String caminhoImagem;
+
 
     //CONSTRUCTORS
     public Equipamento() {}
@@ -56,6 +66,21 @@ public class Equipamento {
         this.numeroSerie = numeroSerie;
         this.modelo = modelo;
         this.valorPorHora = valorPorHora;
+    }
+    public Equipamento(Long id, String nome, int quantidade, int quantidadeDisponivel, String categoria, String marca, String numeroSerie, String modelo, Double valorPorHora, List<Servico> servicos, String nomeArquivoImagem, String tipoImagem, String caminhoImagem) {
+        this.id = id;
+        this.nome = nome;
+        this.quantidade = quantidade;
+        this.quantidadeDisponivel = quantidadeDisponivel;
+        this.categoria = categoria;
+        this.marca = marca;
+        this.numeroSerie = numeroSerie;
+        this.modelo = modelo;
+        this.valorPorHora = valorPorHora;
+        this.servicos = servicos;
+        this.nomeArquivoImagem = nomeArquivoImagem;
+        this.tipoImagem = tipoImagem;
+        this.caminhoImagem = caminhoImagem;
     }
 
     //GETTERS & SETTERS
@@ -116,6 +141,24 @@ public class Equipamento {
         this.quantidadeDisponivel = quantidadeDisponivel;
         if (quantidadeDisponivel < 0) quantidadeDisponivel = 0;
         if (quantidadeDisponivel > quantidade) quantidadeDisponivel = quantidade;
+    }
+    public String getNomeArquivoImagem() {
+        return nomeArquivoImagem;
+    }
+    public void setNomeArquivoImagem(String nomeArquivoImagem) {
+        this.nomeArquivoImagem = nomeArquivoImagem;
+    }
+    public String getTipoImagem() {
+        return tipoImagem;
+    }
+    public void setTipoImagem(String tipoImagem) {
+        this.tipoImagem = tipoImagem;
+    }
+    public String getCaminhoImagem() {
+        return caminhoImagem;
+    }
+    public void setCaminhoImagem(String caminhoImagem) {
+        this.caminhoImagem = caminhoImagem;
     }
 
     //METODOS
