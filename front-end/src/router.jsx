@@ -59,6 +59,10 @@ export const router = createBrowserRouter([
         element: <CadastroOrcamento />
       },
       {
+        path: "/editar/orcamento/:id",
+        element: <CadastroOrcamento />
+      },
+      {
         path: "/profissionais",
         element: <Profissionais />,
       },

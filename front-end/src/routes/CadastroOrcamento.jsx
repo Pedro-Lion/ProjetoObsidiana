@@ -1,13 +1,113 @@
+import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { ContainerSelectTags } from "../components/Containers/ContainerSelectTags";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { SelectBordaLabel } from "../components/Inputs/SelectBordaLabel";
 import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
+import { api } from "../api";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Input } from "react-select/animated";
 
 export function CadastroOrcamento() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  const state = useLocation().state;
+  const [orcamento, setOrcamento] = useState(state ?? { status: "Em análise" });
+  const [opcoes, setOpcoes] = useState({
+    servico: [],
+    equipamento: [],
+    profissional: [],
+  });
+
+  function formatarOpcoes(lista = []) {
+    return lista.map((item) => {
+      return { value: item.id, label: item.nome };
+    });
+  }
+
+  useEffect(() => {
+    async function getOpcoes() {
+      try {
+        const respostaKeys = ["servico", "equipamento", "profissional"];
+        const respostas = await Promise.all(
+          respostaKeys.map((key) =>
+            api.get(`/${key}`, {
+              headers: {
+                Authorization: "Bearer " + sessionStorage.getItem("token"),
+              },
+            })
+          )
+        );
+
+        const novasOpcoes = { ...opcoes };
+        respostaKeys.forEach((key, index) => {
+          novasOpcoes[key] = formatarOpcoes(respostas[index].data);
+        });
+
+        setOpcoes(novasOpcoes);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    getOpcoes();
+  }, []);
+
+  async function cadastrar() {
+    console.log(orcamento);
+
+    try {
+      const request = await api.post("/orcamento", orcamento, {
+        headers: {
+          Authorization: "Bearer " + sessionStorage.getItem("token"),
+        },
+      });
+
+      if (request.status == 201) {
+        const confirmacao = confirm(
+          "Cadastrado com sucesso! Quer retornar à lista de orçamentos?"
+        );
+
+        if (confirmacao) {
+          navigate("/orcamentos");
+        }
+        return;
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Orçamento não pôde ser cadastrado. Tente novamente.");
+    }
+  }
+
+  async function editar() {
+    let orcamentoFormatado = {...orcamento}
+    
+    const chaves = ["servicos", "equipamentos", "profissionais"];
+    chaves.forEach((chave) => {
+      const lista = orcamentoFormatado[chave]
+      orcamentoFormatado[chave] = lista.map((item) => item.id)
+    });
+
+    try {
+      const request = await api.put(`/orcamento/${id}`, orcamentoFormatado, {
+        headers: {
+          Authorization: "Bearer " + sessionStorage.getItem("token"),
+        },
+      });
+
+      if (request.status == 200) {
+        alert("Editado com sucesso! Retornando à lista de orçamentos.");
+        return navigate("/orcamentos");
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Orcamento não pôde ser editado. Tente novamente.");
+    }
+  }
+
   return (
     <>
-      <h1>Cadastro orçamento</h1>
+      <h1>{!state ? "Cadastrar" : "Editar"} orçamento</h1>
 
       <section className="flex flex-col gap-2">
         <div className="flex justify-between gap-5">
@@ -19,30 +119,99 @@ export function CadastroOrcamento() {
               { label: "Confirmado" },
               { label: "Cancelado" },
             ]}
-            disabled={true}
+            disabled={!state ? true : false}
+            onChange={(e) =>
+              setOrcamento({ ...orcamento, status: e.target.value })
+            }
+            defaultValue={orcamento.status}
           />
           <InputBordaLabel
             className="w-full"
             type="date"
             titulo="Data do evento"
+            onInput={(e) =>
+              setOrcamento({ ...orcamento, dataEvento: e.target.value })
+            }
+            defaultValue={orcamento.dataEvento}
           />
           <InputBordaLabel
             className="w-full"
             type="number"
             titulo="Duração em horas"
+            onInput={(e) =>
+              setOrcamento({ ...orcamento, duracaoEvento: e.target.value })
+            }
+            defaultValue={orcamento.duracaoEvento}
           />
         </div>
-
-        <TextareaBordaLabel titulo="Descrição" className="h-40 -mt-4 mb-3" />
-
-        <ContainerSelectTags titulo="Serviços" />
-
-        <ContainerSelectTags titulo="Equipamentos" />
-
-        <ContainerSelectTags titulo="Profissionais" />
+        <InputBordaLabel
+          titulo="Local do evento"
+          className="w-full -mt-4"
+          onInput={(e) =>
+            setOrcamento({ ...orcamento, localEvento: e.target.value })
+          }
+          defaultValue={orcamento.localEvento}
+        />
+        <TextareaBordaLabel
+          titulo="Descrição"
+          className="h-40 -mt-4 mb-3"
+          onInput={(e) =>
+            setOrcamento({ ...orcamento, descricao: e.target.value })
+          }
+          defaultValue={orcamento.descricao}
+        />
+        <ContainerSelectTags
+          titulo="Serviços"
+          itens={opcoes.servico}
+          preSelecao={() =>
+            orcamento.servicos ? formatarOpcoes(orcamento.servicos) : []
+          }
+          onChange={(itens) =>
+            setOrcamento({
+              ...orcamento,
+              servicos: itens.map((item) => item.value),
+            })
+          }
+        />
+        <ContainerSelectTags
+          titulo="Equipamentos"
+          itens={opcoes.equipamento}
+          preSelecao={() =>
+            orcamento.equipamentos ? formatarOpcoes(orcamento.equipamentos) : []
+          }
+          onChange={(itens) =>
+            setOrcamento({
+              ...orcamento,
+              equipamentos: itens.map((item) => item.value),
+            })
+          }
+        />
+        <ContainerSelectTags
+          titulo="Profissionais"
+          itens={opcoes.profissional}
+          preSelecao={() =>
+            orcamento.profissionais
+              ? formatarOpcoes(orcamento.profissionais)
+              : []
+          }
+          onChange={(itens) =>
+            setOrcamento({
+              ...orcamento,
+              profissionais: itens.map((item) => item.value),
+            })
+          }
+        />
       </section>
 
-      <BotaoPrimario titulo="Cadastrar" className="self-end" />
+      {!state ? (
+        <BotaoPrimario
+          titulo="Cadastrar"
+          className="self-end"
+          onClick={cadastrar}
+        />
+      ) : (
+        <BotaoPrimario titulo="Editar" className="self-end" onClick={editar} />
+      )}
     </>
   );
 }
