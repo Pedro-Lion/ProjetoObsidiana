@@ -12,7 +12,7 @@ export function CadastrarNovoServico() {
 
   const state = useLocation().state;
   const [servico, setServico] = useState(state ?? {});
-  const [equipamentos, setEquipamentos] = useState([]);
+  const [opcoes, setOpcoes] = useState([]);
 
   const [horas, setHoras] = useState(servico.horas ?? 0);
   const [valorHora, setValorHora] = useState(
@@ -32,8 +32,7 @@ export function CadastrarNovoServico() {
           const dados = request.data.map((equip) => {
             return { value: equip.id, label: equip.nome };
           });
-
-          setEquipamentos(dados);
+          setOpcoes(dados);
         }
         return;
       } catch (error) {
@@ -61,7 +60,6 @@ export function CadastrarNovoServico() {
         }
         return;
       }
-
     } catch (error) {
       console.log(error);
       alert("Serviço não pôde ser cadastrado. Tente novamente.");
@@ -69,8 +67,20 @@ export function CadastrarNovoServico() {
   }
 
   async function editar() {
+    let servicoFormatado = { ...servico };
+    const equips = servicoFormatado.equipamentos;
+    // caso os equipamentos não forem alterardos, terá a propriedade id (que deve ser formatada)
+    if (equips[0] && equips[0].id) {
+      servicoFormatado.equipamentos = equips.map(
+        (equip) => equip.id
+      );
+    }
+
+
+    console.log(servicoFormatado)
+
     try {
-      const request = await api.put("/servico/" + id, servico, {
+      const request = await api.put(`/servico/${id}`, servicoFormatado, {
         headers: {
           Authorization: "Bearer " + sessionStorage.getItem("token"),
         },
@@ -97,6 +107,7 @@ export function CadastrarNovoServico() {
             titulo="Nome do Serviço"
             placeholder="Insira o nome aqui"
             className="w-full"
+            value={servico.nome}
             onInput={(e) => setServico({ ...servico, nome: e.target.value })}
           />
 
@@ -139,7 +150,7 @@ export function CadastrarNovoServico() {
 
         <ContainerSelectTags
           titulo="Equipamentos"
-          itens={equipamentos}
+          itens={opcoes}
           preSelecao={servico?.equipamentos?.map((s) => {
             return { value: s.id, label: s.nome };
           })}
