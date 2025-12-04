@@ -30,7 +30,7 @@ import java.util.List;
             List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
             servico.setEquipamentos(equipamentos);
 
-            return servicoRepository.save(servico);
+            return servico;
         }
     }
 

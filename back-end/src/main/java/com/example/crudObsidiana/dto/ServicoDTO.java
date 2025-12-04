@@ -1,9 +1,11 @@
 package com.example.crudObsidiana.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "DTO para criação de serviço com equipamentos")
 public class ServicoDTO {
 
