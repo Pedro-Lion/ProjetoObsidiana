@@ -100,8 +100,6 @@ public class OrcamentoController {
         return ResponseEntity.ok(orcamentoRepository.findAll());
     }
 
-
-
     // ----------------------------------------------------------------------
     // GET /orcamento/{id} → Buscar por ID
     // ----------------------------------------------------------------------
@@ -123,6 +121,9 @@ public class OrcamentoController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
+    // ----------------------------------------------------------------------
+    // PUT /orcamento/{id} → Atualizar orcamento
+    // ----------------------------------------------------------------------
     @PutMapping("/{id}")
     public ResponseEntity<Orcamento> atualizarOrcamento(@PathVariable("id") Long id, @RequestBody OrcamentoDTO dto) {
         Orcamento orcamento = orcamentoService.criarOrcamento(dto);
@@ -172,5 +173,16 @@ public class OrcamentoController {
         }
     }
 
+    // ----------------------------------------------------------------------
+    // DELETE /orcamento/{id} → Excluir orçamento
+    // ----------------------------------------------------------------------
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable("id") Long id) {
+        if (orcamentoRepository.existsById(id)) {
+            orcamentoRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
 
 }// FIM CLASSE

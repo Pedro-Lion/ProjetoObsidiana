@@ -23,6 +23,22 @@ export function Orcamentos() {
     getOrcamentos();
   }, []);
 
+  async function deletar(id) {
+    const ok = window.confirm("Tem certeza que deseja excluir este orçamento?");
+    if (!ok) return;
+    try {
+      const resposta = await api.delete(`/orcamento/${id}`, {
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+      });
+      if (resposta.status === 200 || resposta.status === 204) {
+        setOrcamentos(orcamentos.filter((o) => o.id != id));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Não foi possível excluir.");
+    }
+  }
+
   return (
     <>
       <div className="flex justify-between">
@@ -43,7 +59,7 @@ export function Orcamentos() {
             />
           ))
         ) : (
-          <p className="text-xl">Nenhum serviço cadastrado.</p>
+          <p className="text-xl">Nenhum orçamento cadastrado.</p>
         )}
       </section>
     </>
