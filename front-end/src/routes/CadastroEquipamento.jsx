@@ -4,11 +4,24 @@ import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
+import { useState } from "react";
 
 export function CadastroEquipamentos() {
   const navigate = useNavigate();
 
-  const equipamento = {};
+  // equipamento agora é estado controlado
+  const [equipamento, setEquipamento] = useState({
+    nome: "",
+    categoria: "",
+    marca: "",
+    quantidade: 0,
+    modelo: "",
+    numeroSerie: "",
+    valorPorHora: null, // Number (double) — pronto para enviar
+  });
+
+  // Estado apenas para exibir o valor formatado no input (string "0.00")
+  const [valorHora, setValorHora] = useState("0.00");
 
   async function cadastrar() {
     try {
@@ -29,11 +42,34 @@ export function CadastroEquipamentos() {
         return;
       }
 
-      alert("Equipamento não pode ser cadastrado. Tente novamente.");
+      alert("Equipamento não pôde ser cadastrado. Tente novamente.");
     } catch (error) {
       console.log(error);
     }
   }
+
+  // Funções utilitárias para inputs
+  const onChangeTexto = (campo) => (e) => {
+    setEquipamento((prev) => ({ ...prev, [campo]: e.target.value }));
+  };
+
+  const onChangeNumero = (campo) => (e) => {
+    // converte para número (inteiro)
+    const n = e.target.value === "" ? 0 : Number(e.target.value);
+    setEquipamento((prev) => ({ ...prev, [campo]: n }));
+  };
+
+  // Mesma lógica do cadastro de serviço para o campo "Valor por Hora"
+  const onInputValorHora = (e) => {
+    let v = e.target.value || "";
+    // remove tudo que não for número
+    v = v.replace(/\D/g, "");
+    // transforma centavos -> reais
+    const numero = (Number(v) / 100).toFixed(2);
+    setValorHora(numero); // string formatada para mostrar no input
+    // salva como Number (double) no objeto equipamento
+    setEquipamento((prev) => ({ ...prev, valorPorHora: Number(numero) }));
+  };
 
   return (
     <>
@@ -48,23 +84,27 @@ export function CadastroEquipamentos() {
             <InputBordaLabel
               titulo="Nome"
               placeholder="Ex: Memória SD 128gb"
-              onInput={(e) => (equipamento.nome = e.target.value)}
+              onInput={onChangeTexto("nome")}
+              value={equipamento.nome}
             />
             <InputBordaLabel
               titulo="Categoria"
               placeholder="Ex: Armazenamento"
-              onInput={(e) => (equipamento.categoria = e.target.value)}
+              onInput={onChangeTexto("categoria")}
+              value={equipamento.categoria}
             />
             <InputBordaLabel
               titulo="Marca"
               placeholder="Ex: SanDisk"
-              onInput={(e) => (equipamento.marca = e.target.value)}
+              onInput={onChangeTexto("marca")}
+              value={equipamento.marca}
             />
             <InputBordaLabel
               titulo="Quantidade"
               type="number"
               placeholder="Ex: 10"
-              onInput={(e) => (equipamento.quantidade = e.target.value)}
+              onInput={onChangeNumero("quantidade")}
+              value={equipamento.quantidade}
             />
           </div>
           <div className="flex flex-col justify-between h-full">
@@ -72,20 +112,25 @@ export function CadastroEquipamentos() {
               titulo="Modelo"
               type="text"
               placeholder="Ex: SD128GB"
-              onInput={(e) => (equipamento.modelo = e.target.value)}
+              onInput={onChangeTexto("modelo")}
+              value={equipamento.modelo}
             />
             <InputBordaLabel
               titulo="Número de Série"
               type="text"
               placeholder="Ex: 123456789"
-              onInput={(e) => (equipamento.numeroSerie = e.target.value)}
+              onInput={onChangeTexto("numeroSerie")}
+              value={equipamento.numeroSerie}
             />
+
             <InputBordaLabel
               titulo="Valor"
-              type="number"
+              type="text" // tipo texto para permitir a máscara (vírgulas, zeros à esquerda)
               placeholder="Ex: 150.00"
-              onInput={(e) => (equipamento.valorPorHora = e.target.value)}
+              onInput={onInputValorHora}
+              value={valorHora}
             />
+
             <BotaoPrimario
               titulo="Cadastrar"
               className="w-full mb-0 mt-10"
