@@ -82,7 +82,7 @@ public class OrcamentoController {
             @RequestBody OrcamentoDTO dto
     ) {
         Orcamento criado = orcamentoService.criarOrcamento(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(criado);
+        return ResponseEntity.status(HttpStatus.CREATED).body(orcamentoRepository.save(criado));
     }
 
 
@@ -123,7 +123,12 @@ public class OrcamentoController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-
+    @PutMapping("/{id}")
+    public ResponseEntity<Orcamento> atualizarOrcamento(@PathVariable("id") Long id, @RequestBody OrcamentoDTO dto) {
+        Orcamento orcamento = orcamentoService.criarOrcamento(dto);
+        orcamento.setId(id);
+        return ResponseEntity.ok(orcamentoRepository.save(orcamento));
+    }
 
     // ----------------------------------------------------------------------
     // PUT /orcamento/{id}/status → Alterar status (DISPARA OBSERVER)
