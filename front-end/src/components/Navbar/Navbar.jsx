@@ -33,7 +33,7 @@ export function Navbar() {
     },
     {
       titulo: "Serviços",
-      links: ["/servicos", "/cadastro/servico"],
+      links: ["/servicos", "/cadastro/servicos"],
       icones: [
         <i className={"bi bi-folder " + estiloIcone}></i>,
         <i className={"bi bi-folder2-open " + estiloIcone}></i>,
@@ -42,7 +42,7 @@ export function Navbar() {
     },
     {
       titulo: "Orçamentos",
-      links: ["/orcamentos", "/cadastro/orcamento"],
+      links: ["/orcamentos", "/cadastro/orcamentos"],
       icones: [
         <i className={"bi bi-file-earmark " + estiloIcone}></i>,
         <i className={"bi bi-file-earmark " + estiloIcone}></i>,

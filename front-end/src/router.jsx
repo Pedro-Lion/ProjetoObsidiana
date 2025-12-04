@@ -35,11 +35,15 @@ export const router = createBrowserRouter([
         element: <CadastroEquipamentos />
       },
       {
+        path: "/editar/equipamento/:id",
+        element: <CadastroEquipamentos />
+      },
+      {
         path: "/servicos",
         element: <Servicos />,
       },
       {
-        path: "/cadastro/servico",
+        path: "/cadastro/servicos",
         element: <CadastrarNovoServico />
       },
       {
@@ -51,7 +55,7 @@ export const router = createBrowserRouter([
         element: <Orcamentos />
       },
       {
-        path: "/cadastro/orcamento",
+        path: "/cadastro/orcamentos",
         element: <CadastroOrcamento />
       },
       {
