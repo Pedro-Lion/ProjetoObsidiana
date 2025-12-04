@@ -62,9 +62,9 @@ export function CadastrarNovoServico() {
         return;
       }
 
-      alert("Serviço não pôde ser cadastrado. Tente novamente.");
     } catch (error) {
       console.log(error);
+      alert("Serviço não pôde ser cadastrado. Tente novamente.");
     }
   }
 
@@ -152,17 +152,17 @@ export function CadastrarNovoServico() {
           className="mt-10"
         />
 
-        {state ? (
-          <BotaoPrimario
-            titulo="Editar Serviço"
-            className="self-end"
-            onClick={editar}
-          />
-        ) : (
+        {!state ? (
           <BotaoPrimario
             titulo="Cadastrar Serviço"
             className="self-end"
             onClick={cadastrar}
+          />
+        ) : (
+          <BotaoPrimario
+            titulo="Editar Serviço"
+            className="self-end"
+            onClick={editar}
           />
         )}
       </section>
