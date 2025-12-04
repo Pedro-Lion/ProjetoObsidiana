@@ -2,12 +2,36 @@ import { InputFoto } from "../components/Inputs/InputFoto";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
+import { api } from "../api";
+import { useNavigate } from "react-router-dom";
 
 export function CadastroProfissionais() {
+  const navigate = useNavigate();
+
   const profissional = {};
 
   async function cadastrar() {
-    console.log(profissional)
+    try {
+      const request = await api.post("/profissional", profissional, {
+        headers: {
+          Authorization: "Bearer " + sessionStorage.getItem("token"),
+        },
+      });
+
+      if (request.status == 201) {
+        const confirmacao = confirm(
+          "Cadastrado com sucesso! Quer retornar à lista de profissionais?"
+        );
+
+        if (confirmacao) {
+          navigate("/profissionais");
+        }
+        return;
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Profissional não pôde ser cadastrado. Tente novamente.");
+    }
   }
 
   return (
@@ -27,17 +51,21 @@ export function CadastroProfissionais() {
           <InputBordaLabel
             titulo="Disponibilidde"
             placeholder="Ex: Das terças às quintas às 14h"
-            onInput={(e) => profissional.disponibilidade = e.target.value}
+            onInput={(e) => (profissional.disponibilidade = e.target.value)}
           />
 
           <InputBordaLabel
             titulo="Contato"
             placeholder="Ex: (11) 91234-1234 ou fulano@email.com"
-            onInput={(e) => profissional.contato = e.target.value}
+            onInput={(e) => (profissional.contato = e.target.value)}
           />
         </div>
 
-        <BotaoPrimario className="mb-0 mt-10" titulo="Cadastrar" onClick={cadastrar} />
+        <BotaoPrimario
+          className="mb-0 mt-10"
+          titulo="Cadastrar"
+          onClick={cadastrar}
+        />
       </section>
     </>
   );
