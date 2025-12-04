@@ -54,8 +54,6 @@ export function CadastroOrcamento() {
   }, []);
 
   async function cadastrar() {
-    console.log(orcamento);
-
     try {
       const request = await api.post("/orcamento", orcamento, {
         headers: {
@@ -85,6 +83,7 @@ export function CadastroOrcamento() {
     const chaves = ["servicos", "equipamentos", "profissionais"];
     chaves.forEach((chave) => {
       const lista = orcamentoFormatado[chave]
+      if(!lista[0].id) return;
       orcamentoFormatado[chave] = lista.map((item) => item.id)
     });
 
