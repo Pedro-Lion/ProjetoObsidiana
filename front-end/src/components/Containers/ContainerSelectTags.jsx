@@ -1,25 +1,9 @@
 import { useState } from "react";
 import Select from "react-select";
 
-<<<<<<< HEAD
-export function ContainerSelectTags({placeholder="Selecione",titulo, props}) {
-  const [itensSelecionados, setItensSelecionados] = useState([]);
-
-  const itens = [
-    { value: "ariel", label: "Ariel" },
-    { value: "sebastian", label: "Sebastião" },
-    { value: "flounder", label: "Linguado" },
-    { value: "ursula", label: "Úrsula" },
-    { value: "eric", label: "Príncipe Eric" },
-  ];
-
-  // const itens = [props.listaItens];
-
-=======
 export function ContainerSelectTags({titulo = "Container", placeholder="Escolha uma opção", itens = [{value: "", label: ""}], onChange}) {
   const [itensSelecionados, setItensSelecionados] = useState([]);
 
->>>>>>> rafael
   const handleRemove = (removerEste) => {
     const itens = itensSelecionados.filter((item) => item.value !== removerEste.value)
 
