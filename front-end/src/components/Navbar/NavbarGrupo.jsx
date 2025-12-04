@@ -24,15 +24,15 @@ export function NavbarGrupo({ titulo = "", tituloSingular = "", links = [], icon
       </NavbarBotao>
 
       <div className={"py-2 pl-4 overflow-hidden flex flex-col gap-3"}>
+        <NavbarBotao onClick={() => navigate(links[1])}>
+          {icones[2]}
+          <span>Novo {tituloSing}</span>
+        </NavbarBotao>
         <NavbarBotao onClick={() => navigate(links[0])}>
           {icones[1]}
           <span>Todos os {tituloLower}</span>
         </NavbarBotao>
 
-        <NavbarBotao onClick={() => navigate(links[1])}>
-          {icones[2]}
-          <span>Novo {tituloSing}</span>
-        </NavbarBotao>
       </div>
     </li>
   );

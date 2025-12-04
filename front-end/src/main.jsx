@@ -7,6 +7,7 @@ import { msalConfig } from "./authConfig";
 
 import { RouterProvider } from "react-router-dom";
 import { router } from "./router.jsx";
+// import '../index.css';
 
 // const pca = new PublicClientApplication(msalConfig);
 

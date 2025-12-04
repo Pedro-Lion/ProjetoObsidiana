@@ -1,7 +1,9 @@
 package com.example.crudObsidiana.controller;
 
+import com.example.crudObsidiana.dto.ProfissionalDTO;
 import com.example.crudObsidiana.model.Profissional;
 import com.example.crudObsidiana.repository.ProfissionalRepository;
+import com.example.crudObsidiana.service.ProfissionalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -9,6 +11,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +20,7 @@ import java.util.List;
 
 @Tag(name = "Profissionais", description = "Operações relacionadas aos profissionais")
 @RestController
-@RequestMapping("/profissionais")
+@RequestMapping("/profissional")
 public class ProfissionalController {
 
     private final ProfissionalRepository repository;
@@ -24,6 +28,9 @@ public class ProfissionalController {
     public ProfissionalController(ProfissionalRepository repository) {
         this.repository = repository;
     }
+
+    @Autowired
+    private ProfissionalService profissionalService;
 
     @Operation(summary = "Lista todos os profissionais")
     @ApiResponse(responseCode = "200", description = "Lista de profissional retornada com sucesso",
@@ -48,12 +55,12 @@ public class ProfissionalController {
     }
 
     @Operation(summary = "Cadastra um novo profissional")
-    @ApiResponse(responseCode = "200", description = "Profissional criado com sucesso",
+    @ApiResponse(responseCode = "201", description = "Profissional criado com sucesso",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = Profissional.class)))
     @PostMapping
-    public ResponseEntity<Profissional> create(@RequestBody Profissional profissional) {
-        Profissional salvo = repository.save(profissional);
-        return ResponseEntity.ok(salvo);
+    public ResponseEntity<Profissional> create(@RequestBody ProfissionalDTO dto) {
+        Profissional profissionalCriado = profissionalService.criarProfissional(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(profissionalCriado);
     }
 
     @Operation(summary = "Remove um profissional pelo ID")

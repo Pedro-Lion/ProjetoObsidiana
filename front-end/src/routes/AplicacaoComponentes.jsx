@@ -57,6 +57,38 @@ export function AplicacaoComponentes() {
     alert(mensagem);
   }
 
+  const dadosCardServico = {
+    nome: "Serviço 1",
+    descricao: "Descrição do serviço",
+    valorPorHora: 200.3,
+    equipamentos: [],
+  };
+
+  const dadosCardOrcamento = {
+    id: 1,
+    status: "Confirmado",
+    dataEvento: "2025-11-05",
+    localEvento: "Estúdio Principal",
+    duracaoEvento: 8,
+    descricao: "Gravação de videoclipe publicitário",
+    servicos: [],
+  };
+
+  for (let numero = 1; numero <= 6; numero++) {
+    if (numero <= 5) {
+      dadosCardServico.equipamentos.push({
+        nome: "Câmera 0" + numero,
+        categoria: "Fotografia",
+        valorPorHora: 20,
+      });
+    }
+
+    dadosCardOrcamento.servicos.push({
+      nome: "Serviço " + numero,
+      valorPorHora: 100,
+    });
+  }
+
   // container tags
   const [itensSelecionados, setItensSelecionados] = useState([]);
 
@@ -123,7 +155,15 @@ export function AplicacaoComponentes() {
         <h2>Containers</h2>
 
         <ContainerListagem
-          titulo="Câmera 01"
+          dados={{
+            nome: "Câmera 01",
+            quantidade: 5,
+            categoria: "Gravação",
+            marca: "Sony",
+            modelo: "C9-20mm DisplayHD",
+            numeroSerie: "N00123",
+            valorPorHora: 25.5,
+          }}
           onClickEdit={() => clickContainer("editar", "equipamento")}
           onClickDel={() => clickContainer("", "equipamento")}
         />
@@ -136,6 +176,7 @@ export function AplicacaoComponentes() {
             { value: "ursula", label: "Úrsula" },
             { value: "eric", label: "Príncipe Eric" },
           ]}
+          preSelecao={[{value: "ariel", label: "Ariel"}]}
           onChange={(itens) => setItensSelecionados(itens)}
         />
 
@@ -155,11 +196,13 @@ export function AplicacaoComponentes() {
 
         <div className="flex flex-wrap gap-7">
           <CardServico
+            dados={dadosCardServico}
             onClickEdit={() => clickContainer("editar", "serviço")}
             onClickDel={() => clickContainer("", "serviço")}
           />
 
           <CardOrcamento
+            dados={dadosCardOrcamento}
             onClickEdit={() => clickContainer("editar", "serviço")}
             onClickDel={() => clickContainer("", "serviço")}
           />

@@ -67,7 +67,6 @@ public class Servico  {
     public List<Equipamento> getEquipamentos() {
         return equipamentos;
     }
-
     public void setEquipamentos(List<Equipamento> equipamentos) {
         this.equipamentos = equipamentos;
     }
