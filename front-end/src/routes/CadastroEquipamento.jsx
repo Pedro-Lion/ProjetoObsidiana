@@ -8,15 +8,7 @@ import { api } from "../api";
 export function CadastroEquipamentos() {
   const navigate = useNavigate();
 
-  const equipamento = {
-    nome: "",
-    quantidade: 0,
-    categoria: "",
-    marca: "",
-    numeroSerie: "",
-    modelo: "",
-    valorPorHora: 0,
-  };
+  const equipamento = {};
 
   async function cadastrar() {
     try {

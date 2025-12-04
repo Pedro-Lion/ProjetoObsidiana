@@ -1,5 +1,6 @@
 package com.example.crudObsidiana.dto;
 import java.util.Date;
+import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -25,6 +26,12 @@ public class OrcamentoDTO {
     @Schema(description = "Valor total calculado do orçamento", example = "2500.0")
     private Double valorTotal;
 
+    private List<Long> servicos;
+
+    private List<Long> equipamentos;
+
+    private List<Long> profissionais;
+
     // Getters e Setters
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
@@ -43,4 +50,13 @@ public class OrcamentoDTO {
 
     public Double getValorTotal() { return valorTotal; }
     public void setValorTotal(Double valorTotal) { this.valorTotal = valorTotal; }
+
+    public List<Long> getServicos() { return servicos; }
+    public void setServicos(List<Long> servicos) { this.servicos = servicos; }
+
+    public List<Long> getEquipamentos() { return equipamentos; }
+    public void setEquipamentos(List<Long> equipamentos) { this.equipamentos = equipamentos; }
+
+    public List<Long> getProfissionais() { return profissionais; }
+    public void setProfissionais(List<Long> profissionais) { this.profissionais = profissionais; }
 }

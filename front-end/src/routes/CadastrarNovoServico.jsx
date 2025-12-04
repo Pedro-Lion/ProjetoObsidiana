@@ -11,10 +11,13 @@ export function CadastrarNovoServico() {
   const { id } = useParams();
 
   const state = useLocation().state;
-  const servico = state ? state : {};
+  const [servico, setServico] = useState(state ?? {});
   const [equipamentos, setEquipamentos] = useState([]);
-  const [valor, setValor] = useState(servico.horas ?? 0);
-  const [valorHora, setValorHora] = useState(servico.valorPorHora ? servico.valorPorHora.toFixed(2) : "0.00");
+
+  const [horas, setHoras] = useState(servico.horas ?? 0);
+  const [valorHora, setValorHora] = useState(
+    servico.valorPorHora ? servico.valorPorHora.toFixed(2) : "0.00"
+  );
 
   useEffect(() => {
     async function getEquipamentos() {
@@ -74,7 +77,7 @@ export function CadastrarNovoServico() {
       });
 
       if (request.status == 200) {
-        alert("Editado com sucesso! Retornando à lista de serviços.")
+        alert("Editado com sucesso! Retornando à lista de serviços.");
         return navigate("/servicos");
       }
 
@@ -93,21 +96,21 @@ export function CadastrarNovoServico() {
           <InputBordaLabel
             titulo="Nome do Serviço"
             placeholder="Insira o nome aqui"
-            value={servico.nome}
             className="w-full"
-            onChange={(e) => (servico.nome = e.target.value)}
+            onInput={(e) => setServico({ ...servico, nome: e.target.value })}
           />
 
           <InputBordaLabel
             type="number"
             titulo="Duração em Horas"
             className="w-full"
-            value={valor}
-            onChange={(e) => {
+            value={horas}
+            onInput={(e) => {
               let v = Number(e.target.value);
               if (v > 24) v = 24;
-              setValor(v);
-              servico.horas = v;
+              if (v < 0) v = 0;
+              setHoras(v);
+              setServico({ ...servico, horas: v });
             }}
           />
 
@@ -116,12 +119,12 @@ export function CadastrarNovoServico() {
             titulo="Valor por Hora"
             className="w-full"
             value={valorHora}
-            onChange={(e) => {
+            onInput={(e) => {
               let v = e.target.value;
               v = v.replace(/\D/g, ""); // remove tudo que não for número
               const numero = (Number(v) / 100).toFixed(2); // transforma centavos → valor real
               setValorHora(numero); // formata no input a variável acima ↝
-              servico.valorPorHora = Number(numero); // salva no objeto Servico como double
+              setServico({ ...servico, valorPorHora: Number(numero) }); // salva no objeto Servico como double
             }}
           />
         </div>
@@ -130,7 +133,7 @@ export function CadastrarNovoServico() {
           titulo="Descrição do Serviço"
           placeholder="Digite aqui informações do Serviço"
           defaultValue={servico.descricao}
-          onChange={(e) => (servico.descricao = e.target.value)}
+          onInput={(e) => (servico.descricao = e.target.value)}
           className="mb-3 h-35"
         />
 
@@ -141,7 +144,10 @@ export function CadastrarNovoServico() {
             return { value: s.id, label: s.nome };
           })}
           onChange={(itens) =>
-            (servico.equipamentos = itens.map((item) => item.value))
+            setServico({
+              ...servico,
+              equipamentos: itens.map((item) => item.value),
+            })
           }
           className="mt-10"
         />

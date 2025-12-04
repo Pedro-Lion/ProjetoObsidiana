@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -46,6 +47,49 @@ public class Orcamento {
     @JsonManagedReference
     private List<UsoEquipamento> usosEquipamentos;
 
+    @ManyToMany
+    @JoinTable(
+        name = "orcamento_servicos",
+        joinColumns = @JoinColumn(name = "orcamento_id"),
+        inverseJoinColumns = @JoinColumn(name = "servico_id")
+    )
+    private List<Servico> servicos = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+        name = "orcamento_equipamentos",
+        joinColumns = @JoinColumn(name = "orcamento_id"),
+        inverseJoinColumns = @JoinColumn(name = "equipamento_id")
+    )
+    private List<Equipamento> equipamentos = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+    name = "orcamento_profissionais",
+    joinColumns = @JoinColumn(name = "orcamento_id"),
+    inverseJoinColumns = @JoinColumn(name = "profissional_id")
+    )
+    private List<Profissional> profissionais = new ArrayList<>();
+
+    public Orcamento() {
+    }
+
+    public Orcamento(
+        Date dataEvento,
+        Integer duracaoEvento,
+        String localEvento,
+        String descricao,
+        String status,
+        Double valorTotal
+    ) {
+        this.dataEvento = dataEvento;
+        this.duracaoEvento = duracaoEvento;
+        this.localEvento = localEvento;
+        this.descricao = descricao;
+        this.status = status;
+        this.valorTotal = valorTotal;
+    }
+
     // GETTERS & SETTERS
 
     public Long getId() { return id; }
@@ -71,4 +115,13 @@ public class Orcamento {
 
     public List<UsoEquipamento> getUsosEquipamentos() { return usosEquipamentos; }
     public void setUsosEquipamentos(List<UsoEquipamento> usosEquipamentos) { this.usosEquipamentos = usosEquipamentos; }
+
+    public List<Servico> getServicos() { return servicos; }
+    public void setServicos(List<Servico> servicos) { this.servicos = servicos;}
+
+    public List<Equipamento> getEquipamentos() { return equipamentos; }
+    public void setEquipamentos(List<Equipamento> equipamentos) { this.equipamentos = equipamentos;}
+
+    public List<Profissional> getProfissionais() { return profissionais; }
+    public void setProfissionais(List<Profissional> profissionais) { this.profissionais = profissionais; }
 }

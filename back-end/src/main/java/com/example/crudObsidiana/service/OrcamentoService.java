@@ -1,7 +1,14 @@
 package com.example.crudObsidiana.service;
 
 import com.example.crudObsidiana.dto.OrcamentoDTO;
+import com.example.crudObsidiana.model.Equipamento;
 import com.example.crudObsidiana.model.Orcamento;
+import com.example.crudObsidiana.model.Profissional;
+import com.example.crudObsidiana.model.Servico;
+import com.example.crudObsidiana.repository.EquipamentoRepository;
+import com.example.crudObsidiana.repository.OrcamentoRepository;
+import com.example.crudObsidiana.repository.ProfissionalRepository;
+import com.example.crudObsidiana.repository.ServicoRepository;
 import com.example.crudObsidiana.observer.OrcamentoObserver;
 import com.example.crudObsidiana.observer.OrcamentoSubject;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
@@ -30,23 +37,44 @@ public class OrcamentoService implements OrcamentoSubject {
         }
     }
 
+    @Autowired
+    private ServicoRepository servicoRepository;
+
+    @Autowired
+    private EquipamentoRepository equipamentoRepository;
+
+    @Autowired
+    private ProfissionalRepository profissionalRepository;
+
     // ---------------------------------------------------------------------
     // METODOS PADRÃO
     // ---------------------------------------------------------------------
     public Orcamento criarOrcamento(OrcamentoDTO dto) {
-        Orcamento orcamento = new Orcamento();
-        orcamento.setDescricao(dto.getDescricao());
-        orcamento.setDataEvento(dto.getDataEvento());
-        orcamento.setDuracaoEvento(dto.getDuracaoEvento());
-        orcamento.setLocalEvento(dto.getLocalEvento());
-        orcamento.setValorTotal(dto.getValorTotal());
-        orcamento.setStatus("Em análise"); // Coloca um status padrão,
+        Orcamento novoOrcamento = new Orcamento(
+            dto.getDataEvento(),
+            dto.getDuracaoEvento(),
+            dto.getLocalEvento(),
+            dto.getDescricao(),
+            dto.getStatus(),
+            dto.getValorTotal()
+        );
+
+        // O status padrão é "Em análise",
         // pois o Observer só entra em ação quando o endpoint de status é chamado.
-        // Dessa forma, a qtd de equipamentos não é modificada na criação do orçamento, evitando falhas futuras.
+        // Dessa forma, a qtd de equipamentos não é modificada na criação do orçamento, evitando falhas futuras
 
-        return orcamentoRepository.save(orcamento);
+        List<Servico> servicos = servicoRepository.findAllById(dto.getServicos());
+        novoOrcamento.setServicos(servicos);
+
+        List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
+        novoOrcamento.setEquipamentos(equipamentos);
+
+        List<Profissional> profissionais = profissionalRepository.findAllById(dto.getProfissionais());
+        novoOrcamento.setProfissionais(profissionais);
+
+        return orcamentoRepository.save(novoOrcamento);
     }
-
+  
     // ---------------------------------------------------------------------
     // Atualizar status do orçamento
     // ---------------------------------------------------------------------

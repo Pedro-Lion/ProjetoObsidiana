@@ -5,7 +5,6 @@ import { Erro404 } from "./routes/Erro404";
 import { Login } from "./routes/Login";
 
 import { Home } from "./routes/Home";
-import { CadastroGenerico } from "./routes/CadastroGenerico";
 import { Equipamentos } from "./routes/Equipamentos";
 import { CadastroEquipamentos } from "./routes/CadastroEquipamento";
 import { Servicos } from "./routes/Servicos";
@@ -15,6 +14,7 @@ import { Profissionais } from "./routes/Profissionais";
 import { CadastroProfissionais } from "./routes/CadastroProfissionais";
 import { Perfil } from "./routes/Perfil";
 import { AplicacaoComponentes } from "./routes/AplicacaoComponentes";
+import { CadastroOrcamento } from "./routes/CadastroOrcamento";
 
 export const router = createBrowserRouter([
   {
@@ -25,10 +25,6 @@ export const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
-      },
-      {
-        path: "/cadastro/:item",
-        element: <CadastroGenerico />,
       },
       {
         path: "/equipamentos",
@@ -52,8 +48,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/orcamentos",
-        // element: <Orcamentos />,
-        element: <AplicacaoComponentes/>
+        element: <Orcamentos />
+      },
+      {
+        path: "/cadastro/orcamento",
+        element: <CadastroOrcamento />
       },
       {
         path: "/profissionais",
