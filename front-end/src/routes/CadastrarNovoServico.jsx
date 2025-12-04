@@ -70,7 +70,7 @@ export function CadastrarNovoServico() {
     let servicoFormatado = { ...servico };
     const equips = servicoFormatado.equipamentos;
     // caso os equipamentos não forem alterardos, terá a propriedade id (que deve ser formatada)
-    if (equips[0] && equips[0].id) {
+    if (equips[0]?.id) {
       servicoFormatado.equipamentos = equips.map(
         (equip) => equip.id
       );

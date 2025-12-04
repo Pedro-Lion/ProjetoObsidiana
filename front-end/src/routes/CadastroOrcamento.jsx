@@ -83,7 +83,7 @@ export function CadastroOrcamento() {
     const chaves = ["servicos", "equipamentos", "profissionais"];
     chaves.forEach((chave) => {
       const lista = orcamentoFormatado[chave]
-      if(!lista[0].id) return;
+      if(!lista[0]?.id) return;
       orcamentoFormatado[chave] = lista.map((item) => item.id)
     });
 
