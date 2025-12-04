@@ -50,9 +50,17 @@ export function Servicos() {
       </div>
 
       <section>
-        {servicos.map((s) => (
-          <CardServico key={s.id} dados={s} onClickDel={() => deletar(s.id)} />
-        ))}
+        {servicos.length != 0 ? (
+          servicos.map((s) => (
+            <CardServico
+              key={s.id}
+              dados={s}
+              onClickDel={() => deletar(s.id)}
+            />
+          ))
+        ) : (
+          <p className="text-xl">Nenhum serviço cadastrado.</p>
+        )}
       </section>
     </>
   );
