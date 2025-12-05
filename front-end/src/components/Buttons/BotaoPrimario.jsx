@@ -1,4 +1,4 @@
-export function BotaoPrimario({ titulo = "Clique aqui", icone = "", className = "w-32", onClick = undefined }) {
+export function BotaoPrimario({ titulo = "Clique aqui", icone = "", className = "", onClick = undefined }) {
     return (
         <button type="button" className={`
         ${className}

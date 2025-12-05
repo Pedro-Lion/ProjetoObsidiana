@@ -1,9 +1,11 @@
 package com.example.crudObsidiana.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "DTO para criação de serviço com equipamentos")
 public class ServicoDTO {
 
@@ -54,11 +56,9 @@ public class ServicoDTO {
         this.valorPorHora = valorPorHora;
     }
 
-    public List<Long> getEquipamentos() {
-        return equipamentos;
-    }
+    public List<Long> getEquipamentos() { return equipamentos; }
 
-    public void setEquipamentos(List<Long> equipamentos) {
+    public void setEquipamentosIds(List<Long> equipamentosIds) {
         this.equipamentos = equipamentos;
     }
 }

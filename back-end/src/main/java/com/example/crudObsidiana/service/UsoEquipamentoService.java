@@ -47,11 +47,7 @@ public class UsoEquipamentoService {
             throw new RuntimeException("É necessário informar o ID de um orçamento ou serviço.");
         }
 
-        // Atualiza estoque
-        int novaDisponivel = equipamento.getQuantidadeDisponivel() - dto.getQuantidadeUsada();
-        if (novaDisponivel < 0) novaDisponivel = 0;
-        equipamento.setQuantidadeDisponivel(novaDisponivel);
-        equipamentoRepository.save(equipamento);
+        // NÃO MEXER NO ESTOQUE AQUI (o Observer já está fazendo isso)
 
         return usoEquipamentoRepository.save(uso);
     }

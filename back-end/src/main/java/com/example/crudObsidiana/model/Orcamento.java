@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Schema(description = "Modelo de orçamento")
@@ -21,7 +21,7 @@ public class Orcamento {
 
     @Schema(description = "Data do evento", example = "2025-11-05")
     @Column(name = "data_evento")
-    private LocalDate dataEvento;
+    private Date dataEvento;
 
     @Schema(description = "Duração do evento em horas", example = "8")
     @Column(name = "duracao")
@@ -42,12 +42,10 @@ public class Orcamento {
     @Column(name = "valorTotal")
     private Double valorTotal;
 
-    /*
     @OneToMany(mappedBy = "orcamento", cascade = CascadeType.ALL, orphanRemoval = true)
     @Schema(description = "Lista de usos de equipamentos vinculados a este orçamento")
     @JsonManagedReference
     private List<UsoEquipamento> usosEquipamentos;
-     */
 
     @ManyToMany
     @JoinTable(
@@ -65,11 +63,19 @@ public class Orcamento {
     )
     private List<Equipamento> equipamentos = new ArrayList<>();
 
+    @ManyToMany
+    @JoinTable(
+    name = "orcamento_profissionais",
+    joinColumns = @JoinColumn(name = "orcamento_id"),
+    inverseJoinColumns = @JoinColumn(name = "profissional_id")
+    )
+    private List<Profissional> profissionais = new ArrayList<>();
+
     public Orcamento() {
     }
 
     public Orcamento(
-        LocalDate dataEvento,
+        Date dataEvento,
         Integer duracaoEvento,
         String localEvento,
         String descricao,
@@ -89,8 +95,8 @@ public class Orcamento {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public LocalDate getDataEvento() { return dataEvento; }
-    public void setDataEvento(LocalDate dataEvento) { this.dataEvento = dataEvento; }
+    public Date getDataEvento() { return dataEvento; }
+    public void setDataEvento(Date dataEvento) { this.dataEvento = dataEvento; }
 
     public Integer getDuracaoEvento() { return duracaoEvento; }
     public void setDuracaoEvento(Integer duracaoEvento) { this.duracaoEvento = duracaoEvento; }
@@ -107,14 +113,15 @@ public class Orcamento {
     public Double getValorTotal() { return valorTotal; }
     public void setValorTotal(Double valorTotal) { this.valorTotal = valorTotal; }
 
-    /*
     public List<UsoEquipamento> getUsosEquipamentos() { return usosEquipamentos; }
     public void setUsosEquipamentos(List<UsoEquipamento> usosEquipamentos) { this.usosEquipamentos = usosEquipamentos; }
-     */
 
     public List<Servico> getServicos() { return servicos; }
     public void setServicos(List<Servico> servicos) { this.servicos = servicos;}
 
     public List<Equipamento> getEquipamentos() { return equipamentos; }
     public void setEquipamentos(List<Equipamento> equipamentos) { this.equipamentos = equipamentos;}
+
+    public List<Profissional> getProfissionais() { return profissionais; }
+    public void setProfissionais(List<Profissional> profissionais) { this.profissionais = profissionais; }
 }

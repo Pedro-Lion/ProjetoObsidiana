@@ -41,7 +41,7 @@ public class ServicoController {
     @PostMapping
     public ResponseEntity<Servico> criarServico(@RequestBody ServicoDTO dto) {
         Servico servicoCriado = servicoService.criarServico(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(servicoCriado);
+        return ResponseEntity.status(HttpStatus.CREATED).body(repository.save(servicoCriado));
     }
 
 
@@ -88,13 +88,10 @@ public class ServicoController {
             @ApiResponse(responseCode = "404", description = "Serviço não encontrado")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Servico> atualizar(@PathVariable("id") Long id, @RequestBody Servico servico) {
-        if (repository.existsById(id)) {
-            servico.setId(id);
-            repository.save(servico);
-            return ResponseEntity.ok(servico);
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Servico> atualizar(@PathVariable("id") Long id, @RequestBody ServicoDTO dto) {
+        Servico servico = servicoService.criarServico(dto);
+        servico.setId(id);
+        return ResponseEntity.ok(repository.save(servico));
     }
 
 

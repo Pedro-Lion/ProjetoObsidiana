@@ -6,8 +6,6 @@ import jakarta.persistence.*;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.JoinColumn;
-import org.hibernate.mapping.Join;
-
 import java.util.List;
 import java.util.ArrayList;
 
@@ -42,9 +40,6 @@ public class Servico  {
     )
     private List<Equipamento> equipamentos = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "servicos")
-    private List<Orcamento> orcamentos = new ArrayList<>();
-
     public Servico() {}
 
     public Servico(Long id, String nome, int horas, int valor) {
@@ -72,7 +67,6 @@ public class Servico  {
     public List<Equipamento> getEquipamentos() {
         return equipamentos;
     }
-
     public void setEquipamentos(List<Equipamento> equipamentos) {
         this.equipamentos = equipamentos;
     }

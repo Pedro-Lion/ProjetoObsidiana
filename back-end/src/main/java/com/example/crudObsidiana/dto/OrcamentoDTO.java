@@ -1,18 +1,20 @@
 package com.example.crudObsidiana.dto;
-import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Dados para criação de um novo orçamento")
 public class OrcamentoDTO {
 
     @Schema(description = "Descrição ou título do orçamento", example = "Gravação de vídeo institucional")
     private String descricao;
 
-    @Schema(description = "Data e hora do evento", example = "2025-11-10")
-    private LocalDate dataEvento;
+    @Schema(description = "Data e hora do evento", example = "2025-11-10T09:00:00")
+    private Date dataEvento;
 
     @Schema(description = "Duração do evento em horas", example = "8")
     private Integer duracaoEvento;
@@ -30,12 +32,14 @@ public class OrcamentoDTO {
 
     private List<Long> equipamentos;
 
+    private List<Long> profissionais;
+
     // Getters e Setters
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
 
-    public LocalDate getDataEvento() { return dataEvento; }
-    public void setDataEvento(LocalDate dataEvento) { this.dataEvento = dataEvento; }
+    public Date getDataEvento() { return dataEvento; }
+    public void setDataEvento(Date dataEvento) { this.dataEvento = dataEvento; }
 
     public Integer getDuracaoEvento() { return duracaoEvento; }
     public void setDuracaoEvento(Integer duracaoEvento) { this.duracaoEvento = duracaoEvento; }
@@ -54,4 +58,7 @@ public class OrcamentoDTO {
 
     public List<Long> getEquipamentos() { return equipamentos; }
     public void setEquipamentos(List<Long> equipamentos) { this.equipamentos = equipamentos; }
+
+    public List<Long> getProfissionais() { return profissionais; }
+    public void setProfissionais(List<Long> profissionais) { this.profissionais = profissionais; }
 }
