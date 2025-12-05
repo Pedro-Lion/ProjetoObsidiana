@@ -28,7 +28,7 @@ export function Navbar() {
       icones: [
         <i className={"bi bi-camera " + estiloIcone}></i>,
         <i className={"bi bi-camera " + estiloIcone}></i>,
-        <i className={"bi bi-camera " + estiloIcone}></i>,
+        <i className={"bi bi-plus-circle " + estiloIcone}></i>,
       ]
     },
     {
