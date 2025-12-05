@@ -6,28 +6,38 @@ import { CardServico } from "../components/Cards/CardServico";
 
 export function Servicos() {
   const navigate = useNavigate();
-  const [servicos, setServicos] = useState("Buscando serviços...");
+  const [servicos, setServicos] = useState([]);
 
   useEffect(() => {
     async function getServicos() {
       const request = await api.get("/servico", {
         headers: {
           Authorization: "Bearer " + sessionStorage.getItem("token"),
-        }
+        },
       });
 
       if (request.status = 200) {
-        const dados = request.data;
-        setServicos(
-          dados.map((s) => (
-            <CardServico key={s.id} dados={s} />
-          ))
-        );
+        setServicos(request.data);
       }
-
     }
     getServicos();
   }, []);
+
+  async function deletar(id) {
+    const ok = window.confirm("Tem certeza que deseja excluir este serviço?");
+    if (!ok) return;
+    try {
+      const resposta = await api.delete(`/servico/${id}`, {
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+      });
+      if (resposta.status === 200 || resposta.status === 204) {
+        setServicos(servicos.filter((s) => s.id != id));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Não foi possível excluir.");
+    }
+  }
 
   return (
     <>
@@ -35,12 +45,22 @@ export function Servicos() {
         <h1>Serviços</h1>
         <BotaoPrimario
           titulo="+ Novo serviço"
-          onClick={() => navigate("/cadastro/servico")}
+          onClick={() => navigate("/cadastro/servicos")}
         />
       </div>
 
-      <section>
-        {servicos}
+      <section className="flex flex-wrap gap-5">
+        {servicos.length != 0 ? (
+          servicos.map((s) => (
+            <CardServico
+              key={s.id}
+              dados={s}
+              onClickDel={() => deletar(s.id)}
+            />
+          ))
+        ) : (
+          <p className="text-xl">Nenhum serviço cadastrado.</p>
+        )}
       </section>
     </>
   );

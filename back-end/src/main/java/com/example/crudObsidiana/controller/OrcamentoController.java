@@ -82,7 +82,7 @@ public class OrcamentoController {
             @RequestBody OrcamentoDTO dto
     ) {
         Orcamento criado = orcamentoService.criarOrcamento(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(criado);
+        return ResponseEntity.status(HttpStatus.CREATED).body(orcamentoRepository.save(criado));
     }
 
 
@@ -99,8 +99,6 @@ public class OrcamentoController {
     public ResponseEntity<List<Orcamento>> listarTodos() {
         return ResponseEntity.ok(orcamentoRepository.findAll());
     }
-
-
 
     // ----------------------------------------------------------------------
     // GET /orcamento/{id} → Buscar por ID
@@ -123,7 +121,15 @@ public class OrcamentoController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-
+    // ----------------------------------------------------------------------
+    // PUT /orcamento/{id} → Atualizar orcamento
+    // ----------------------------------------------------------------------
+    @PutMapping("/{id}")
+    public ResponseEntity<Orcamento> atualizarOrcamento(@PathVariable("id") Long id, @RequestBody OrcamentoDTO dto) {
+        Orcamento orcamento = orcamentoService.criarOrcamento(dto);
+        orcamento.setId(id);
+        return ResponseEntity.ok(orcamentoRepository.save(orcamento));
+    }
 
     // ----------------------------------------------------------------------
     // PUT /orcamento/{id}/status → Alterar status (DISPARA OBSERVER)
@@ -167,5 +173,16 @@ public class OrcamentoController {
         }
     }
 
+    // ----------------------------------------------------------------------
+    // DELETE /orcamento/{id} → Excluir orçamento
+    // ----------------------------------------------------------------------
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable("id") Long id) {
+        if (orcamentoRepository.existsById(id)) {
+            orcamentoRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
 
 }// FIM CLASSE

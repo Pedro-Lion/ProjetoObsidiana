@@ -72,7 +72,7 @@ public class OrcamentoService implements OrcamentoSubject {
         List<Profissional> profissionais = profissionalRepository.findAllById(dto.getProfissionais());
         novoOrcamento.setProfissionais(profissionais);
 
-        return orcamentoRepository.save(novoOrcamento);
+        return novoOrcamento;
     }
   
     // ---------------------------------------------------------------------

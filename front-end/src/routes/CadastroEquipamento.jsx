@@ -2,51 +2,33 @@ import { InputFoto } from "../components/Inputs/InputFoto";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import { useState } from "react";
 
 export function CadastroEquipamentos() {
   const navigate = useNavigate();
+  const { id } = useParams();
 
-  // equipamento agora é estado controlado
-  const [equipamento, setEquipamento] = useState({
-    nome: "",
-    categoria: "",
-    marca: "",
-    quantidade: 0,
-    modelo: "",
-    numeroSerie: "",
-    valorPorHora: null, // Number (double) — pronto para enviar
-  });
+  const state = useLocation().state;
+  const [equipamento, setEquipamento] = useState(
+    state ?? {
+      nome: "",
+      categoria: "",
+      marca: "",
+      quantidade: 0,
+      modelo: "",
+      numeroSerie: "",
+      valorPorHora: null, // Number (double) — pronto para enviar
+    }
+  );
 
   // Estado apenas para exibir o valor formatado no input (string "0.00")
-  const [valorHora, setValorHora] = useState("0.00");
-
-  async function cadastrar() {
-    try {
-      const request = await api.post("/equipamento", equipamento, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
-      });
-
-      if (request.status == 201) {
-        const confirmacao = confirm(
-          "Cadastrado com sucesso! Quer retornar à lista de equipamentos?"
-        );
-
-        if (confirmacao) {
-          navigate("/equipamentos");
-        }
-        return;
-      }
-
-      alert("Equipamento não pôde ser cadastrado. Tente novamente.");
-    } catch (error) {
-      console.log(error);
-    }
-  }
+  const [valorHora, setValorHora] = useState(
+    equipamento.valorPorHora
+      ? Number(equipamento.valorPorHora).toFixed(2)
+      : "0.00"
+  );
 
   // Funções utilitárias para inputs
   const onChangeTexto = (campo) => (e) => {
@@ -70,6 +52,50 @@ export function CadastroEquipamentos() {
     // salva como Number (double) no objeto equipamento
     setEquipamento((prev) => ({ ...prev, valorPorHora: Number(numero) }));
   };
+
+  async function cadastrar() {
+    try {
+      const request = await api.post("/equipamento", equipamento, {
+        headers: {
+          Authorization: "Bearer " + sessionStorage.getItem("token"),
+        },
+      });
+
+      if (request.status == 201) {
+        const confirmacao = confirm(
+          "Cadastrado com sucesso! Quer retornar à lista de equipamentos?"
+        );
+
+        if (confirmacao) {
+          navigate("/equipamentos");
+        }
+        return;
+      }
+
+    } catch (error) {
+      console.log(error);
+      alert("Equipamento não pôde ser cadastrado. Tente novamente.");
+    }
+  }
+
+  async function editar() {
+    try {
+      const request = await api.put(`/equipamento/${id}`, equipamento, {
+        headers: {
+          Authorization: "Bearer " + sessionStorage.getItem("token"),
+        },
+      });
+
+      if (request.status == 200) {
+        alert("Editado com sucesso! Retornando à lista de equipamentos.");
+        return navigate("/equipamentos");
+      }
+
+    } catch (error) {
+      console.log(error);
+      alert("Equipamento não pôde ser editado. Tente novamente.");
+    }
+  }
 
   return (
     <>
@@ -131,11 +157,19 @@ export function CadastroEquipamentos() {
               value={valorHora}
             />
 
-            <BotaoPrimario
-              titulo="Cadastrar"
-              className="w-full mb-0 mt-10"
-              onClick={cadastrar}
-            />
+            {!state ? (
+              <BotaoPrimario
+                titulo="Cadastrar"
+                className="w-full mb-0 mt-10"
+                onClick={cadastrar}
+              />
+            ) : (
+              <BotaoPrimario
+                titulo="Editar"
+                className="w-full mb-0 mt-7"
+                onClick={editar}
+              />
+            )}
           </div>
         </div>
       </div>

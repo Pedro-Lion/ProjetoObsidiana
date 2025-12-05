@@ -5,6 +5,8 @@ export function SelectBordaLabel({
   onChange,
   options = [{ value, label: "" }],
   disabled = false,
+  value,
+  defaulValue,
 }) {
   const estilos = {
     cursor: !disabled ? "cursor-default" : "cursor-not-allowed",
@@ -29,6 +31,8 @@ export function SelectBordaLabel({
         className={`px-3 py-3 text-[1.1rem] bg-transparent border-1 rounded-lg        
         focus:outline-none placeholder:text-black/25
         ${estilos.selectBorda} ${estilos.selectTexto}`}
+        value={value}
+        defaultValue={defaulValue}
       >
         {placeholder && <option value="">{placeholder}</option>}
         {options.map((o) => (

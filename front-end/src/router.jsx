@@ -15,6 +15,7 @@ import { CadastroProfissionais } from "./routes/CadastroProfissionais";
 import { Perfil } from "./routes/Perfil";
 import { AplicacaoComponentes } from "./routes/AplicacaoComponentes";
 import { CadastroOrcamento } from "./routes/CadastroOrcamento";
+import {API} from "./routes/API";
 
 export const router = createBrowserRouter([
   {
@@ -35,11 +36,15 @@ export const router = createBrowserRouter([
         element: <CadastroEquipamentos />
       },
       {
+        path: "/editar/equipamento/:id",
+        element: <CadastroEquipamentos />
+      },
+      {
         path: "/servicos",
         element: <Servicos />,
       },
       {
-        path: "/cadastro/servico",
+        path: "/cadastro/servicos",
         element: <CadastrarNovoServico />
       },
       {
@@ -51,7 +56,11 @@ export const router = createBrowserRouter([
         element: <Orcamentos />
       },
       {
-        path: "/cadastro/orcamento",
+        path: "/cadastro/orcamentos",
+        element: <CadastroOrcamento />
+      },
+      {
+        path: "/editar/orcamento/:id",
         element: <CadastroOrcamento />
       },
       {
@@ -63,9 +72,13 @@ export const router = createBrowserRouter([
         element: <CadastroProfissionais />
       },
       {
-        path: "/perfil",
-        element: <Perfil />
+        path: "/cadastro/profissionais",
+        element: <CadastroProfissionais />
       },
+      {
+      path: "/api",
+      element: <API />
+      }
     ],
   },
   {

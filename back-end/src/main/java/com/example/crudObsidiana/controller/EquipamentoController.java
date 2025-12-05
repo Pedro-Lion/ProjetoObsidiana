@@ -62,8 +62,10 @@ public class EquipamentoController {
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = Equipamento.class))))
     @GetMapping
-    public List<Equipamento> listarTodos() {
-        return repository.findAll();
+    public ResponseEntity<List<Equipamento>> listarTodos() {
+        List<Equipamento> equipamentos = repository.findAll();
+        if (equipamentos.isEmpty()) return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(equipamentos);
     }
 
     @Operation(summary = "Recupera um equipamento pelo ID")

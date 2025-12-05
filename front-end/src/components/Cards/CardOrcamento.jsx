@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { BotaoPrimario } from "../Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../Buttons/BotaoSecundario";
 import { Foto } from "../Foto";
@@ -18,9 +19,10 @@ export function CardOrcamento({
       },
     ],
   },
-  onClickEdit,
   onClickDel,
 }) {
+  const navigate = useNavigate();
+
   const formatarValor = new Intl.NumberFormat("pt-br", {
     style: "currency",
     currency: "BRL",
@@ -28,13 +30,16 @@ export function CardOrcamento({
     maximumFractionDigits: 2,
   }).format;
 
-  const valorServicos = dados.servicos.reduce((acumulador, atual) => acumulador + atual.valorPorHora, 0);
+  const valorServicos = dados.servicos.reduce(
+    (acumulador, atual) => acumulador + atual.valorPorHora,
+    0
+  );
 
   function formatarData() {
     const dataSemNormalizacao = Intl.DateTimeFormat("pt-br", {
       day: "numeric",
       month: "short",
-    }).format(new Date(dados.dataEvento + "T00:00:00-03:00"));
+    }).format(new Date(dados.dataEvento));
 
     let dataNormalizada = dataSemNormalizacao.replace(" de ", " ");
     dataNormalizada = dataNormalizada.slice(0, dataNormalizada.length - 1);
@@ -47,7 +52,7 @@ export function CardOrcamento({
   function definirCorStatus() {
     const corPorStatus = {
       confirmado: "oklch(62.7% 0.194 149.214)",
-      pendente: "oklch(68.1% 0.162 75.834)",
+      "em análise": "oklch(68.1% 0.162 75.834)",
       cancelado: "oklch(50.5% 0.213 27.518)",
     };
 
@@ -57,11 +62,11 @@ export function CardOrcamento({
   const corStatus = definirCorStatus();
 
   const servicos = dados.servicos.map((s) => (
-    <li className="w-full p-3 flex justify-between bg-violet-200 rounded-md text-xl">
+    <li key={s.id} className="w-full p-3 flex justify-between bg-violet-200 rounded-md text-xl">
       <span className="font-medium">{s.nome}</span>
       {formatarValor(s.valorPorHora)}
     </li>
-  ))
+  ));
 
   return (
     <div className="w-120 h-160 flex flex-col border rounded-xl">
@@ -103,7 +108,9 @@ export function CardOrcamento({
           titulo="Editar"
           icone="bi bi-pencil"
           className="mt-0 mb-0"
-          onClick={onClickEdit}
+          onClick={() =>
+            navigate(`/editar/orcamento/${dados.id}`, { state: dados })
+          }
         />
         <BotaoSecundario
           titulo="Excluir"
