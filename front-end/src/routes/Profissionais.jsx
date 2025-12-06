@@ -2,13 +2,14 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { api } from "../api";
+import { ContainerProfissional } from "../components/Containers/ContainerProfissional";
 
 export function Profissionais() {
   const navigate = useNavigate();
   const [profissionais, setProfissionais] = useState([]);
 
   useEffect(() => {
-    async function getServicos() {
+    async function getProfissionais() {
       const request = await api.get("/profissional", {
         headers: {
           Authorization: "Bearer " + sessionStorage.getItem("token"),
@@ -16,12 +17,29 @@ export function Profissionais() {
       });
 
       if ((request.status = 200)) {
-        console.log(request.data);
         setProfissionais(request.data);
       }
     }
-    getServicos();
+    getProfissionais();
   }, []);
+
+  async function deletar(id) {
+    const ok = window.confirm(
+      "Tem certeza que deseja excluir este profissional?"
+    );
+    if (!ok) return;
+    try {
+      const resposta = await api.delete(`/profissional/${id}`, {
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+      });
+      if (resposta.status === 200 || resposta.status === 204) {
+        setProfissionais(profissionais.filter((p) => p.id != id));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Não foi possível excluir.");
+    }
+  }
 
   return (
     <>
@@ -35,7 +53,16 @@ export function Profissionais() {
 
       <section>
         {profissionais.length != 0 ? (
-          profissionais.map((p) => <p key={p.id}>{p.nome}</p>)
+          profissionais.map((p) => (
+            <ContainerProfissional
+              key={p.id}
+              dados={p}
+              onClickEdit={() =>
+                navigate(`/editar/profissional/${p.id}`, { state: p })
+              }
+              onClickDel={() => deletar(p.id)}
+            />
+          ))
         ) : (
           <p className="text-xl">Nenhum profissional cadastrado.</p>
         )}

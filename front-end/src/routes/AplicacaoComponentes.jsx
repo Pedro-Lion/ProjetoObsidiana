@@ -15,6 +15,7 @@ import { ContainerSelectTags } from "../components/Containers/ContainerSelectTag
 
 import { CardServico } from "../components/Cards/CardServico";
 import { CardOrcamento } from "../components/Cards/CardOrcamento";
+import { ContainerProfissional } from "../components/Containers/ContainerProfissional";
 
 export function AplicacaoComponentes() {
   // botões
@@ -168,6 +169,14 @@ export function AplicacaoComponentes() {
           onClickDel={() => clickContainer("", "equipamento")}
         />
 
+        <ContainerProfissional
+          dados={{
+            nome: "Roberto",
+            disponibilidade: "Ter a qui das 12h às 20h",
+            contato: "roberto@gmail.com",
+          }}
+        />
+
         <ContainerSelectTags
           itens={[
             { value: "ariel", label: "Ariel" },
@@ -176,7 +185,7 @@ export function AplicacaoComponentes() {
             { value: "ursula", label: "Úrsula" },
             { value: "eric", label: "Príncipe Eric" },
           ]}
-          preSelecao={[{value: "ariel", label: "Ariel"}]}
+          preSelecao={[{ value: "ariel", label: "Ariel" }]}
           onChange={(itens) => setItensSelecionados(itens)}
         />
 
