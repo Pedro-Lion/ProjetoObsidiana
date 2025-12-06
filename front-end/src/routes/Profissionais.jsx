@@ -16,7 +16,7 @@ export function Profissionais() {
       });
 
       if ((request.status = 200)) {
-        console.log(request.data)
+        console.log(request.data);
         setProfissionais(request.data);
       }
     }

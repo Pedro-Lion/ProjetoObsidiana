@@ -4,33 +4,68 @@ import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { api } from "../api";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Modal } from "../components/Modal/Modal.jsx";
 
 export function CadastroProfissionais() {
   const navigate = useNavigate();
 
-  const profissional = {};
+  const [profissional, setProfissional] = useState({
+    nome: "",
+    disponibilidade: "",
+    contato: "",
+  });
+
+  // Estados do modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitulo, setModalTitulo] = useState("");
+  const [modalDescricao, setModalDescricao] = useState("");
+  const [modalActions, setModalActions] = useState(null);
 
   async function cadastrar() {
     try {
       const request = await api.post("/profissional", profissional, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
 
       if (request.status == 201) {
-        const confirmacao = confirm(
+        setModalTitulo("Sucesso!");
+        setModalDescricao(
           "Cadastrado com sucesso! Quer retornar à lista de profissionais?"
         );
-
-        if (confirmacao) {
-          navigate("/profissionais");
-        }
-        return;
+        setModalActions(
+          <>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded mr-3"
+              onClick={() => navigate("/profissionais")}
+            >
+              Ir para lista
+            </button>
+            <button
+              className="bg-gray-300 px-4 py-2 rounded"
+              onClick={() => setModalOpen(false)}
+            >
+              Continuar
+            </button>
+          </>
+        );
+        setModalOpen(true);
       }
     } catch (error) {
       console.log(error);
-      alert("Profissional não pôde ser cadastrado. Tente novamente.");
+      setModalTitulo("Erro");
+      setModalDescricao(
+        "Profissional não pôde ser cadastrado. Tente novamente."
+      );
+      setModalActions(
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Fechar
+        </button>
+      );
+      setModalOpen(true);
     }
   }
 
@@ -45,19 +80,31 @@ export function CadastroProfissionais() {
           <InputBordaLabel
             titulo="Nome"
             placeholder="Ex: Fulano de Tal"
-            onInput={(e) => (profissional.nome = e.target.value)}
+            onInput={(e) =>
+              setProfissional({ ...profissional, nome: e.target.value })
+            }
+            value={profissional.nome}
           />
 
           <InputBordaLabel
-            titulo="Disponibilidde"
+            titulo="Disponibilidade"
             placeholder="Ex: Das terças às quintas às 14h"
-            onInput={(e) => (profissional.disponibilidade = e.target.value)}
+            onInput={(e) =>
+              setProfissional({
+                ...profissional,
+                disponibilidade: e.target.value,
+              })
+            }
+            value={profissional.disponibilidade}
           />
 
           <InputBordaLabel
             titulo="Contato"
             placeholder="Ex: (11) 91234-1234 ou fulano@email.com"
-            onInput={(e) => (profissional.contato = e.target.value)}
+            onInput={(e) =>
+              setProfissional({ ...profissional, contato: e.target.value })
+            }
+            value={profissional.contato}
           />
         </div>
 
@@ -67,6 +114,12 @@ export function CadastroProfissionais() {
           onClick={cadastrar}
         />
       </section>
+
+      {modalOpen && (
+        <Modal titulo={modalTitulo} descricao={modalDescricao}>
+          {modalActions}
+        </Modal>
+      )}
     </>
   );
 }

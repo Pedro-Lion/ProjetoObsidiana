@@ -3,41 +3,82 @@ import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { api } from "../api";
 import { CardOrcamento } from "../components/Cards/CardOrcamento";
+import { Modal } from "../components/Modal/Modal.jsx";
 
 export function Orcamentos() {
   const navigate = useNavigate();
   const [orcamentos, setOrcamentos] = useState([]);
 
+  // Estados do modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitulo, setModalTitulo] = useState("");
+  const [modalDescricao, setModalDescricao] = useState("");
+  const [modalActions, setModalActions] = useState(null);
+
   useEffect(() => {
     async function getOrcamentos() {
-      const request = await api.get("/orcamento", {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
-      });
-
-      if ((request.status = 200)) {
-        setOrcamentos(request.data);
+      try {
+        const request = await api.get("/orcamento", {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("token"),
+          },
+        });
+        if (request.status === 200) {
+          setOrcamentos(request.data);
+        }
+      } catch (err) {
+        console.error(err);
       }
     }
     getOrcamentos();
   }, []);
 
-  async function deletar(id) {
-    const ok = window.confirm("Tem certeza que deseja excluir este orçamento?");
-    if (!ok) return;
-    try {
-      const resposta = await api.delete(`/orcamento/${id}`, {
-        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-      if (resposta.status === 200 || resposta.status === 204) {
-        setOrcamentos(orcamentos.filter((o) => o.id != id));
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Não foi possível excluir.");
-    }
-  }
+  const deletar = (id) => {
+    setModalTitulo("Confirmar exclusão");
+    setModalDescricao("Tem certeza que deseja excluir este orçamento?");
+    setModalActions(
+      <>
+        <button
+          className="bg-red-500 text-white px-4 py-2 rounded mr-3"
+          onClick={async () => {
+            try {
+              const resposta = await api.delete(`/orcamento/${id}`, {
+                headers: {
+                  Authorization: "Bearer " + sessionStorage.getItem("token"),
+                },
+              });
+              if (resposta.status === 200 || resposta.status === 204) {
+                setOrcamentos((prev) => prev.filter((o) => o.id !== id));
+              }
+              setModalOpen(false);
+            } catch (err) {
+              console.error(err);
+              setModalTitulo("Erro");
+              setModalDescricao("Não foi possível excluir. Tente novamente.");
+              setModalActions(
+                <button
+                  className="bg-gray-300 px-4 py-2 rounded"
+                  onClick={() => setModalOpen(false)}
+                >
+                  Fechar
+                </button>
+              );
+              setModalOpen(true);
+            }
+          }}
+        >
+          Excluir
+        </button>
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Cancelar
+        </button>
+      </>
+    );
+    setModalOpen(true);
+  };
 
   return (
     <>
@@ -50,7 +91,7 @@ export function Orcamentos() {
       </div>
 
       <section className="flex flex-wrap gap-5">
-        {orcamentos.length != 0 ? (
+        {orcamentos.length !== 0 ? (
           orcamentos.map((o) => (
             <CardOrcamento
               key={o.id}
@@ -62,6 +103,12 @@ export function Orcamentos() {
           <p className="text-xl">Nenhum orçamento cadastrado.</p>
         )}
       </section>
+
+      {modalOpen && (
+        <Modal titulo={modalTitulo} descricao={modalDescricao}>
+          {modalActions}
+        </Modal>
+      )}
     </>
   );
 }
