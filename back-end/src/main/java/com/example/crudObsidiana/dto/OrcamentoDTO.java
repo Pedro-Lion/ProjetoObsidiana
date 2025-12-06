@@ -22,9 +22,10 @@ public class OrcamentoDTO {
     @Schema(description = "Duração do evento em horas", example = "8")
     private Integer duracaoEvento;
     */
-
+    @Schema(description = "Data de início do evento", example = "2025-11-10T09:00:00")
     private Date dataInicio;
 
+    @Schema(description = "Data de término do evento", example = "2025-11-10T09:00:00")
     private Date dataTermino;
 
     @Schema(description = "Local onde o evento ocorrerá", example = "Estúdio Central")

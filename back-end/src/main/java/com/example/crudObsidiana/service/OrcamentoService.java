@@ -58,8 +58,8 @@ public class OrcamentoService implements OrcamentoSubject {
     public Orcamento criarOrcamento(OrcamentoDTO dto) {
         // Mapear DTO -> Model Orcamento
         Orcamento novoOrcamento = new Orcamento(
-                dto.getDataEvento(),
-                dto.getDuracaoEvento(),
+                dto.getDataInicio(),
+                dto.getDataTermino(),
                 dto.getLocalEvento(),
                 dto.getDescricao(),
                 dto.getStatus(),
@@ -161,8 +161,8 @@ public class OrcamentoService implements OrcamentoSubject {
 
         // Atualiza campos simples
         existente.setDescricao(dto.getDescricao());
-        existente.setDataEvento(dto.getDataEvento());
-        existente.setDuracaoEvento(dto.getDuracaoEvento());
+        existente.setDataInicio(dto.getDataInicio());
+        existente.setDataTermino(dto.getDataTermino());
         existente.setLocalEvento(dto.getLocalEvento());
         existente.setValorTotal(dto.getValorTotal());
         // Detalhe: não sobrescrevemos status aqui ainda; iremos decidir mais abaixo
