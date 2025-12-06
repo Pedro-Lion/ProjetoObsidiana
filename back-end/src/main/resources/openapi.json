@@ -1144,16 +1144,15 @@
             "format": "int64",
             "example": 1
           },
-          "dataEvento": {
+          "dataInicio": {
             "type": "string",
-            "description": "Data do evento",
+            "description": "Data início do evento",
             "format": "date-time"
           },
-          "duracaoEvento": {
-            "type": "integer",
-            "description": "Duração do evento em horas",
-            "format": "int32",
-            "example": 8
+          "dataTermino": {
+            "type": "string",
+            "description": "Data fim do evento em horas",
+            "format": "date-time"
           },
           "localEvento": {
             "type": "string",
