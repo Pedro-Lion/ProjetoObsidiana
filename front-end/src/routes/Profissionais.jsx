@@ -3,43 +3,82 @@ import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { api } from "../api";
 import { ContainerProfissional } from "../components/Containers/ContainerProfissional";
+import { Modal } from "../components/Modal/Modal.jsx";
 
 export function Profissionais() {
   const navigate = useNavigate();
   const [profissionais, setProfissionais] = useState([]);
 
+  // Estados do modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitulo, setModalTitulo] = useState("");
+  const [modalDescricao, setModalDescricao] = useState("");
+  const [modalActions, setModalActions] = useState(null);
+
   useEffect(() => {
     async function getProfissionais() {
-      const request = await api.get("/profissional", {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
-      });
-
-      if ((request.status = 200)) {
-        setProfissionais(request.data);
+      try {
+        const request = await api.get("/profissional", {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("token"),
+          },
+        });
+        if (request.status === 200) {
+          setProfissionais(request.data);
+        }
+      } catch (err) {
+        console.error(err);
       }
     }
     getProfissionais();
   }, []);
 
-  async function deletar(id) {
-    const ok = window.confirm(
-      "Tem certeza que deseja excluir este profissional?"
+  const deletar = (id) => {
+    setModalTitulo("Confirmar exclusão");
+    setModalDescricao("Tem certeza que deseja excluir este profissional?");
+    setModalActions(
+      <>
+        <button
+          className="bg-red-500 text-white px-4 py-2 rounded mr-3"
+          onClick={async () => {
+            try {
+              const resposta = await api.delete(`/profissional/${id}`, {
+                headers: {
+                  Authorization: "Bearer " + sessionStorage.getItem("token"),
+                },
+              });
+              if (resposta.status === 200 || resposta.status === 204) {
+                setProfissionais((prev) => prev.filter((p) => p.id !== id));
+              }
+              setModalOpen(false);
+            } catch (err) {
+              console.error(err);
+              setModalTitulo("Erro");
+              setModalDescricao("Não foi possível excluir. Tente novamente.");
+              setModalActions(
+                <button
+                  className="bg-gray-300 px-4 py-2 rounded"
+                  onClick={() => setModalOpen(false)}
+                >
+                  Fechar
+                </button>
+              );
+              setModalOpen(true);
+            }
+          }}
+        >
+          Excluir
+        </button>
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Cancelar
+        </button>
+      </>
     );
-    if (!ok) return;
-    try {
-      const resposta = await api.delete(`/profissional/${id}`, {
-        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-      if (resposta.status === 200 || resposta.status === 204) {
-        setProfissionais(profissionais.filter((p) => p.id != id));
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Não foi possível excluir.");
-    }
-  }
+    setModalOpen(true);
+  };
 
   return (
     <>
@@ -52,7 +91,7 @@ export function Profissionais() {
       </div>
 
       <section>
-        {profissionais.length != 0 ? (
+        {profissionais.length !== 0 ? (
           profissionais.map((p) => (
             <ContainerProfissional
               key={p.id}
@@ -67,6 +106,12 @@ export function Profissionais() {
           <p className="text-xl">Nenhum profissional cadastrado.</p>
         )}
       </section>
+
+      {modalOpen && (
+        <Modal titulo={modalTitulo} descricao={modalDescricao}>
+          {modalActions}
+        </Modal>
+      )}
     </>
   );
 }

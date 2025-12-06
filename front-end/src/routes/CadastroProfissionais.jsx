@@ -26,7 +26,7 @@ export function CadastroProfissionais() {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
 
-      if (request.status == 201) {
+      if (request.status === 201) {
         setModalTitulo("Sucesso!");
         setModalDescricao(
           "Cadastrado com sucesso! Quer retornar à lista de profissionais?"
@@ -75,13 +75,34 @@ export function CadastroProfissionais() {
         },
       });
 
-      if (request.status == 200) {
-        alert("Editado com sucesso! Retornando à lista de profissionais.");
-        return navigate("/profissionais");
+      if (request.status === 200) {
+        setModalTitulo("Sucesso!");
+        setModalDescricao(
+          "Editado com sucesso! Retornando à lista de profissionais."
+        );
+        setModalActions(
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={() => navigate("/profissionais")}
+          >
+            Ok
+          </button>
+        );
+        setModalOpen(true);
       }
     } catch (error) {
       console.log(error);
-      alert("Profissional não pôde ser editado. Tente novamente.");
+      setModalTitulo("Erro");
+      setModalDescricao("Profissional não pôde ser editado. Tente novamente.");
+      setModalActions(
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Fechar
+        </button>
+      );
+      setModalOpen(true);
     }
   }
 
