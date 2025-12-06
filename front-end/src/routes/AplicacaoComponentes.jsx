@@ -6,6 +6,7 @@ import { BotaoBordaGradiente } from "../components/Buttons/BotaoBordaGradiente";
 
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
+import { InputDataBordaLabel } from "../components/Inputs/InputDataBordaLabel";
 import { InputFundoCor } from "../components/Inputs/InputFundoCor";
 import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { InputFoto } from "../components/Inputs/InputFoto";
@@ -16,6 +17,7 @@ import { ContainerSelectTags } from "../components/Containers/ContainerSelectTag
 import { CardServico } from "../components/Cards/CardServico";
 import { CardOrcamento } from "../components/Cards/CardOrcamento";
 import { ContainerProfissional } from "../components/Containers/ContainerProfissional";
+
 
 export function AplicacaoComponentes() {
   // botões
@@ -43,6 +45,11 @@ export function AplicacaoComponentes() {
   function lidarFoto(e) {
     const url = URL.createObjectURL(e.target.files[0]);
     setUrlImagem(url);
+  }
+
+  // input data hora
+  function verData(v) {
+    console.log(v.format())
   }
 
   // contariner equipamento e cards
@@ -78,6 +85,7 @@ export function AplicacaoComponentes() {
   for (let numero = 1; numero <= 6; numero++) {
     if (numero <= 5) {
       dadosCardServico.equipamentos.push({
+        id: numero - 1,
         nome: "Câmera 0" + numero,
         categoria: "Fotografia",
         valorPorHora: 20,
@@ -85,6 +93,7 @@ export function AplicacaoComponentes() {
     }
 
     dadosCardOrcamento.servicos.push({
+      id: numero - 1,
       nome: "Serviço " + numero,
       valorPorHora: 100,
     });
@@ -128,6 +137,8 @@ export function AplicacaoComponentes() {
           </div>
 
           <div>
+            <InputDataBordaLabel titulo="Data e hora" />
+
             <InputFundoCor
               type="number"
               titulo="Telefone"

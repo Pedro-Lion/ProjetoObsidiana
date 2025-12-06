@@ -27,8 +27,10 @@ import java.util.List;
             servico.setHoras(dto.getHoras());
             servico.setValorPorHora(dto.getValorPorHora());
 
-            List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
-            servico.setEquipamentos(equipamentos);
+            if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
+                List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
+                servico.setEquipamentos(equipamentos);
+            }
 
             return servico;
         }

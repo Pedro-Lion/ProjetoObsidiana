@@ -1,4 +1,5 @@
 package com.example.crudObsidiana.dto;
+
 import java.util.Date;
 import java.util.List;
 
@@ -14,11 +15,17 @@ public class OrcamentoDTO {
     @Schema(description = "Descrição ou título do orçamento", example = "Gravação de vídeo institucional")
     private String descricao;
 
+    /*
     @Schema(description = "Data e hora do evento", example = "2025-11-10T09:00:00")
     private Date dataEvento;
 
     @Schema(description = "Duração do evento em horas", example = "8")
     private Integer duracaoEvento;
+    */
+
+    private Date dataInicio;
+
+    private Date dataTermino;
 
     @Schema(description = "Local onde o evento ocorrerá", example = "Estúdio Central")
     private String localEvento;
@@ -41,11 +48,11 @@ public class OrcamentoDTO {
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
 
-    public Date getDataEvento() { return dataEvento; }
-    public void setDataEvento(Date dataEvento) { this.dataEvento = dataEvento; }
+    public Date getDataInicio() { return dataInicio;}
+    public void setDataInicio(Date dataInicio) { this.dataInicio = dataInicio; }
 
-    public Integer getDuracaoEvento() { return duracaoEvento; }
-    public void setDuracaoEvento(Integer duracaoEvento) { this.duracaoEvento = duracaoEvento; }
+    public Date getDataTermino() { return dataTermino; }
+    public void setDataTermino(Date dataTermino) { this.dataTermino = dataTermino; }
 
     public String getLocalEvento() { return localEvento; }
     public void setLocalEvento(String localEvento) { this.localEvento = localEvento; }
