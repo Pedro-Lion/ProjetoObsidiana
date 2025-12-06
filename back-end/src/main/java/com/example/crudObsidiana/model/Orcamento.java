@@ -19,6 +19,7 @@ public class Orcamento {
     @Schema(description = "ID do orçamento", example = "1")
     private Long id;
 
+    /*
     @Schema(description = "Data do evento", example = "2025-11-05")
     @Column(name = "data_evento")
     private Date dataEvento;
@@ -26,6 +27,11 @@ public class Orcamento {
     @Schema(description = "Duração do evento em horas", example = "8")
     @Column(name = "duracao")
     private Integer duracaoEvento;
+     */
+
+    private Date dataInicio;
+
+    private Date dataTermino;
 
     @Schema(description = "Local do evento", example = "Estúdio Principal")
     @Column(name = "local_evento")
@@ -75,15 +81,11 @@ public class Orcamento {
     }
 
     public Orcamento(
-        Date dataEvento,
-        Integer duracaoEvento,
         String localEvento,
         String descricao,
         String status,
         Double valorTotal
     ) {
-        this.dataEvento = dataEvento;
-        this.duracaoEvento = duracaoEvento;
         this.localEvento = localEvento;
         this.descricao = descricao;
         this.status = status;
@@ -95,11 +97,11 @@ public class Orcamento {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Date getDataEvento() { return dataEvento; }
-    public void setDataEvento(Date dataEvento) { this.dataEvento = dataEvento; }
+    public Date getDataInicio() { return dataInicio;}
+    public void setDataInicio(Date dataInicio) { this.dataInicio = dataInicio; }
 
-    public Integer getDuracaoEvento() { return duracaoEvento; }
-    public void setDuracaoEvento(Integer duracaoEvento) { this.duracaoEvento = duracaoEvento; }
+    public Date getDataTermino() { return dataTermino; }
+    public void setDataTermino(Date dataTermino) { this.dataTermino = dataTermino; }
 
     public String getLocalEvento() { return localEvento; }
     public void setLocalEvento(String localEvento) { this.localEvento = localEvento; }

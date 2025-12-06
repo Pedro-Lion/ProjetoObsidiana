@@ -51,8 +51,6 @@ public class OrcamentoService implements OrcamentoSubject {
     // ---------------------------------------------------------------------
     public Orcamento criarOrcamento(OrcamentoDTO dto) {
         Orcamento novoOrcamento = new Orcamento(
-            dto.getDataEvento(),
-            dto.getDuracaoEvento(),
             dto.getLocalEvento(),
             dto.getDescricao(),
             dto.getStatus(),
@@ -63,14 +61,20 @@ public class OrcamentoService implements OrcamentoSubject {
         // pois o Observer só entra em ação quando o endpoint de status é chamado.
         // Dessa forma, a qtd de equipamentos não é modificada na criação do orçamento, evitando falhas futuras
 
-        List<Servico> servicos = servicoRepository.findAllById(dto.getServicos());
-        novoOrcamento.setServicos(servicos);
+        if (dto.getServicos() != null && !dto.getServicos().isEmpty()) {
+            List<Servico> servicos = servicoRepository.findAllById(dto.getServicos());
+            novoOrcamento.setServicos(servicos);
+        }
 
-        List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
-        novoOrcamento.setEquipamentos(equipamentos);
+        if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
+            List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
+            novoOrcamento.setEquipamentos(equipamentos);
+        }
 
-        List<Profissional> profissionais = profissionalRepository.findAllById(dto.getProfissionais());
-        novoOrcamento.setProfissionais(profissionais);
+        if (dto.getProfissionais() != null && !dto.getProfissionais().isEmpty()) {
+            List<Profissional> profissionais = profissionalRepository.findAllById(dto.getProfissionais());
+            novoOrcamento.setProfissionais(profissionais);
+        }
 
         return novoOrcamento;
     }
