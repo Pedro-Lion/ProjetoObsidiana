@@ -36,10 +36,12 @@ export function CardOrcamento({
   );
 
   function formatarData() {
+    if (!dados.dataInicio) return "N/A"
+
     const dataSemNormalizacao = Intl.DateTimeFormat("pt-br", {
       day: "numeric",
       month: "short",
-    }).format(new Date(dados.dataEvento));
+    }).format(new Date(dados.dataInicio));
 
     let dataNormalizada = dataSemNormalizacao.replace(" de ", " ");
     dataNormalizada = dataNormalizada.slice(0, dataNormalizada.length - 1);

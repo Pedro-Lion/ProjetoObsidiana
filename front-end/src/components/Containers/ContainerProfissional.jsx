@@ -1,9 +1,6 @@
 import { Foto } from "../Foto";
-import { formatarPreco } from "../../../utils/formatarPreco";
 
-export function ContainerListagem({ dados = {}, onClickEdit = () => { }, onClickDel = () => { } }) {
-  // Valor formatado (tratando null/undefined/string)
-  const valorFormatado = formatarPreco(dados.valorPorHora);
+export function ContainerProfissional({ dados = {}, onClickEdit = () => { }, onClickDel = () => { } }) {
   return (
     <>
       <style>
@@ -47,7 +44,7 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => { }, onClick
                 .estilo-conteudo-campo,
                 .estilo-titulo-campo{
                 font-size:0.75em;
-                color:red;
+                color:black;
                 }
             }
         `}
@@ -57,14 +54,8 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => { }, onClick
           <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-xl leading-5.5 font-bold uppercase">
             {dados.nome || "—"}
           </label>
-          <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-[1.1rem] w-fit leading-5.5 uppercase">
-            {dados.categoria || "—"}
-          </label>
-          <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-[1.1rem] w-fit leading-5.5">
-            <b>{dados.quantidadeDisponivel ?? dados.quantidade ?? 0}</b> disponíveis
-          </label>
         </div>
-        <div className="flex flex-row justify-between items-start w-full px-7 lg:gap-10">
+        <div className="flex flex-row gap-15 items-start w-full px-7 lg:gap-10">
           {dados.nomeArquivoImagem ? (
             <img
               src={`${process.env.REACT_APP_API_BASE_URL || ""}/equipamento/${dados.id}/imagem`}
@@ -72,61 +63,29 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => { }, onClick
               className="w-full h-full object-cover"
             />
           ) : (
-            <Foto /> //componente placeholder
+            <Foto icone="bi bi-person" /> //componente placeholder
           )}
 
           <div className="estilo-campos">
             <label className="estilo-titulo-campo w-fit">
-              Marca
+              Disponibilidade
             </label>
             <label className="estilo-conteudo-campo">
-              {dados.marca || "—"}
+              {dados.disponibilidade || "—"}
             </label>
           </div>
           <div className="estilo-campos">
             <label className="estilo-titulo-campo">
-              Modelo
+              Contato
             </label>
             <label className="estilo-conteudo-campo">
-              {dados.modelo || "—"}
+              {dados.contato || "—"}
             </label>
           </div>
-          <div className="estilo-campos">
-            <label className="estilo-titulo-campo">
-              NºSerie
-            </label>
-            <label className="estilo-conteudo-campo">
-              {dados.numeroSerie || "—"}
-            </label>
-          </div>
-          <div className="estilo-campos">
-            <label className="estilo-titulo-campo">
-              Valor/hora
-            </label>
-            <label className="estilo-conteudo-campo">
-              {valorFormatado === "N/A" ? "R$ N/A" : `R$ ${valorFormatado}`}
-            </label>
-          </div>
-          {dados.diaria && (<div className="estilo-campos">
-            <label className="estilo-titulo-campo">
-              Diária
-            </label>
-            <label className="estilo-conteudo-campo">
-              R$ {formatarPreco(dados.valorDiaria)}
-            </label>
-          </div>)}
-          <div className="flex flex-col gap-3 lg:max-w-[45%] sm:max-w-[25%]">
-            <label className="estilo-titulo-campo w-fit">
-              Observações
-            </label>
-            <label className="estilo-conteudo-campo">
-              {dados.observacoes || "—"}
-            </label>
-          </div>
-          <div className="border-l border-violet-200
+          <div className="border-l-1 border-violet-200
                         flex flex-row self-center
                         lg:pl-9 sm:pl-4
-                        lg:gap-9 sm:gap-4">
+                        lg:gap-9 sm:gap-4 ml-auto">
             <i className="bi bi-pencil-square
                         text-slate-700 self-center
                         cursor-pointer hover:text-indigo-300

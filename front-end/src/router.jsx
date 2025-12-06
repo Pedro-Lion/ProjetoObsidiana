@@ -72,7 +72,7 @@ export const router = createBrowserRouter([
         element: <CadastroProfissionais />
       },
       {
-        path: "/cadastro/profissionais",
+        path: "/editar/profissional/:id",
         element: <CadastroProfissionais />
       },
       {

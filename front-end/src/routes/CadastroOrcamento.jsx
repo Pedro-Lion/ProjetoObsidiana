@@ -6,7 +6,8 @@ import { SelectBordaLabel } from "../components/Inputs/SelectBordaLabel";
 import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 import { api } from "../api";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Input } from "react-select/animated";
+import { InputDataBordaLabel } from "../components/Inputs/InputDataBordaLabel";
+import moment from "moment";
 
 export function CadastroOrcamento() {
   const navigate = useNavigate();
@@ -19,6 +20,14 @@ export function CadastroOrcamento() {
     equipamento: [],
     profissional: [],
   });
+
+  function registrarData(dt, atributo) {
+    if (moment.isMoment(dt)) {
+      const orcamentoCopia = { ...orcamento };
+      orcamentoCopia[atributo] = dt.format();
+      setOrcamento(orcamentoCopia);
+    }
+  }
 
   function formatarOpcoes(lista = []) {
     return lista.map((item) => {
@@ -42,7 +51,8 @@ export function CadastroOrcamento() {
 
         const novasOpcoes = { ...opcoes };
         respostaKeys.forEach((key, index) => {
-          novasOpcoes[key] = formatarOpcoes(respostas[index].data);
+          const dados = respostas[index].data;
+          if (dados.length != 0) novasOpcoes[key] = formatarOpcoes(dados);
         });
 
         setOpcoes(novasOpcoes);
@@ -78,13 +88,13 @@ export function CadastroOrcamento() {
   }
 
   async function editar() {
-    let orcamentoFormatado = {...orcamento}
-    
+    let orcamentoFormatado = { ...orcamento };
+
     const chaves = ["servicos", "equipamentos", "profissionais"];
     chaves.forEach((chave) => {
-      const lista = orcamentoFormatado[chave]
-      if(!lista[0]?.id) return;
-      orcamentoFormatado[chave] = lista.map((item) => item.id)
+      const lista = orcamentoFormatado[chave];
+      if (!lista[0]?.id) return;
+      orcamentoFormatado[chave] = lista.map((item) => item.id);
     });
 
     try {
@@ -124,23 +134,23 @@ export function CadastroOrcamento() {
             }
             defaultValue={orcamento.status}
           />
-          <InputBordaLabel
+          <InputDataBordaLabel
+            titulo="Data de início"
             className="w-full"
-            type="date"
-            titulo="Data do evento"
-            onInput={(e) =>
-              setOrcamento({ ...orcamento, dataEvento: e.target.value })
+            defaultValue={
+              orcamento.dataInicio ? new Date(orcamento.dataInicio) : undefined
             }
-            defaultValue={orcamento.dataEvento}
+            onChange={(dt) => registrarData(dt, "dataInicio")}
           />
-          <InputBordaLabel
+          <InputDataBordaLabel
+            titulo="Data de término"
             className="w-full"
-            type="number"
-            titulo="Duração em horas"
-            onInput={(e) =>
-              setOrcamento({ ...orcamento, duracaoEvento: e.target.value })
+            defaultValue={
+              orcamento.dataTermino
+                ? new Date(orcamento.dataTermino)
+                : undefined
             }
-            defaultValue={orcamento.duracaoEvento}
+            onChange={(dt) => registrarData(dt, "dataTermino")}
           />
         </div>
         <InputBordaLabel
