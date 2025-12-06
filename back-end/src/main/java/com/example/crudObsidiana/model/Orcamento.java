@@ -81,11 +81,15 @@ public class Orcamento {
     }
 
     public Orcamento(
+        Date dataInicio,
+        Date dataTermino,
         String localEvento,
         String descricao,
         String status,
         Double valorTotal
     ) {
+        this.dataInicio = dataInicio;
+        this.dataTermino = dataTermino;
         this.localEvento = localEvento;
         this.descricao = descricao;
         this.status = status;

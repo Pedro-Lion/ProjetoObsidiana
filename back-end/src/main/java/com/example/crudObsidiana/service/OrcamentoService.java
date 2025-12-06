@@ -51,6 +51,8 @@ public class OrcamentoService implements OrcamentoSubject {
     // ---------------------------------------------------------------------
     public Orcamento criarOrcamento(OrcamentoDTO dto) {
         Orcamento novoOrcamento = new Orcamento(
+            dto.getDataInicio(),
+            dto.getDataTermino(),
             dto.getLocalEvento(),
             dto.getDescricao(),
             dto.getStatus(),
