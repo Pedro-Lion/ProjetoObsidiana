@@ -10,23 +10,22 @@ import com.example.crudObsidiana.repository.ProfissionalRepository;
 import com.example.crudObsidiana.repository.ServicoRepository;
 import com.example.crudObsidiana.observer.OrcamentoObserver;
 import com.example.crudObsidiana.observer.OrcamentoSubject;
-import com.example.crudObsidiana.repository.OrcamentoRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
-
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.*;
 
 @Service
 public class OrcamentoService implements OrcamentoSubject {
 
-    private final OrcamentoRepository orcamentoRepository;
-    // Lista de observers (EquipamentoObserver, e qualquer outro futuro):
     private final List<OrcamentoObserver> observers = new ArrayList<>();
+    private final OrcamentoRepository orcamentoRepository;
 
+//    CONSTRUCTORS
     // Injeção via construtor
     // o Spring vai colocar aqui todos os beans que implementam OrcamentoObserver
     @Autowired
@@ -54,9 +53,10 @@ public class OrcamentoService implements OrcamentoSubject {
     // ---------------------------------------------------------------------
     // METODOS PADRÃO
     // ---------------------------------------------------------------------
-    // Colar dentro de OrcamentoService (substitui o método criarOrcamento existente)
+
     @Transactional
     public Orcamento criarOrcamento(OrcamentoDTO dto) {
+        // Mapear DTO -> Model Orcamento
         Orcamento novoOrcamento = new Orcamento(
                 dto.getDataEvento(),
                 dto.getDuracaoEvento(),
@@ -66,11 +66,9 @@ public class OrcamentoService implements OrcamentoSubject {
                 dto.getValorTotal()
         );
 
-        // Persistir o orçamento para garantir id e relacionamento correto
+        // Persistir para obter ID
         Orcamento salvo = orcamentoRepository.save(novoOrcamento);
 
-        // Criar usos de equipamento: prefere dto.getUsosEquipamentos() (com quantidades),
-        // fallback: dto.getEquipamentos() (ids apenas -> quantidade = 1)
         List<UsoEquipamento> usos = new ArrayList<>();
 
         if (dto.getUsosEquipamentos() != null && !dto.getUsosEquipamentos().isEmpty()) {
@@ -93,15 +91,14 @@ public class OrcamentoService implements OrcamentoSubject {
                 UsoEquipamento uso = new UsoEquipamento();
                 uso.setOrcamento(salvo);
                 uso.setEquipamento(eq);
-                uso.setQuantidadeUsada(1); // default
+                uso.setQuantidadeUsada(1);
                 uso = usoEquipamentoRepository.save(uso);
                 usos.add(uso);
             }
         }
         salvo.setUsosEquipamentos(usos);
 
-
-        // Popular servicos/profissionais/equipamentos na model (mantendo compatibilidade)
+        // popular relações many-to-many (servicos/profissionais/equipamentos)
         if (dto.getServicos() != null) {
             List<Servico> servicos = servicoRepository.findAllById(dto.getServicos());
             salvo.setServicos(servicos);
@@ -111,13 +108,45 @@ public class OrcamentoService implements OrcamentoSubject {
             salvo.setProfissionais(profs);
         }
         if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
-            // já setamos usos, mas mantemos também a relação many-to-many se desejar
             List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
             salvo.setEquipamentos(equipamentos);
         }
 
+        // --- Se o DTO pediu status "Confirmado", checar estoque e notificar observers ---
+        String statusDto = dto.getStatus();
+        if (statusDto != null && "Confirmado".equalsIgnoreCase(statusDto)) {
+
+            // buscar usos persistidos (garante leitura correta)
+            List<UsoEquipamento> usosPersistidos = usoEquipamentoRepository.findByOrcamento_Id(salvo.getId());
+            if (usosPersistidos == null) usosPersistidos = new ArrayList<>();
+
+            List<String> faltantes = new ArrayList<>();
+            for (UsoEquipamento uso : usosPersistidos) {
+                Equipamento eq = uso.getEquipamento();
+                if (eq == null) continue;
+                Integer disponivel = (eq.getQuantidadeDisponivel() == null) ? 0 : eq.getQuantidadeDisponivel();
+                Integer requisitado = (uso.getQuantidadeUsada() == null) ? 0 : uso.getQuantidadeUsada();
+                if (disponivel < requisitado) {
+                    faltantes.add("Equipamento '" + eq.getNome() + "' (id=" + eq.getId() + "): disponível " + disponivel + ", requisitado " + requisitado);
+                }
+            }
+
+            if (!faltantes.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Estoque insuficiente: " + String.join("; ", faltantes));
+            }
+
+            // OK: persistir status e notificar observers para reduzir estoque
+            String statusAnterior = salvo.getStatus();
+            salvo.setStatus("Confirmado");
+            Orcamento salvoComStatus = orcamentoRepository.save(salvo);
+            notifyObservers(salvoComStatus, statusAnterior, "Confirmado");
+            return salvoComStatus;
+        }
+
+        // não pediu confirmação imediata: retornar orcamento salvo (status como veio/por default)
         return salvo;
     }
+
 
     // ---------------------------------------------------------------------
     // Editar orçamento
@@ -127,57 +156,56 @@ public class OrcamentoService implements OrcamentoSubject {
         Orcamento existente = orcamentoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orçamento não encontrado: " + id));
 
-        // Atualiza campos simples (mantendo o mesmo registro)
+        // salvar status anterior para decisões posteriores
+        String statusAnterior = existente.getStatus();
+
+        // Atualiza campos simples
         existente.setDescricao(dto.getDescricao());
         existente.setDataEvento(dto.getDataEvento());
         existente.setDuracaoEvento(dto.getDuracaoEvento());
         existente.setLocalEvento(dto.getLocalEvento());
         existente.setValorTotal(dto.getValorTotal());
-        // Não alteramos status aqui automaticamente
+        // Detalhe: não sobrescrevemos status aqui ainda; iremos decidir mais abaixo
 
-        // Buscar usos antigos persistidos
+        // Buscar usos antigos vinculados
         List<UsoEquipamento> usosAntigos = usoEquipamentoRepository.findByOrcamento_Id(existente.getId());
         if (usosAntigos == null) usosAntigos = new ArrayList<>();
 
-        // Construir mapa novo: equipamentoId -> quantidade (front envia ids -> default 1)
         // Construir mapa novo: equipamentoId -> quantidade
         Map<Long, Integer> novoMapa = new HashMap<>();
-
         if (dto.getUsosEquipamentos() != null && !dto.getUsosEquipamentos().isEmpty()) {
-            // quando frontend envia explicitamente quantidades
             for (UsoEquipamentoDTO uDto : dto.getUsosEquipamentos()) {
                 Long idEq = uDto.getIdEquipamento();
                 Integer qtd = (uDto.getQuantidadeUsada() == null) ? 1 : uDto.getQuantidadeUsada();
                 novoMapa.put(idEq, novoMapa.getOrDefault(idEq, 0) + qtd);
             }
         } else if (dto.getEquipamentos() != null) {
-            // fallback: front envia apenas ids (cada id representa 1 unidade)
             for (Long idEq : dto.getEquipamentos()) {
                 novoMapa.put(idEq, novoMapa.getOrDefault(idEq, 0) + 1);
             }
         }
 
-        // Construir mapa antigo: equipamentoId -> quantidade
+        // Mapear usos antigos para mapa
         Map<Long, Integer> antigoMapa = new HashMap<>();
         for (UsoEquipamento u : usosAntigos) {
             if (u.getEquipamento() == null) continue;
             Long idEq = u.getEquipamento().getId();
-            Integer q = u.getQuantidadeUsada();
+            Integer q = (u.getQuantidadeUsada() == null) ? 0 : u.getQuantidadeUsada();
             antigoMapa.put(idEq, antigoMapa.getOrDefault(idEq, 0) + q);
         }
 
-        boolean estavaConfirmado = "Confirmado".equalsIgnoreCase(existente.getStatus());
+        boolean estavaConfirmado = "Confirmado".equalsIgnoreCase(statusAnterior);
 
+        // Se estava confirmado, aplicar deltas (checagem de disponibilidade para deltas positivos)
         if (estavaConfirmado) {
-            // calcular deltas
             Map<Long, Integer> deltas = new HashMap<>();
             Set<Long> allIds = new HashSet<>();
             allIds.addAll(antigoMapa.keySet());
             allIds.addAll(novoMapa.keySet());
             for (Long idEq : allIds) {
-                Integer novoQtd = novoMapa.getOrDefault(idEq, 0);
-                Integer antigoQtd = antigoMapa.getOrDefault(idEq, 0);
-                Integer delta = novoQtd - antigoQtd;
+                int novoQtd = novoMapa.getOrDefault(idEq, 0);
+                int antigoQtd = antigoMapa.getOrDefault(idEq, 0);
+                int delta = novoQtd - antigoQtd;
                 if (delta != 0) deltas.put(idEq, delta);
             }
 
@@ -185,11 +213,11 @@ public class OrcamentoService implements OrcamentoSubject {
             List<String> faltantes = new ArrayList<>();
             for (Map.Entry<Long, Integer> e : deltas.entrySet()) {
                 Long idEq = e.getKey();
-                Integer delta = e.getValue();
+                int delta = e.getValue();
                 if (delta <= 0) continue;
                 Equipamento eq = equipamentoRepository.findById(idEq)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
-                Integer disponivel = eq.getQuantidadeDisponivel();
+                Integer disponivel = (eq.getQuantidadeDisponivel() == null) ? 0 : eq.getQuantidadeDisponivel();
                 if (disponivel < delta) {
                     faltantes.add("Equipamento '" + eq.getNome() + "' (id=" + idEq + "): disponível " + disponivel + ", requerido adicional " + delta);
                 }
@@ -198,10 +226,10 @@ public class OrcamentoService implements OrcamentoSubject {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Estoque insuficiente para edição: " + String.join("; ", faltantes));
             }
 
-            // aplicar deltas (reduzir ou devolver)
+            // aplicar deltas
             for (Map.Entry<Long, Integer> e : deltas.entrySet()) {
                 Long idEq = e.getKey();
-                Integer delta = e.getValue();
+                int delta = e.getValue();
                 Equipamento eq = equipamentoRepository.findById(idEq)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
                 if (delta > 0) {
@@ -213,11 +241,9 @@ public class OrcamentoService implements OrcamentoSubject {
             }
         }
 
-        // Agora sobrescrever usos: deletar apenas os usos deste orçamento
-        // Usamos deleteByOrcamentoId (query) para performance (opção B)
+        // Sobrescrever usos: deletar os antigos (por orcamento) e criar novos a partir do novoMapa
         usoEquipamentoRepository.deleteByOrcamentoId(existente.getId());
 
-        // Criar novos usos a partir do novoMapa
         List<UsoEquipamento> novosUsos = new ArrayList<>();
         for (Map.Entry<Long, Integer> e : novoMapa.entrySet()) {
             Long idEq = e.getKey();
@@ -233,7 +259,7 @@ public class OrcamentoService implements OrcamentoSubject {
         }
         existente.setUsosEquipamentos(novosUsos);
 
-        // Atualizar relações many-to-many (opcional: manter lista de equipamentos)
+        // atualizar lista many-to-many de equipamentos (opcional/compat)
         if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
             List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
             existente.setEquipamentos(equipamentos);
@@ -241,8 +267,50 @@ public class OrcamentoService implements OrcamentoSubject {
             existente.setEquipamentos(new ArrayList<>());
         }
 
-        Orcamento salvo = orcamentoRepository.save(existente);
-        return salvo;
+        // Agora, tratar mudança de status solicitada no DTO (se houver)
+        String novoStatusDto = dto.getStatus();
+        String novoStatus = (novoStatusDto == null) ? statusAnterior : novoStatusDto;
+        boolean seraConfirmado = "Confirmado".equalsIgnoreCase(novoStatus);
+
+        // Idempotência: se não houve transição confirm<->nao-confirm, apenas persistir status e retornar
+        if ( ("Confirmado".equalsIgnoreCase(statusAnterior)) == seraConfirmado ) {
+            existente.setStatus(novoStatus);
+            return orcamentoRepository.save(existente);
+        }
+
+        // Se vai virar Confirmado: checar estoque (usos já atualizados)
+        if (seraConfirmado && !"Confirmado".equalsIgnoreCase(statusAnterior)) {
+            List<UsoEquipamento> usos = usoEquipamentoRepository.findByOrcamento_Id(existente.getId());
+            List<String> faltantes = new ArrayList<>();
+            for (UsoEquipamento uso : usos) {
+                Equipamento eq = uso.getEquipamento();
+                if (eq == null) continue;
+                Integer disponivel = (eq.getQuantidadeDisponivel() == null) ? 0 : eq.getQuantidadeDisponivel();
+                Integer requisitado = (uso.getQuantidadeUsada() == null) ? 0 : uso.getQuantidadeUsada();
+                if (disponivel < requisitado) {
+                    faltantes.add("Equipamento '" + eq.getNome() + "' (id=" + eq.getId() + "): disponível " + disponivel + ", requisitado " + requisitado);
+                }
+            }
+            if (!faltantes.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Estoque insuficiente: " + String.join("; ", faltantes));
+            }
+            existente.setStatus("Confirmado");
+            Orcamento salvo = orcamentoRepository.save(existente);
+            notifyObservers(salvo, statusAnterior, "Confirmado");
+            return salvo;
+        }
+
+        // Se estava confirmado e agora deixa de ser: persistir e notificar devolução
+        if (!seraConfirmado && "Confirmado".equalsIgnoreCase(statusAnterior)) {
+            existente.setStatus(novoStatus);
+            Orcamento salvo = orcamentoRepository.save(existente);
+            notifyObservers(salvo, statusAnterior, novoStatus);
+            return salvo;
+        }
+
+        // fallback - persistir e retornar
+        existente.setStatus(novoStatus);
+        return orcamentoRepository.save(existente);
     }
 
 
