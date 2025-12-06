@@ -3,12 +3,15 @@ import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { api } from "../api";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
 
 export function CadastroProfissionais() {
   const navigate = useNavigate();
 
-  const profissional = {};
+  const { id } = useParams();
+  const state = useLocation().state;
+  const [profissional, setProfissional] = useState(state ?? {});
 
   async function cadastrar() {
     try {
@@ -34,9 +37,27 @@ export function CadastroProfissionais() {
     }
   }
 
+  async function editar() {
+    try {
+      const request = await api.put(`/profissional/${id}`, profissional, {
+        headers: {
+          Authorization: "Bearer " + sessionStorage.getItem("token"),
+        },
+      });
+
+      if (request.status == 200) {
+        alert("Editado com sucesso! Retornando à lista de profissionais.");
+        return navigate("/profissionais");
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Profissional não pôde ser editado. Tente novamente.");
+    }
+  }
+
   return (
     <>
-      <h1 className="mb-16 text-4xl font-bold">Cadastrar Profissional</h1>
+      <h1 className="mb-16">{!state ? "Cadastrar" : "Editar"} profissional</h1>
 
       <section>
         <InputFoto />
@@ -45,27 +66,47 @@ export function CadastroProfissionais() {
           <InputBordaLabel
             titulo="Nome"
             placeholder="Ex: Fulano de Tal"
-            onInput={(e) => (profissional.nome = e.target.value)}
+            defaultValue={profissional.nome}
+            onInput={(e) =>
+              setProfissional({ ...profissional, nome: e.target.value })
+            }
           />
 
           <InputBordaLabel
             titulo="Disponibilidde"
             placeholder="Ex: Das terças às quintas às 14h"
-            onInput={(e) => (profissional.disponibilidade = e.target.value)}
+            defaultValue={profissional.disponibilidade}
+            onInput={(e) =>
+              setProfissional({
+                ...profissional,
+                disponibilidade: e.target.value,
+              })
+            }
           />
 
           <InputBordaLabel
             titulo="Contato"
             placeholder="Ex: (11) 91234-1234 ou fulano@email.com"
-            onInput={(e) => (profissional.contato = e.target.value)}
+            defaultValue={profissional.contato}
+            onInput={(e) =>
+              setProfissional({ ...profissional, contato: e.target.value })
+            }
           />
         </div>
 
-        <BotaoPrimario
-          className="mb-0 mt-10"
-          titulo="Cadastrar"
-          onClick={cadastrar}
-        />
+        {!state ? (
+          <BotaoPrimario
+            className="mb-0 mt-10"
+            titulo="Cadastrar"
+            onClick={cadastrar}
+          />
+        ) : (
+          <BotaoPrimario
+            className="mb-0 mt-10"
+            titulo="Editar"
+            onClick={editar}
+          />
+        )}
       </section>
     </>
   );
