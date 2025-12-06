@@ -123,7 +123,7 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => { }, onClick
               {dados.observacoes || "—"}
             </label>
           </div>
-          <div className="border-l-1 border-violet-200
+          <div className="border-l border-violet-200
                         flex flex-row self-center
                         lg:pl-9 sm:pl-4
                         lg:gap-9 sm:gap-4">
