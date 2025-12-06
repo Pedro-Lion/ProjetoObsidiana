@@ -21,10 +21,10 @@ public class Equipamento {
     private String nome;
 
     @Schema(description = "Quantidade total", example = "5")
-    private int quantidade;
+    private Integer quantidadeTotal;
 
     @Schema(description = "Quantidade disponível", example = "3")
-    private int quantidadeDisponivel;
+    private Integer quantidadeDisponivel;
 
     @Schema(description = "Categoria do Equipamento", example = "Câmeras")
     private String categoria;
@@ -57,20 +57,20 @@ public class Equipamento {
 
     //CONSTRUCTORS
     public Equipamento() {}
-    public Equipamento(Long id, String nome, int quantidade, String categoria, String marca, String numeroSerie, String modelo, Double valorPorHora) {
+    public Equipamento(Long id, String nome, Integer quantidadeTotal, String categoria, String marca, String numeroSerie, String modelo, Double valorPorHora) {
         this.id = id;
         this.nome = nome;
-        this.quantidade = quantidade;
+        this.quantidadeTotal = quantidadeTotal;
         this.categoria = categoria;
         this.marca = marca;
         this.numeroSerie = numeroSerie;
         this.modelo = modelo;
         this.valorPorHora = valorPorHora;
     }
-    public Equipamento(Long id, String nome, int quantidade, int quantidadeDisponivel, String categoria, String marca, String numeroSerie, String modelo, Double valorPorHora, List<Servico> servicos, String nomeArquivoImagem, String tipoImagem, String caminhoImagem) {
+    public Equipamento(Long id, String nome, Integer quantidadeTotal, Integer quantidadeDisponivel, String categoria, String marca, String numeroSerie, String modelo, Double valorPorHora, List<Servico> servicos, String nomeArquivoImagem, String tipoImagem, String caminhoImagem) {
         this.id = id;
         this.nome = nome;
-        this.quantidade = quantidade;
+        this.quantidadeTotal = quantidadeTotal;
         this.quantidadeDisponivel = quantidadeDisponivel;
         this.categoria = categoria;
         this.marca = marca;
@@ -96,14 +96,14 @@ public class Equipamento {
     public void setNome(String nome) {
         this.nome = nome;
     }
-    public int getQuantidade() {
-        return quantidade;
+    public Integer getQuantidadeTotal() {
+        return quantidadeTotal;
     }
-    public void setQuantidade(int quantidade) {
-        this.quantidade = quantidade;
+    public void setQuantidadeTotal(Integer quantidadeTotal) {
+        this.quantidadeTotal = quantidadeTotal;
         // Se a quantidade total for alterada, ajustar o disponível
-        if (quantidadeDisponivel > quantidade) {
-            quantidadeDisponivel = quantidade;
+        if (quantidadeDisponivel > quantidadeTotal) {
+            quantidadeDisponivel = quantidadeTotal;
         }
     }
     public String getCategoria() {
@@ -136,11 +136,11 @@ public class Equipamento {
     public void setValorPorHora(Double valorPorHora) {
         this.valorPorHora = valorPorHora;
     }
-    public int getQuantidadeDisponivel() { return quantidadeDisponivel; }
-    public void setQuantidadeDisponivel(int quantidadeDisponivel) {
+    public Integer getQuantidadeDisponivel() { return quantidadeDisponivel; }
+    public void setQuantidadeDisponivel(Integer quantidadeDisponivel) {
         this.quantidadeDisponivel = quantidadeDisponivel;
         if (quantidadeDisponivel < 0) quantidadeDisponivel = 0;
-        if (quantidadeDisponivel > quantidade) quantidadeDisponivel = quantidade;
+        if (quantidadeDisponivel > quantidadeTotal) quantidadeDisponivel = quantidadeTotal;
     }
     public String getNomeArquivoImagem() {
         return nomeArquivoImagem;
@@ -162,7 +162,7 @@ public class Equipamento {
     }
 
     //METODOS
-    public void reduzirQuantidade(int quantidadeUsada) {
+    public void reduzirQuantidade(Integer quantidadeUsada) {
         if (quantidadeUsada < 0) return;
         if (quantidadeDisponivel >= quantidadeUsada) {
             quantidadeDisponivel -= quantidadeUsada;
@@ -171,11 +171,11 @@ public class Equipamento {
         }
     }
 
-    public void devolverQuantidade(int quantidadeDevolvida) {
+    public void devolverQuantidade(Integer quantidadeDevolvida) {
         if (quantidadeDevolvida < 0) return;
         quantidadeDisponivel += quantidadeDevolvida;
-        if (quantidadeDisponivel > quantidade) {
-            quantidadeDisponivel = quantidade;
+        if (quantidadeDisponivel > quantidadeTotal) {
+            quantidadeDisponivel = quantidadeTotal;
         }
     }
 }

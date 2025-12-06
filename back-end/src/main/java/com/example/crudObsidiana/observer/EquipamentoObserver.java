@@ -5,6 +5,7 @@ import com.example.crudObsidiana.model.Orcamento;
 import com.example.crudObsidiana.model.UsoEquipamento;
 import com.example.crudObsidiana.repository.EquipamentoRepository;
 import com.example.crudObsidiana.repository.UsoEquipamentoRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,7 @@ public class EquipamentoObserver implements OrcamentoObserver {
     @Autowired
     private UsoEquipamentoRepository usoEquipamentoRepository;
     @Override
+    @Transactional
     public void onOrcamentoUpdated(Orcamento orcamento,
                                    String statusAnterior,
                                    String novoStatus) {
@@ -64,8 +66,8 @@ public class EquipamentoObserver implements OrcamentoObserver {
                             "Equipamento não encontrado (ID: " + idEquipamento + ")"
                     ));
 
-            int antes = eq.getQuantidadeDisponivel();
-            int quantidadeUsada = uso.getQuantidadeUsada();
+            Integer antes = eq.getQuantidadeDisponivel();
+            Integer quantidadeUsada = uso.getQuantidadeUsada();
 
             if (reservar) {
                 eq.reduzirQuantidade(quantidadeUsada);

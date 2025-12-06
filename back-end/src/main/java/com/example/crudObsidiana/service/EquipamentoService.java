@@ -15,13 +15,13 @@ public class EquipamentoService {
     public Equipamento criarEquipamento(EquipamentoDTO dto) {
         Equipamento equipamento = new Equipamento();
         equipamento.setNome(dto.getNome());
-        equipamento.setQuantidade(dto.getQuantidade());
+        equipamento.setQuantidadeTotal(dto.getQuantidadeTotal());
         equipamento.setCategoria(dto.getCategoria());
         equipamento.setMarca(dto.getMarca());
         equipamento.setNumeroSerie(dto.getNumeroSerie());
         equipamento.setModelo(dto.getModelo());
         equipamento.setValorPorHora(dto.getValorPorHora());
-        equipamento.setQuantidadeDisponivel(dto.getQuantidade());
+        equipamento.setQuantidadeDisponivel(dto.getQuantidadeTotal());
 
         return equipamentoRepository.save(equipamento);
     }

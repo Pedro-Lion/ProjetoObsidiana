@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -82,7 +83,7 @@ public class OrcamentoController {
             @RequestBody OrcamentoDTO dto
     ) {
         Orcamento criado = orcamentoService.criarOrcamento(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(orcamentoRepository.save(criado));
+        return ResponseEntity.status(HttpStatus.CREATED).body(criado);
     }
 
 
@@ -126,9 +127,20 @@ public class OrcamentoController {
     // ----------------------------------------------------------------------
     @PutMapping("/{id}")
     public ResponseEntity<Orcamento> atualizarOrcamento(@PathVariable("id") Long id, @RequestBody OrcamentoDTO dto) {
-        Orcamento orcamento = orcamentoService.criarOrcamento(dto);
-        orcamento.setId(id);
-        return ResponseEntity.ok(orcamentoRepository.save(orcamento));
+        try {
+            Orcamento atualizado = orcamentoService.editarOrcamento(id, dto);
+            return ResponseEntity.ok(atualizado);
+        } catch (ResponseStatusException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            } else if (ex.getStatusCode() == HttpStatus.CONFLICT) {
+                // opcional: retornar mensagem ou corpo com detalhes
+                return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            }
+            return ResponseEntity.status(ex.getStatusCode()).build();
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     // ----------------------------------------------------------------------

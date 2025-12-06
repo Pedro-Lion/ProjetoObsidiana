@@ -1027,7 +1027,7 @@
             "description": "Nome do equipamento",
             "example": "Câmera Canon"
           },
-          "quantidade": {
+          "quantidadeTotal": {
             "type": "integer",
             "description": "Quantidade total",
             "format": "int32",
@@ -1386,7 +1386,7 @@
             "description": "Nome do equipamento",
             "example": "Câmera Canon"
           },
-          "quantidade": {
+          "quantidadeTotal": {
             "type": "integer",
             "description": "Quantidade disponível",
             "format": "int32",
