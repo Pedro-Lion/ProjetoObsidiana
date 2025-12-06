@@ -2,12 +2,7 @@ import Datetime from "react-datetime";
 import "react-datetime/css/react-datetime.css";
 
 export function InputDataBordaLabel({
-  titulo = "",
-  placeholder = "Insira a data e hora",
-  value,
-  defaultValue,
-  className = "w-80",
-  onChange,
+  titulo = "", placeholder = "Insira a data", value, defaultValue, className = "w-80", onChange
 }) {
   return (
     <div className={"flex flex-col " + className}>
@@ -19,16 +14,20 @@ export function InputDataBordaLabel({
         {titulo}
       </label>
       <Datetime
-        locale="pt-BR"
+        locale="pt-br"
+        dateFormat="DD/MM/YYYY"
         timeFormat="HH:mm"
+        closeOnSelect={true}
         className="border-indigo-500 text-slate-700
         px-3 py-3 text-[1.1rem] bg-transparent border-1 rounded-lg"
         inputProps={{
-          className: "focus:outline-none placeholder:text-black/25",
+          className: "w-full placeholder:text-black/25 focus:outline-none ",
           placeholder: placeholder,
         }}
-        onChange={onChange ? (data) => onChange(data.format()) : undefined}
-      />
+        value={value}
+        initialValue={defaultValue}
+        onChange={onChange ?? undefined}
+      />   
     </div>
   );
 }
