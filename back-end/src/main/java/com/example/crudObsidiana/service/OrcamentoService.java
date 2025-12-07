@@ -25,7 +25,7 @@ public class OrcamentoService implements OrcamentoSubject {
     private final List<OrcamentoObserver> observers = new ArrayList<>();
     private final OrcamentoRepository orcamentoRepository;
 
-//    CONSTRUCTORS
+    //    CONSTRUCTORS
     // Injeção via construtor
     // o Spring vai colocar aqui todos os beans que implementam OrcamentoObserver
     @Autowired
@@ -49,6 +49,41 @@ public class OrcamentoService implements OrcamentoSubject {
 
     @Autowired
     private UsoEquipamentoRepository usoEquipamentoRepository;
+
+
+    // ---------------------------------------------------------------------
+    // CALCULAR BALOR TOTAL ORÇAMENTO
+    // ---------------------------------------------------------------------
+    // Mantive nomes e checagens de nulls: soma serviços (horas * valorPorHora)
+    // e equipamentos via usosEquipamentos (quantidadeUsada * equipamento.valorPorHora)
+    private double calcularValorTotal(Orcamento orcamento) {
+        double total = 0.0;
+
+        // Serviços: horas * valorPorHora (se houver serviços associados)
+        if (orcamento.getServicos() != null) {
+            for (Servico serv : orcamento.getServicos()) {
+                if (serv == null) continue;
+                Double valorHora = serv.getValorPorHora();
+                Integer horas = serv.getHoras();
+                double vHora = (valorHora == null) ? 0.0 : valorHora;
+                int h = (horas == null) ? 0 : horas;
+                total += vHora * h;
+            }
+        }
+
+        // Equipamentos: usosEquipamentos (quantidadeUsada * equipamento.valorPorHora)
+        if (orcamento.getUsosEquipamentos() != null) {
+            for (UsoEquipamento uso : orcamento.getUsosEquipamentos()) {
+                if (uso == null || uso.getEquipamento() == null) continue;
+                Integer qtd = (uso.getQuantidadeUsada() == null) ? 0 : uso.getQuantidadeUsada();
+                Double vHoraEq = uso.getEquipamento().getValorPorHora();
+                double vEq = (vHoraEq == null) ? 0.0 : vHoraEq;
+                total += qtd * vEq;
+            }
+        }
+        return total;
+    }
+
 
     // ---------------------------------------------------------------------
     // METODOS PADRÃO
@@ -112,6 +147,11 @@ public class OrcamentoService implements OrcamentoSubject {
             salvo.setEquipamentos(equipamentos);
         }
 
+        // calcular e popular valorTotal antes de retornar/salvar final
+        double total = calcularValorTotal(salvo);
+        salvo.setValorTotal(total);
+
+
         // --- Se o DTO pediu status "Confirmado", checar estoque e notificar observers ---
         String statusDto = dto.getStatus();
         if (statusDto != null && "Confirmado".equalsIgnoreCase(statusDto)) {
@@ -160,12 +200,12 @@ public class OrcamentoService implements OrcamentoSubject {
         String statusAnterior = existente.getStatus();
 
         // Atualiza campos simples
+        // não puxar getStatus() aqui ainda! há uma lógica abaixo
         existente.setDescricao(dto.getDescricao());
         existente.setDataInicio(dto.getDataInicio());
         existente.setDataTermino(dto.getDataTermino());
         existente.setLocalEvento(dto.getLocalEvento());
-        existente.setValorTotal(dto.getValorTotal());
-        // Detalhe: não sobrescrevemos status aqui ainda; iremos decidir mais abaixo
+        // existente.setValorTotal(dto.getValorTotal());
 
         // Buscar usos antigos vinculados
         List<UsoEquipamento> usosAntigos = usoEquipamentoRepository.findByOrcamento_Id(existente.getId());
@@ -267,12 +307,16 @@ public class OrcamentoService implements OrcamentoSubject {
             existente.setEquipamentos(new ArrayList<>());
         }
 
-        // Agora, tratar mudança de status solicitada no DTO (se houver)
+        // recalcular valor total com base nas relações atualizadas
+        double totalAtualizado = calcularValorTotal(existente);
+        existente.setValorTotal(totalAtualizado);
+
+        // tratar mudança de status solicitada no DTO
         String novoStatusDto = dto.getStatus();
         String novoStatus = (novoStatusDto == null) ? statusAnterior : novoStatusDto;
         boolean seraConfirmado = "Confirmado".equalsIgnoreCase(novoStatus);
 
-        // Idempotência: se não houve transição confirm<->nao-confirm, apenas persistir status e retornar
+        // Se não houve mudnça de status confirm<->nao-confirm, apenas persistir status e retornar
         if ( ("Confirmado".equalsIgnoreCase(statusAnterior)) == seraConfirmado ) {
             existente.setStatus(novoStatus);
             return orcamentoRepository.save(existente);
@@ -326,7 +370,7 @@ public class OrcamentoService implements OrcamentoSubject {
         boolean eraConfirmado = "Confirmado".equalsIgnoreCase(statusAnterior);
         boolean seraConfirmado = "Confirmado".equalsIgnoreCase(novoStatus);
 
-        // Idempotência: se não houve transição confirmada<->não-confirmada, atualiza e retorna
+        // Se não houve mudança de status confirmada<->não-confirmada, atualiza e retorna
         if (eraConfirmado == seraConfirmado) {
             orcamento.setStatus(novoStatus);
             return orcamentoRepository.save(orcamento);
