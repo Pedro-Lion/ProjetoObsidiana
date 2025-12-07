@@ -3,9 +3,14 @@ import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { api } from "../api";
 import { CardOrcamento } from "../components/Cards/CardOrcamento";
+import { useMsal } from "@azure/msal-react";
+import { loginRequest } from "../authConfig";
 
 export function Orcamentos() {
   const navigate = useNavigate();
+  const { instance } = useMsal();
+  const account = instance.getActiveAccount();
+  
   const [orcamentos, setOrcamentos] = useState([]);
 
   useEffect(() => {
@@ -23,15 +28,45 @@ export function Orcamentos() {
     getOrcamentos();
   }, []);
 
-  async function deletar(id) {
+  async function deletar(orcamento) {
     const ok = window.confirm("Tem certeza que deseja excluir este orçamento?");
     if (!ok) return;
+
+    if (orcamento.idCalendar && account) {
+      try {
+        const response = await instance.acquireTokenSilent({
+          ...loginRequest,
+          account: account,
+        });
+
+        const accessToken = response.accessToken;
+
+        await fetch(
+          `https://graph.microsoft.com/v1.0/me/calendar/events/${orcamento.idCalendar}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        alert("Evento deletado com sucesso!");
+        // window.location.reload();
+      } catch (error) {
+        alert("Erro ao deletar evento");
+        return console.log(error);
+        // console.error(error);
+      }
+    }
+
     try {
-      const resposta = await api.delete(`/orcamento/${id}`, {
+      const resposta = await api.delete(`/orcamento/${orcamento.id}`, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
       if (resposta.status === 200 || resposta.status === 204) {
-        setOrcamentos(orcamentos.filter((o) => o.id != id));
+        setOrcamentos(orcamentos.filter((o) => o.id != orcamento.id));
       }
     } catch (err) {
       console.error(err);
@@ -52,11 +87,7 @@ export function Orcamentos() {
       <section className="flex flex-wrap gap-5">
         {orcamentos.length != 0 ? (
           orcamentos.map((o) => (
-            <CardOrcamento
-              key={o.id}
-              dados={o}
-              onClickDel={() => deletar(o.id)}
-            />
+            <CardOrcamento key={o.id} dados={o} onClickDel={() => deletar(o)} />
           ))
         ) : (
           <p className="text-xl">Nenhum orçamento cadastrado.</p>

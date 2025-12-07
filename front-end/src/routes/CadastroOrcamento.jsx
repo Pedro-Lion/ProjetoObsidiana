@@ -7,11 +7,15 @@ import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 import { api } from "../api";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { InputDataBordaLabel } from "../components/Inputs/InputDataBordaLabel";
+import { useMsal } from "@azure/msal-react";
+import { loginRequest } from "../authConfig";
 import moment from "moment";
 
 export function CadastroOrcamento() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { instance } = useMsal();
+  const account = instance.getActiveAccount();
 
   const state = useLocation().state;
   const [orcamento, setOrcamento] = useState(state ?? { status: "Em análise" });
@@ -96,6 +100,83 @@ export function CadastroOrcamento() {
       if (!lista[0]?.id) return;
       orcamentoFormatado[chave] = lista.map((item) => item.id);
     });
+
+    if (orcamentoFormatado.status === "Confirmado" && account) {
+      try {
+        const response = await instance.acquireTokenSilent({
+          ...loginRequest,
+          account: account,
+        });
+
+        const accessToken = response.accessToken;
+        console.log(accessToken);
+
+        var inicioFormatado = "";
+        var terminoFormatado = "";
+        for (let i = 0; i <= 18; i++) {
+          const cInicio = orcamentoFormatado.dataInicio[i];
+          const cFim = orcamentoFormatado.dataTermino[i];
+
+          if (i == 11) {
+            inicioFormatado +=
+              Number(cInicio + orcamentoFormatado.dataInicio[i + 1]) - 3;
+            terminoFormatado +=
+              Number(cFim + orcamentoFormatado.dataTermino[i + 1]) - 3;
+          } else if (i >= 13 || i < 11) {
+            inicioFormatado += cInicio;
+            terminoFormatado += cFim;
+          }
+        }
+
+        // return console.log(inicioFormatado,orcamentoFormatado.dataInicio)
+
+        const event = {
+          subject: orcamentoFormatado.descricao,
+          start: { dateTime: inicioFormatado, timeZone: "America/Sao_Paulo" },
+          end: { dateTime: terminoFormatado, timeZone: "America/Sao_Paulo" },
+          location: { displayName: orcamentoFormatado.localEvento },
+        };
+
+        console.log(event);
+
+        if (!orcamentoFormatado.idCalendar) {
+          // return console.log("Entrou sem idCalendar",);
+
+          const idCalendar = await fetch(
+            "https://graph.microsoft.com/v1.0/me/events",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(event),
+            }
+          );
+
+          const data = await idCalendar.json();
+
+          orcamentoFormatado.idCalendar = data.id;
+        } else {
+          // return console.log("Entrou com idCalendar");
+          await fetch(
+            `https://graph.microsoft.com/v1.0/me/events/${orcamentoFormatado.idCalendar}`,
+            {
+              method: "PATCH",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(event),
+            }
+          );
+        }
+      } catch (error) {
+        alert("Erro ao criar evento");
+        console.error(error);
+        return;
+      }
+    }
 
     try {
       const request = await api.put(`/orcamento/${id}`, orcamentoFormatado, {

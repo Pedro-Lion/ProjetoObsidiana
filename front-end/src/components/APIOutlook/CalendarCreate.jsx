@@ -21,13 +21,13 @@ export const CalendarCreate = () => {
 
         const event = {
             subject: 'Reunião de Teste',
-            start: { dateTime: '2025-12-03w09:00:00', timeZone: 'America/Sao_Paulo' },
-            end: { dateTime: '2025-12-03w10:00:00', timeZone: 'America/Sao_Paulo' },
+            start: { dateTime: '2025-12-03T09:00:00', timeZone: 'America/Sao_Paulo' },
+            end: { dateTime: '2025-12-03T10:00:00', timeZone: 'America/Sao_Paulo' },
             location: { displayName: 'Sala de Reuniões 1' },
             attendees: [{ emailAddress: { address: 'exemplo@dominio.com', name: 'Convidado' }, type: 'required' }]
         };
 
-        await fetch('https://graph.microsoft.com/v1.0/me/events', {
+        const idCalendar = await fetch('https://graph.microsoft.com/v1.0/me/events', {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -35,6 +35,12 @@ export const CalendarCreate = () => {
             },
             body: JSON.stringify(event)
         });
+
+        const data = await idCalendar.json();
+
+        const mapped = data.value.map(ev => ({
+            id: ev.id
+        }));
 
         alert('Evento criado com sucesso!');
         window.location.reload();

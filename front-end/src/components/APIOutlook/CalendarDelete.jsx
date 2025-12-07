@@ -3,7 +3,7 @@ import { loginRequest } from "../../authConfig";
 // import { Button } from "react-bootstrap";
 import { BotaoSecundario } from "../../components/Buttons/BotaoSecundario";
 
-export const CalendarDelete = () => {
+export const CalendarDelete = (id) => {
     const { instance } = useMsal();
     const account = instance.getActiveAccount();
 
