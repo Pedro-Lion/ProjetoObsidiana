@@ -34,6 +34,43 @@ export function CadastroOrcamento() {
       return { value: item.id, label: item.nome };
     });
   }
+  // Normaliza a lista de equipamentos (pode ser [id,id,...] ou [{id:..}, ...])
+  function obterListaIdsEquipamentos(rawLista) {
+    if (!rawLista) return [];
+    return rawLista.map(item => (typeof item === "number" ? item : item?.id)).filter(Boolean);
+  }
+
+  // Converte equipamentos (ids) em usosEquipamentos [{ idEquipamento, quantidadeUsada }]
+  function equipamentosParaUsos(equipamentoIds) {
+    const mapa = new Map();
+    equipamentoIds.forEach(id => {
+      mapa.set(id, (mapa.get(id) || 0) + 1);
+    });
+    const usos = [];
+    mapa.forEach((qtd, id) => usos.push({ idEquipamento: id, quantidadeUsada: qtd }));
+    return usos;
+  }
+
+  // Normaliza um possível usosEquipamentos vindo da UI (pode conter equipamento aninhado)
+  function normalizarUsos(usosRaw, equipamentosFallback) {
+    if (usosRaw && usosRaw.length > 0) {
+      return usosRaw.map(u => {
+        // se já vier { idEquipamento, quantidadeUsada } usa direto
+        if (u.idEquipamento) return { idEquipamento: u.idEquipamento, quantidadeUsada: u.quantidadeUsada ?? 1 };
+        // se vier { equipamento: { id: ... }, quantidadeUsada }
+        if (u.equipamento && (u.equipamento.id || u.equipamento.id === 0)) {
+          return { idEquipamento: u.equipamento.id, quantidadeUsada: u.quantidadeUsada ?? 1 };
+        }
+        // se vier { id, ... } (uso antigo)
+        if (u.id) return { idEquipamento: u.id, quantidadeUsada: u.quantidadeUsada ?? 1 };
+        // fallback
+        return null;
+      }).filter(Boolean);
+    }
+    // fallback para equipamentos simples
+    const ids = obterListaIdsEquipamentos(equipamentosFallback);
+    return equipamentosParaUsos(ids);
+  }
 
   useEffect(() => {
     async function getOpcoes() {
@@ -65,54 +102,69 @@ export function CadastroOrcamento() {
 
   async function cadastrar() {
     try {
-      const request = await api.post("/orcamento", orcamento, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
+      // preparar payload padronizado
+      const orcamentoFormatado = { ...orcamento };
+      orcamentoFormatado.servicos = orcamentoFormatado.servicos ? obterListaIdsEquipamentos(orcamentoFormatado.servicos) : [];
+      orcamentoFormatado.profissionais = orcamentoFormatado.profissionais ? obterListaIdsEquipamentos(orcamentoFormatado.profissionais) : [];
+
+      // montar usosEquipamentos do jeito que o backend espera
+      orcamentoFormatado.usosEquipamentos = normalizarUsos(orcamentoFormatado.usosEquipamentos, orcamentoFormatado.equipamentos);
+
+      const request = await api.post("/orcamento", orcamentoFormatado, {
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
 
-      if (request.status == 201) {
-        const confirmacao = confirm(
-          "Cadastrado com sucesso! Quer retornar à lista de orçamentos?"
-        );
-
-        if (confirmacao) {
-          navigate("/orcamentos");
-        }
+      if (request.status === 201) {
+        const confirmacao = confirm("Cadastrado com sucesso! Quer retornar à lista de orçamentos?");
+        if (confirmacao) navigate("/orcamentos");
         return;
       }
     } catch (error) {
       console.log(error);
-      alert("Orçamento não pôde ser cadastrado. Tente novamente.");
+      const msg = error?.response?.data?.message || error?.response?.data || "Orçamento não pôde ser cadastrado. Tente novamente.";
+      alert(msg);
     }
   }
 
+
   async function editar() {
-    let orcamentoFormatado = { ...orcamento };
-
-    const chaves = ["servicos", "equipamentos", "profissionais"];
-    chaves.forEach((chave) => {
-      const lista = orcamentoFormatado[chave];
-      if (!lista[0]?.id) return;
-      orcamentoFormatado[chave] = lista.map((item) => item.id);
-    });
-
     try {
-      const request = await api.put(`/orcamento/${id}`, orcamentoFormatado, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
+      // clona e formata listas many-to-many (servicos/profissionais/equipamentos)
+      let orcamentoFormatado = { ...orcamento };
+
+      const chaves = ["servicos", "equipamentos", "profissionais"];
+      chaves.forEach((chave) => {
+        const lista = orcamentoFormatado[chave];
+        if (!lista) {
+          orcamentoFormatado[chave] = [];
+          return;
+        }
+        // se for lista de objetos com id, converte; se já for lista de ids, mantém
+        if (lista.length > 0 && typeof lista[0] !== "number" && lista[0]?.id) {
+          orcamentoFormatado[chave] = lista.map((item) => item.id);
+        } else {
+          orcamentoFormatado[chave] = lista;
+        }
       });
 
-      if (request.status == 200) {
+      // garantir usosEquipamentos no formato { idEquipamento, quantidadeUsada }
+      orcamentoFormatado.usosEquipamentos = normalizarUsos(orcamentoFormatado.usosEquipamentos, orcamentoFormatado.equipamentos);
+
+      const request = await api.put(`/orcamento/${id}`, orcamentoFormatado, {
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+      });
+
+      if (request.status === 200) {
         alert("Editado com sucesso! Retornando à lista de orçamentos.");
         return navigate("/orcamentos");
       }
     } catch (error) {
       console.log(error);
-      alert("Orcamento não pôde ser editado. Tente novamente.");
+      const msg = error?.response?.data?.message || error?.response?.data || "Orçamento não pôde ser editado. Tente novamente.";
+      alert(msg);
     }
   }
+
 
   return (
     <>
@@ -182,19 +234,29 @@ export function CadastroOrcamento() {
             })
           }
         />
+
         <ContainerSelectTags
           titulo="Equipamentos"
           itens={opcoes.equipamento}
           preSelecao={() =>
             orcamento.equipamentos ? formatarOpcoes(orcamento.equipamentos) : []
           }
-          onChange={(itens) =>
+          temQuantidade={true}
+          onChange={(itensComQtd) => {
+            // itensComQtd = [{ value, label, quantidade }] quando temQuantidade=true
+            const equipamentoIds = (itensComQtd || []).map(i => i.value);
+            const usos = (itensComQtd || []).map(i => ({
+              idEquipamento: i.value,
+              quantidadeUsada: i.quantidade ?? 1
+            }));
             setOrcamento({
               ...orcamento,
-              equipamentos: itens.map((item) => item.value),
-            })
-          }
+              equipamentos: equipamentoIds,
+              usosEquipamentos: usos
+            });
+          }}
         />
+
         <ContainerSelectTags
           titulo="Profissionais"
           itens={opcoes.profissional}
@@ -210,6 +272,7 @@ export function CadastroOrcamento() {
             })
           }
         />
+
       </section>
 
       {!state ? (
@@ -219,7 +282,7 @@ export function CadastroOrcamento() {
           onClick={cadastrar}
         />
       ) : (
-        <BotaoPrimario titulo="Editar" className="self-end" onClick={editar} />
+        <BotaoPrimario titulo="Salvar alterações" className="self-end" onClick={editar} />
       )}
     </>
   );

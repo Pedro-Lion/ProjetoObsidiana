@@ -1372,7 +1372,7 @@
             "type": "number",
             "description": "Valor total calculado do orçamento",
             "format": "double",
-            "example": 2500
+            "example": 2500.0
           }
         },
         "description": "Dados para criação de um novo orçamento"
