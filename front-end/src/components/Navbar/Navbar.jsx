@@ -41,15 +41,6 @@ export function Navbar() {
       ]
     },
     {
-      titulo: "Orçamentos",
-      links: ["/orcamentos", "/cadastro/orcamentos"],
-      icones: [
-        <i className={"bi bi-file-earmark " + estiloIcone}></i>,
-        <i className={"bi bi-file-earmark " + estiloIcone}></i>,
-        <i className={"bi bi-file-earmark-plus " + estiloIcone}></i>,
-      ]
-    },
-    {
       titulo: "Profissionais",
       tituloSingular: "profissional",
       links: ["/profissionais", "/cadastro/profissionais"],
@@ -57,6 +48,15 @@ export function Navbar() {
         <i className={"bi bi-person " + estiloIcone}></i>,
         <i className={"bi bi-person " + estiloIcone}></i>,
         <i className={"bi bi-person-plus " + estiloIcone}></i>,
+      ]
+    },
+    {
+      titulo: "Orçamentos",
+      links: ["/orcamentos", "/cadastro/orcamentos"],
+      icones: [
+        <i className={"bi bi-file-earmark " + estiloIcone}></i>,
+        <i className={"bi bi-file-earmark " + estiloIcone}></i>,
+        <i className={"bi bi-file-earmark-plus " + estiloIcone}></i>,
       ]
     }
   ];
