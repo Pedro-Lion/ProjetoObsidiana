@@ -1,5 +1,6 @@
 package com.example.crudObsidiana.service;
 
+import com.example.crudObsidiana.dto.KpisOrcamentoDTO;
 import com.example.crudObsidiana.dto.OrcamentoDTO;
 import com.example.crudObsidiana.model.Orcamento;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
@@ -27,4 +28,13 @@ public class OrcamentoService {
 
         return orcamentoRepository.save(orcamento);
     }
+
+    public KpisOrcamentoDTO getKpis() {
+        Integer aprovados = orcamentoRepository.countByStatus("Aprovado");
+        Integer pendentes = orcamentoRepository.countByStatus("Pendente");
+        Integer concluidos = orcamentoRepository.countByStatus("Concluido");
+
+        return new KpisOrcamentoDTO(aprovados, pendentes, concluidos);
+    }
+
 }
