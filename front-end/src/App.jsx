@@ -5,6 +5,8 @@ import { Foto } from "./components/Foto.jsx"
 import "./App.css";
 import { Login } from './routes/Login.jsx';
 import { useEffect } from 'react';
+import { AplicacaoComponentes } from './routes/AplicacaoComponentes.jsx';
+// import { AuthenticatedTemplate, useMsal, UnauthenticatedTemplate } from '@azure/msal-react';
 
 export function App() {
   const navigate = useNavigate();
@@ -15,6 +17,10 @@ export function App() {
       navigate("/login");
     }
   }, []) 
+
+  // return (
+  //   <AplicacaoComponentes />
+  // )
 
   return (
     <>

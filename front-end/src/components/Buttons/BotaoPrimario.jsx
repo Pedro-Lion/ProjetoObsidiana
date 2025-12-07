@@ -1,4 +1,4 @@
-export function BotaoPrimario({ titulo = "Clique aqui", icone = "", className = "w-32", onClick = undefined }) {
+export function BotaoPrimario({ titulo = "Clique aqui", icone = "", className = "", onClick = undefined }) {
     return (
         <button type="button" className={`
         ${className}
@@ -13,7 +13,7 @@ export function BotaoPrimario({ titulo = "Clique aqui", icone = "", className = 
         `}
         onClick={onClick}
         >
-            <i className={icone + " mr-3"}></i>
+            {icone && (<i className={icone + " mr-3"}></i>)}
             {titulo}
         </button>
     )

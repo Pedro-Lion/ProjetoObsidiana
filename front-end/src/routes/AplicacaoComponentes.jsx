@@ -6,6 +6,7 @@ import { BotaoBordaGradiente } from "../components/Buttons/BotaoBordaGradiente";
 
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
+import { InputDataBordaLabel } from "../components/Inputs/InputDataBordaLabel";
 import { InputFundoCor } from "../components/Inputs/InputFundoCor";
 import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { InputFoto } from "../components/Inputs/InputFoto";
@@ -15,6 +16,8 @@ import { ContainerSelectTags } from "../components/Containers/ContainerSelectTag
 
 import { CardServico } from "../components/Cards/CardServico";
 import { CardOrcamento } from "../components/Cards/CardOrcamento";
+import { ContainerProfissional } from "../components/Containers/ContainerProfissional";
+
 
 export function AplicacaoComponentes() {
   // botões
@@ -44,6 +47,11 @@ export function AplicacaoComponentes() {
     setUrlImagem(url);
   }
 
+  // input data hora
+  function verData(v) {
+    console.log(v.format())
+  }
+
   // contariner equipamento e cards
   function clickContainer(funcao, tipo) {
     let mensagem = "";
@@ -55,6 +63,40 @@ export function AplicacaoComponentes() {
     }
 
     alert(mensagem);
+  }
+
+  const dadosCardServico = {
+    nome: "Serviço 1",
+    descricao: "Descrição do serviço",
+    valorPorHora: 200.3,
+    equipamentos: [],
+  };
+
+  const dadosCardOrcamento = {
+    id: 1,
+    status: "Confirmado",
+    dataEvento: "2025-11-05",
+    localEvento: "Estúdio Principal",
+    duracaoEvento: 8,
+    descricao: "Gravação de videoclipe publicitário",
+    servicos: [],
+  };
+
+  for (let numero = 1; numero <= 6; numero++) {
+    if (numero <= 5) {
+      dadosCardServico.equipamentos.push({
+        id: numero - 1,
+        nome: "Câmera 0" + numero,
+        categoria: "Fotografia",
+        valorPorHora: 20,
+      });
+    }
+
+    dadosCardOrcamento.servicos.push({
+      id: numero - 1,
+      nome: "Serviço " + numero,
+      valorPorHora: 100,
+    });
   }
 
   // container tags
@@ -95,6 +137,8 @@ export function AplicacaoComponentes() {
           </div>
 
           <div>
+            <InputDataBordaLabel titulo="Data e hora" />
+
             <InputFundoCor
               type="number"
               titulo="Telefone"
@@ -123,9 +167,25 @@ export function AplicacaoComponentes() {
         <h2>Containers</h2>
 
         <ContainerListagem
-          titulo="Câmera 01"
+          dados={{
+            nome: "Câmera 01",
+            quantidade: 5,
+            categoria: "Gravação",
+            marca: "Sony",
+            modelo: "C9-20mm DisplayHD",
+            numeroSerie: "N00123",
+            valorPorHora: 25.5,
+          }}
           onClickEdit={() => clickContainer("editar", "equipamento")}
           onClickDel={() => clickContainer("", "equipamento")}
+        />
+
+        <ContainerProfissional
+          dados={{
+            nome: "Roberto",
+            disponibilidade: "Ter a qui das 12h às 20h",
+            contato: "roberto@gmail.com",
+          }}
         />
 
         <ContainerSelectTags
@@ -136,6 +196,7 @@ export function AplicacaoComponentes() {
             { value: "ursula", label: "Úrsula" },
             { value: "eric", label: "Príncipe Eric" },
           ]}
+          preSelecao={[{ value: "ariel", label: "Ariel" }]}
           onChange={(itens) => setItensSelecionados(itens)}
         />
 
@@ -155,11 +216,13 @@ export function AplicacaoComponentes() {
 
         <div className="flex flex-wrap gap-7">
           <CardServico
+            dados={dadosCardServico}
             onClickEdit={() => clickContainer("editar", "serviço")}
             onClickDel={() => clickContainer("", "serviço")}
           />
 
           <CardOrcamento
+            dados={dadosCardOrcamento}
             onClickEdit={() => clickContainer("editar", "serviço")}
             onClickDel={() => clickContainer("", "serviço")}
           />
