@@ -129,12 +129,27 @@ public class Equipamento {
     public Integer getQuantidadeTotal() {
         return quantidadeTotal;
     }
+    public void setQuantidadeTotal(Integer novaQuantidadeTotal) {
+        int novoTotal = (novaQuantidadeTotal == null ? 0 : Math.max(0, novaQuantidadeTotal));
 
-    public void setQuantidadeTotal(Integer quantidadeTotal) {
-        this.quantidadeTotal = (quantidadeTotal == null ? 0 : Math.max(0, quantidadeTotal));
-        if (this.quantidadeDisponivel == null) this.quantidadeDisponivel = 0;
-        if (this.quantidadeDisponivel > this.quantidadeTotal) this.quantidadeDisponivel = this.quantidadeTotal;
+        Integer atualDisponivel = this.quantidadeDisponivel;
+        Integer antigoTotal = (this.quantidadeTotal == null ? 0 : this.quantidadeTotal);
+
+        //diferença entre novo total e antigo total
+        int delta = novoTotal - antigoTotal;
+
+        if (atualDisponivel == null) {
+            this.quantidadeDisponivel = novoTotal;
+        } else {
+            // ajustar disponibilidade pelo delta (por exemplo: se aumentar total em 3 => adiciona 3 à disponível)
+            int novaDisponivel = atualDisponivel + delta;
+            if (novaDisponivel < 0) novaDisponivel = 0;
+            if (novaDisponivel > novoTotal) novaDisponivel = novoTotal;
+            this.quantidadeDisponivel = novaDisponivel;
+        }
+        this.quantidadeTotal = novoTotal;
     }
+
     public Integer getQuantidadeDisponivel() { return quantidadeDisponivel; }
     public void setQuantidadeDisponivel(Integer quantidadeDisponivel) {
         this.quantidadeDisponivel =
