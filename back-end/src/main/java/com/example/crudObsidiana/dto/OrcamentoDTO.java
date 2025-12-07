@@ -62,7 +62,7 @@ public class OrcamentoDTO {
     public void setStatus(String status) { this.status = status; }
 
     public Double getValorTotal() { return valorTotal; }
-    public void setValorTotal(Double valorTotal) { this.valorTotal = valorTotal; }
+    public void setValorTotal(Double valorTotal) { this.valorTotal = (valorTotal == null) ? 0.0 : valorTotal; }
 
     public List<Long> getServicos() { return servicos; }
     public void setServicos(List<Long> servicos) { this.servicos = servicos; }
