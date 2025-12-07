@@ -10,7 +10,7 @@ export function Orcamentos() {
   const navigate = useNavigate();
   const { instance } = useMsal();
   const account = instance.getActiveAccount();
-  
+
   const [orcamentos, setOrcamentos] = useState([]);
 
   useEffect(() => {
@@ -51,13 +51,9 @@ export function Orcamentos() {
             },
           }
         );
-
-        alert("Evento deletado com sucesso!");
-        // window.location.reload();
       } catch (error) {
-        alert("Erro ao deletar evento");
+        alert("Não foi possível excluir o evento associado ao orçamento.");
         return console.log(error);
-        // console.error(error);
       }
     }
 

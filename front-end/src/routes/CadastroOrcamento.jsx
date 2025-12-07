@@ -18,7 +18,40 @@ export function CadastroOrcamento() {
   const account = instance.getActiveAccount();
 
   const state = useLocation().state;
-  const [orcamento, setOrcamento] = useState(state ?? { status: "Em análise" });
+  function definirState() {
+    if (!state) return undefined;
+    let copiaState = { ...state };
+
+    const formatador = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).format;
+
+    function formatarData(dt) {
+      if (!dt) return undefined;
+      return (
+        formatador(new Date(dt))
+          .replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$3-$2-$1")
+          .replace(", ", "T") + "-03:00"
+      );
+    }
+
+    copiaState.dataInicio = formatarData(copiaState.dataInicio);
+    copiaState.dataTermino = formatarData(copiaState.dataTermino);
+
+    console.log(copiaState);
+    return copiaState;
+  }
+
+  const [orcamento, setOrcamento] = useState(
+    definirState() ?? { status: "Em análise" }
+  );
   const [opcoes, setOpcoes] = useState({
     servico: [],
     equipamento: [],
@@ -101,7 +134,9 @@ export function CadastroOrcamento() {
       orcamentoFormatado[chave] = lista.map((item) => item.id);
     });
 
-    if (orcamentoFormatado.status === "Confirmado" && account) {
+    async function tratarEvento() {
+      if (!account) return;
+
       try {
         const response = await instance.acquireTokenSilent({
           ...loginRequest,
@@ -109,39 +144,42 @@ export function CadastroOrcamento() {
         });
 
         const accessToken = response.accessToken;
-        console.log(accessToken);
 
-        var inicioFormatado = "";
-        var terminoFormatado = "";
-        for (let i = 0; i <= 18; i++) {
-          const cInicio = orcamentoFormatado.dataInicio[i];
-          const cFim = orcamentoFormatado.dataTermino[i];
+        if (
+          orcamentoFormatado.status != "Confirmado" &&
+          orcamentoFormatado.idCalendar
+        ) {
+          await fetch(
+            `https://graph.microsoft.com/v1.0/me/calendar/events/${orcamento.idCalendar}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
 
-          if (i == 11) {
-            inicioFormatado +=
-              Number(cInicio + orcamentoFormatado.dataInicio[i + 1]) - 3;
-            terminoFormatado +=
-              Number(cFim + orcamentoFormatado.dataTermino[i + 1]) - 3;
-          } else if (i >= 13 || i < 11) {
-            inicioFormatado += cInicio;
-            terminoFormatado += cFim;
-          }
+          orcamentoFormatado.idCalendar = null;
+          return;
         }
 
-        // return console.log(inicioFormatado,orcamentoFormatado.dataInicio)
+        if (orcamento.status != "Confirmado") return;
 
         const event = {
           subject: orcamentoFormatado.descricao,
-          start: { dateTime: inicioFormatado, timeZone: "America/Sao_Paulo" },
-          end: { dateTime: terminoFormatado, timeZone: "America/Sao_Paulo" },
+          start: {
+            dateTime: orcamentoFormatado.dataInicio.slice(0, 19),
+            timeZone: "America/Sao_Paulo",
+          },
+          end: {
+            dateTime: orcamentoFormatado.dataTermino.slice(0, 19),
+            timeZone: "America/Sao_Paulo",
+          },
           location: { displayName: orcamentoFormatado.localEvento },
         };
 
-        console.log(event);
-
         if (!orcamentoFormatado.idCalendar) {
-          // return console.log("Entrou sem idCalendar",);
-
           const idCalendar = await fetch(
             "https://graph.microsoft.com/v1.0/me/events",
             {
@@ -158,7 +196,6 @@ export function CadastroOrcamento() {
 
           orcamentoFormatado.idCalendar = data.id;
         } else {
-          // return console.log("Entrou com idCalendar");
           await fetch(
             `https://graph.microsoft.com/v1.0/me/events/${orcamentoFormatado.idCalendar}`,
             {
@@ -177,6 +214,7 @@ export function CadastroOrcamento() {
         return;
       }
     }
+    tratarEvento();
 
     try {
       const request = await api.put(`/orcamento/${id}`, orcamentoFormatado, {
@@ -213,7 +251,7 @@ export function CadastroOrcamento() {
             onChange={(e) =>
               setOrcamento({ ...orcamento, status: e.target.value })
             }
-            defaultValue={orcamento.status}
+            value={orcamento.status}
           />
           <InputDataBordaLabel
             titulo="Data de início"
