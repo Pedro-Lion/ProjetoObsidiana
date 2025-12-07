@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 //importado no package.json
 import FullCalendar from "@fullcalendar/react";
@@ -25,11 +26,14 @@ import {
 //Adequar ao nosso tema 
 import Header from "./Header";
 import { tokens } from "./Theme";
+import { api } from "../../api.js";
+
 
 export default function Calendar({getAccessToken}) {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [currentEvents, setCurrentEvents] = useState([]);
+  const navigate = useNavigate();
 
   // Teste do outro código com chamadas por mês a microsoft graph
   const [events, setEvents] = useState([]);
@@ -104,8 +108,23 @@ export default function Calendar({getAccessToken}) {
   //   loadEvents();
   // }, []);
 
-  function onEventClick(info) {
-    alert(`ID do evento clicado: ${info.event.id}`);
+  async function onEventClick(info) {
+
+    try {
+      const response = await api.get(`/orcamento/calendar/${info.event.id}`, {
+      headers: {
+        Authorization: "Bearer " + sessionStorage.getItem("token"), 
+      },
+    })
+
+    // return console.log(response.data)
+
+    navigate(`/editar/orcamento/${response.data.id}`, {state: response.data});
+
+    } catch (error) {
+      console.log(error);
+    }
+    
   }
   const handleDateClick = (selected) => {
     const title = prompt("Please enter a new title for your event");
