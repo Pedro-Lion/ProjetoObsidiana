@@ -3,6 +3,7 @@ package com.example.crudObsidiana.dto;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import com.example.crudObsidiana.dto.UsoEquipamentoDTO;
@@ -22,9 +23,11 @@ public class OrcamentoDTO {
     @Schema(description = "Duração do evento em horas", example = "8")
     private Integer duracaoEvento;
     */
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Schema(description = "Data de início do evento", example = "2025-11-10T09:00:00")
     private Date dataInicio;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Schema(description = "Data de término do evento", example = "2025-11-10T09:00:00")
     private Date dataTermino;
 
