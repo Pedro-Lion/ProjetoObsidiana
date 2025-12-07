@@ -157,7 +157,7 @@ export function ContainerSelectTags({ titulo = "Container", placeholder = "Escol
             itensSelecionados.map((selecionado) => (
               <div
                 key={selecionado.value}
-                className="flex gap-2 items-center px-3 py-2 rounded-md text-[1.1rem] cursor-pointer bg-violet-200 text-slate-700">
+                className="flex gap-2 items-center px-3 py-2 rounded-md text-[1.1rem] bg-violet-200 text-slate-700">
                 {temQuantidade ? (
                   <input
                     type="number"
@@ -170,7 +170,7 @@ export function ContainerSelectTags({ titulo = "Container", placeholder = "Escol
                   />
                 ) : null}
                 <span className="w-fit">{selecionado.label}</span>
-                <span className="ml-2"
+                <span className="ml-2 cursor-pointer"
                   onClick={() => handleRemove(selecionado)}>×</span>
               </div>
             ))
