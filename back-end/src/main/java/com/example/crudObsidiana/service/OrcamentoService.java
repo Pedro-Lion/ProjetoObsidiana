@@ -281,9 +281,14 @@ public class OrcamentoService implements OrcamentoSubject {
             }
         }
 
-        // Sobrescrever usos: deletar os antigos (por orcamento) e criar novos a partir do novoMapa
-        usoEquipamentoRepository.deleteByOrcamentoId(existente.getId());
+        if (existente.getUsosEquipamentos() == null) {
+            existente.setUsosEquipamentos(new ArrayList<>());
+        } else {
+            // remove todos os elementos da lista gerenciada (triggera orphanRemoval)
+            existente.getUsosEquipamentos().clear();
+        }
 
+        // agora crie e salve os novos usos e ADICIONE à coleção gerenciada
         List<UsoEquipamento> novosUsos = new ArrayList<>();
         for (Map.Entry<Long, Integer> e : novoMapa.entrySet()) {
             Long idEq = e.getKey();
@@ -296,8 +301,10 @@ public class OrcamentoService implements OrcamentoSubject {
             uso.setQuantidadeUsada(qtd);
             uso = usoEquipamentoRepository.save(uso);
             novosUsos.add(uso);
+
+            // add no MESMO objeto — NÃO usar setUsosEquipamentos(novosUsos)
+            existente.getUsosEquipamentos().add(uso);
         }
-        existente.setUsosEquipamentos(novosUsos);
 
         // atualizar lista many-to-many de equipamentos (opcional/compat)
         if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {

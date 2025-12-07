@@ -139,49 +139,8 @@ public class OrcamentoController {
             }
             return ResponseEntity.status(ex.getStatusCode()).build();
         } catch (RuntimeException ex) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    // ----------------------------------------------------------------------
-    // PUT /orcamento/{id}/status → Alterar status (DISPARA OBSERVER)
-    // ----------------------------------------------------------------------
-    @PutMapping("/{id}/status")
-    @Operation(
-            summary = "Atualizar status do orçamento",
-            description = """
-                    Altera o status de um orçamento existente.
-                    
-                    Regra importante:
-                    - Quando o status muda para 'Confirmado', o Observer reduz
-                      automaticamente as quantidades disponíveis dos equipamentos usados.
-                    - Quando o status deixa de ser 'Confirmado', o Observer devolve
-                      as quantidades ao estoque.
-                    """
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
-            @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
-    })
-    public ResponseEntity<Orcamento> atualizarStatus(
-            @Parameter(description = "ID do orçamento", example = "1")
-            @PathVariable Long id,
-            @RequestBody AtualizarStatusRequest body
-    ) {
-        if (body == null || body.getStatus() == null || body.getStatus().isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        try {
-            Orcamento atualizado = orcamentoService.atualizarStatus(id, body.getStatus());
-            return ResponseEntity.ok(atualizado);
-
-        } catch (RuntimeException ex) {
-            if (ex.getMessage() != null && ex.getMessage().contains("não encontrado")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(null);
         }
     }
 
