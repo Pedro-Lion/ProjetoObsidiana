@@ -52,7 +52,6 @@ export function CadastroOrcamento() {
     copiaState.dataInicio = formatarData(copiaState.dataInicio);
     copiaState.dataTermino = formatarData(copiaState.dataTermino);
 
-    console.log(copiaState);
     return copiaState;
   }
 
