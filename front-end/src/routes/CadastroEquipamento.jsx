@@ -5,6 +5,7 @@ import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import { useState } from "react";
+import { Modal } from "../components/Modal/Modal.jsx";
 
 export function CadastroEquipamentos() {
   const navigate = useNavigate();
@@ -19,16 +20,21 @@ export function CadastroEquipamentos() {
       quantidade: 0,
       modelo: "",
       numeroSerie: "",
-      valorPorHora: null, // Number (double) — pronto para enviar
+      valorPorHora: null,
     }
   );
 
-  // Estado apenas para exibir o valor formatado no input (string "0.00")
   const [valorHora, setValorHora] = useState(
     equipamento.valorPorHora
       ? Number(equipamento.valorPorHora).toFixed(2)
       : "0.00"
   );
+
+  // Estados do modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitulo, setModalTitulo] = useState("");
+  const [modalDescricao, setModalDescricao] = useState("");
+  const [modalActions, setModalActions] = useState(null);
 
   // Funções utilitárias para inputs
   const onChangeTexto = (campo) => (e) => {
@@ -36,64 +42,111 @@ export function CadastroEquipamentos() {
   };
 
   const onChangeNumero = (campo) => (e) => {
-    // converte para número (inteiro)
     const n = e.target.value === "" ? 0 : Number(e.target.value);
     setEquipamento((prev) => ({ ...prev, [campo]: n }));
   };
 
-  // Mesma lógica do cadastro de serviço para o campo "Valor por Hora"
   const onInputValorHora = (e) => {
     let v = e.target.value || "";
-    // remove tudo que não for número
     v = v.replace(/\D/g, "");
-    // transforma centavos -> reais
     const numero = (Number(v) / 100).toFixed(2);
-    setValorHora(numero); // string formatada para mostrar no input
-    // salva como Number (double) no objeto equipamento
+    setValorHora(numero);
     setEquipamento((prev) => ({ ...prev, valorPorHora: Number(numero) }));
   };
 
   async function cadastrar() {
     try {
       const request = await api.post("/equipamento", equipamento, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
 
       if (request.status == 201) {
-        const confirmacao = confirm(
+        setModalTitulo("Sucesso!");
+        setModalDescricao(
           "Cadastrado com sucesso! Quer retornar à lista de equipamentos?"
         );
-
-        if (confirmacao) {
-          navigate("/equipamentos");
-        }
-        return;
+        setModalActions(
+          <>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded mr-3"
+              onClick={() => navigate("/equipamentos")}
+            >
+              Ir para lista
+            </button>
+            <button
+              className="bg-gray-300 px-4 py-2 rounded"
+              onClick={() => setModalOpen(false)}
+            >
+              Continuar
+            </button>
+          </>
+        );
+        setModalOpen(true);
       }
-
     } catch (error) {
       console.log(error);
-      alert("Equipamento não pôde ser cadastrado. Tente novamente.");
+      setModalTitulo("Erro");
+      setModalDescricao(
+        "Equipamento não pôde ser cadastrado. Tente novamente."
+      );
+      setModalActions(
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Fechar
+        </button>
+      );
+      setModalOpen(true);
     }
   }
 
   async function editar() {
     try {
       const request = await api.put(`/equipamento/${id}`, equipamento, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
 
       if (request.status == 200) {
-        alert("Editado com sucesso! Retornando à lista de equipamentos.");
-        return navigate("/equipamentos");
+        setModalTitulo("Sucesso!");
+        setModalDescricao(
+          "Editado com sucesso! Retornando à lista de equipamentos."
+        );
+        setModalActions(
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={() => navigate("/equipamentos")}
+          >
+            Ok
+          </button>
+        );
+        setModalOpen(true);
+      } else {
+        setModalTitulo("Erro");
+        setModalDescricao("Equipamento não pôde ser editado. Tente novamente.");
+        setModalActions(
+          <button
+            className="bg-gray-300 px-4 py-2 rounded"
+            onClick={() => setModalOpen(false)}
+          >
+            Fechar
+          </button>
+        );
+        setModalOpen(true);
       }
-
     } catch (error) {
       console.log(error);
-      alert("Equipamento não pôde ser editado. Tente novamente.");
+      setModalTitulo("Erro");
+      setModalDescricao("Erro ao editar equipamento.");
+      setModalActions(
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Fechar
+        </button>
+      );
+      setModalOpen(true);
     }
   }
 
@@ -105,7 +158,7 @@ export function CadastroEquipamentos() {
           <InputFoto />
         </div>
 
-        <div className="h-95  mt-10 flex justify-between items-center">
+        <div className="h-95 mt-10 flex justify-between items-center">
           <div className="flex flex-col justify-between h-full">
             <InputBordaLabel
               titulo="Nome"
@@ -148,10 +201,9 @@ export function CadastroEquipamentos() {
               onInput={onChangeTexto("numeroSerie")}
               value={equipamento.numeroSerie}
             />
-
             <InputBordaLabel
               titulo="Valor"
-              type="text" // tipo texto para permitir a máscara (vírgulas, zeros à esquerda)
+              type="text"
               placeholder="Ex: 150.00"
               onInput={onInputValorHora}
               value={valorHora}
@@ -173,6 +225,12 @@ export function CadastroEquipamentos() {
           </div>
         </div>
       </div>
+
+      {modalOpen && (
+        <Modal titulo={modalTitulo} descricao={modalDescricao}>
+          {modalActions}
+        </Modal>
+      )}
     </>
   );
 }

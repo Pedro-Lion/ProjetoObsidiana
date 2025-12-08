@@ -10,12 +10,19 @@ import { InputDataBordaLabel } from "../components/Inputs/InputDataBordaLabel";
 import { useMsal } from "@azure/msal-react";
 import { loginRequest } from "../authConfig";
 import moment from "moment";
+import { Modal } from "../components/Modal/Modal.jsx";
 
 export function CadastroOrcamento() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { instance } = useMsal();
   const account = instance.getActiveAccount();
+
+  // Estados do modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitulo, setModalTitulo] = useState("");
+  const [modalDescricao, setModalDescricao] = useState("");
+  const [modalActions, setModalActions] = useState(null);
 
   const state = useLocation().state;
   function definirState() {
@@ -103,24 +110,45 @@ export function CadastroOrcamento() {
   async function cadastrar() {
     try {
       const request = await api.post("/orcamento", orcamento, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
 
       if (request.status == 201) {
-        const confirmacao = confirm(
+        setModalTitulo("Sucesso!");
+        setModalDescricao(
           "Cadastrado com sucesso! Quer retornar à lista de orçamentos?"
         );
-
-        if (confirmacao) {
-          navigate("/orcamentos");
-        }
-        return;
+        setModalActions(
+          <>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded mr-3"
+              onClick={() => navigate("/orcamentos")}
+            >
+              Ir para lista
+            </button>
+            <button
+              className="bg-gray-300 px-4 py-2 rounded"
+              onClick={() => setModalOpen(false)}
+            >
+              Continuar
+            </button>
+          </>
+        );
+        setModalOpen(true);
       }
     } catch (error) {
       console.log(error);
-      alert("Orçamento não pôde ser cadastrado. Tente novamente.");
+      setModalTitulo("Erro");
+      setModalDescricao("Orçamento não pôde ser cadastrado. Tente novamente.");
+      setModalActions(
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Fechar
+        </button>
+      );
+      setModalOpen(true);
     }
   }
 
@@ -218,18 +246,49 @@ export function CadastroOrcamento() {
 
     try {
       const request = await api.put(`/orcamento/${id}`, orcamentoFormatado, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
 
       if (request.status == 200) {
-        alert("Editado com sucesso! Retornando à lista de orçamentos.");
-        return navigate("/orcamentos");
+        setModalTitulo("Sucesso!");
+        setModalDescricao(
+          "Editado com sucesso! Retornando à lista de orçamentos."
+        );
+        setModalActions(
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={() => navigate("/orcamentos")}
+          >
+            Ok
+          </button>
+        );
+        setModalOpen(true);
+      } else {
+        setModalTitulo("Erro");
+        setModalDescricao("Orçamento não pôde ser editado. Tente novamente.");
+        setModalActions(
+          <button
+            className="bg-gray-300 px-4 py-2 rounded"
+            onClick={() => setModalOpen(false)}
+          >
+            Fechar
+          </button>
+        );
+        setModalOpen(true);
       }
     } catch (error) {
       console.log(error);
-      alert("Orcamento não pôde ser editado. Tente novamente.");
+      setModalTitulo("Erro");
+      setModalDescricao("Erro ao editar orçamento.");
+      setModalActions(
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Fechar
+        </button>
+      );
+      setModalOpen(true);
     }
   }
 
@@ -339,6 +398,12 @@ export function CadastroOrcamento() {
         />
       ) : (
         <BotaoPrimario titulo="Editar" className="self-end" onClick={editar} />
+      )}
+
+      {modalOpen && (
+        <Modal titulo={modalTitulo} descricao={modalDescricao}>
+          {modalActions}
+        </Modal>
       )}
     </>
   );
