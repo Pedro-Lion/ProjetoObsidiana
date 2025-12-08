@@ -9,23 +9,25 @@ import com.example.crudObsidiana.repository.EquipamentoRepository;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
 import com.example.crudObsidiana.repository.ServicoRepository;
 import com.example.crudObsidiana.repository.UsoEquipamentoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UsoEquipamentoService {
 
-    @Autowired
-    private UsoEquipamentoRepository usoEquipamentoRepository;
+    private final UsoEquipamentoRepository usoEquipamentoRepository;
+    private final EquipamentoRepository equipamentoRepository;
+    private final OrcamentoRepository orcamentoRepository;
+    private final ServicoRepository servicoRepository;
 
-    @Autowired
-    private EquipamentoRepository equipamentoRepository;
-
-    @Autowired
-    private OrcamentoRepository orcamentoRepository;
-
-    @Autowired
-    private ServicoRepository servicoRepository;
+    public UsoEquipamentoService(UsoEquipamentoRepository usoEquipamentoRepository,
+                                 EquipamentoRepository equipamentoRepository,
+                                 OrcamentoRepository orcamentoRepository,
+                                 ServicoRepository servicoRepository) {
+        this.usoEquipamentoRepository = usoEquipamentoRepository;
+        this.equipamentoRepository = equipamentoRepository;
+        this.orcamentoRepository = orcamentoRepository;
+        this.servicoRepository = servicoRepository;
+    }
 
     public UsoEquipamento registrarUso(UsoEquipamentoDTO dto) {
         Equipamento equipamento = equipamentoRepository.findById(dto.getIdEquipamento())

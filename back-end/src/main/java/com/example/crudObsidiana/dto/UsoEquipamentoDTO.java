@@ -19,7 +19,7 @@ public class UsoEquipamentoDTO {
 
     @Schema(description = "Quantidade de unidades do equipamento utilizadas", example = "3", required = true)
     @Min(value = 1, message = "A quantidade usada deve ser no mínimo 1.")
-    private int quantidadeUsada;
+    private Integer quantidadeUsada;
 
     // Getters e Setters
     public Long getIdEquipamento() {
@@ -43,10 +43,10 @@ public class UsoEquipamentoDTO {
         this.idServico = idServico;
     }
 
-    public int getQuantidadeUsada() {
+    public Integer getQuantidadeUsada() {
         return quantidadeUsada;
     }
-    public void setQuantidadeUsada(int quantidadeUsada) {
+    public void setQuantidadeUsada(Integer quantidadeUsada) {
         this.quantidadeUsada = quantidadeUsada;
     }
 }

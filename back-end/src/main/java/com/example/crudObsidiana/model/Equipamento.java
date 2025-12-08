@@ -21,10 +21,10 @@ public class Equipamento {
     private String nome;
 
     @Schema(description = "Quantidade total", example = "5")
-    private int quantidade;
+    private Integer quantidadeTotal;
 
     @Schema(description = "Quantidade disponível", example = "3")
-    private int quantidadeDisponivel;
+    private Integer quantidadeDisponivel;
 
     @Schema(description = "Categoria do Equipamento", example = "Câmeras")
     private String categoria;
@@ -57,20 +57,20 @@ public class Equipamento {
 
     //CONSTRUCTORS
     public Equipamento() {}
-    public Equipamento(Long id, String nome, int quantidade, String categoria, String marca, String numeroSerie, String modelo, Double valorPorHora) {
+    public Equipamento(Long id, String nome, Integer quantidadeTotal, String categoria, String marca, String numeroSerie, String modelo, Double valorPorHora) {
         this.id = id;
         this.nome = nome;
-        this.quantidade = quantidade;
+        this.quantidadeTotal = quantidadeTotal;
         this.categoria = categoria;
         this.marca = marca;
         this.numeroSerie = numeroSerie;
         this.modelo = modelo;
         this.valorPorHora = valorPorHora;
     }
-    public Equipamento(Long id, String nome, int quantidade, int quantidadeDisponivel, String categoria, String marca, String numeroSerie, String modelo, Double valorPorHora, List<Servico> servicos, String nomeArquivoImagem, String tipoImagem, String caminhoImagem) {
+    public Equipamento(Long id, String nome, Integer quantidadeTotal, Integer quantidadeDisponivel, String categoria, String marca, String numeroSerie, String modelo, Double valorPorHora, List<Servico> servicos, String nomeArquivoImagem, String tipoImagem, String caminhoImagem) {
         this.id = id;
         this.nome = nome;
-        this.quantidade = quantidade;
+        this.quantidadeTotal = quantidadeTotal;
         this.quantidadeDisponivel = quantidadeDisponivel;
         this.categoria = categoria;
         this.marca = marca;
@@ -95,16 +95,6 @@ public class Equipamento {
     }
     public void setNome(String nome) {
         this.nome = nome;
-    }
-    public int getQuantidade() {
-        return quantidade;
-    }
-    public void setQuantidade(int quantidade) {
-        this.quantidade = quantidade;
-        // Se a quantidade total for alterada, ajustar o disponível
-        if (quantidadeDisponivel > quantidade) {
-            quantidadeDisponivel = quantidade;
-        }
     }
     public String getCategoria() {
         return categoria;
@@ -136,11 +126,35 @@ public class Equipamento {
     public void setValorPorHora(Double valorPorHora) {
         this.valorPorHora = valorPorHora;
     }
-    public int getQuantidadeDisponivel() { return quantidadeDisponivel; }
-    public void setQuantidadeDisponivel(int quantidadeDisponivel) {
-        this.quantidadeDisponivel = quantidadeDisponivel;
-        if (quantidadeDisponivel < 0) quantidadeDisponivel = 0;
-        if (quantidadeDisponivel > quantidade) quantidadeDisponivel = quantidade;
+    public Integer getQuantidadeTotal() {
+        return quantidadeTotal;
+    }
+    public void setQuantidadeTotal(Integer novaQuantidadeTotal) {
+        int novoTotal = (novaQuantidadeTotal == null ? 0 : Math.max(0, novaQuantidadeTotal));
+
+        Integer atualDisponivel = this.quantidadeDisponivel;
+        Integer antigoTotal = (this.quantidadeTotal == null ? 0 : this.quantidadeTotal);
+
+        //diferença entre novo total e antigo total
+        int delta = novoTotal - antigoTotal;
+
+        if (atualDisponivel == null) {
+            this.quantidadeDisponivel = novoTotal;
+        } else {
+            // ajustar disponibilidade pelo delta (por exemplo: se aumentar total em 3 => adiciona 3 à disponível)
+            int novaDisponivel = atualDisponivel + delta;
+            if (novaDisponivel < 0) novaDisponivel = 0;
+            if (novaDisponivel > novoTotal) novaDisponivel = novoTotal;
+            this.quantidadeDisponivel = novaDisponivel;
+        }
+        this.quantidadeTotal = novoTotal;
+    }
+
+    public Integer getQuantidadeDisponivel() { return quantidadeDisponivel; }
+    public void setQuantidadeDisponivel(Integer quantidadeDisponivel) {
+        this.quantidadeDisponivel =
+                (quantidadeDisponivel == null) ? 0
+                : Math.max(0, Math.min(quantidadeDisponivel, this.quantidadeTotal));
     }
     public String getNomeArquivoImagem() {
         return nomeArquivoImagem;
@@ -161,21 +175,18 @@ public class Equipamento {
         this.caminhoImagem = caminhoImagem;
     }
 
-    //METODOS
-    public void reduzirQuantidade(int quantidadeUsada) {
-        if (quantidadeUsada < 0) return;
-        if (quantidadeDisponivel >= quantidadeUsada) {
-            quantidadeDisponivel -= quantidadeUsada;
-        } else {
-            quantidadeDisponivel = 0;
-        }
+//    METODOS
+//    Nota: Math.max eevita numeros negativos
+    public void reduzirQuantidade(Integer quantidadeRecebida) {
+        if (this.quantidadeDisponivel == null) this.quantidadeDisponivel = 0;
+        if (quantidadeRecebida == null) quantidadeRecebida = 0;
+        this.quantidadeDisponivel = Math.max(0, this.quantidadeDisponivel - quantidadeRecebida);
     }
 
-    public void devolverQuantidade(int quantidadeDevolvida) {
-        if (quantidadeDevolvida < 0) return;
-        quantidadeDisponivel += quantidadeDevolvida;
-        if (quantidadeDisponivel > quantidade) {
-            quantidadeDisponivel = quantidade;
-        }
+    public void devolverQuantidade(Integer quantidadeRecebida) {
+        if (this.quantidadeDisponivel == null) this.quantidadeDisponivel = 0;
+        if (quantidadeRecebida == null) quantidadeRecebida = 0;
+        this.quantidadeDisponivel = Math.max(0, this.quantidadeDisponivel + quantidadeRecebida);
     }
+
 }

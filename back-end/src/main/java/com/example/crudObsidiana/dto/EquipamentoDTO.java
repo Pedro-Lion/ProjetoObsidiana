@@ -9,7 +9,7 @@ public class EquipamentoDTO {
     private String nome;
 
     @Schema(description = "Quantidade disponível", example = "5")
-    private int quantidade;
+    private Integer quantidadeTotal;
 
     @Schema(description = "Categoria do equipamento", example = "Câmeras")
     private String categoria;
@@ -34,12 +34,12 @@ public class EquipamentoDTO {
         this.nome = nome;
     }
 
-    public int getQuantidade() {
-        return quantidade;
+    public Integer getQuantidadeTotal() {
+        return quantidadeTotal;
     }
 
-    public void setQuantidade(int quantidade) {
-        this.quantidade = quantidade;
+    public void setQuantidadeTotal(Integer quantidadeTotal) {
+        this.quantidadeTotal = quantidadeTotal;
     }
 
     public String getCategoria() {

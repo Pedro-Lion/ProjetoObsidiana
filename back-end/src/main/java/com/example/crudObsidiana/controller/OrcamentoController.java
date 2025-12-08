@@ -1,5 +1,6 @@
 package com.example.crudObsidiana.controller;
 
+import com.example.crudObsidiana.dto.KpisOrcamentoDTO;
 import com.example.crudObsidiana.dto.OrcamentoDTO;
 import com.example.crudObsidiana.model.Orcamento;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -82,7 +84,7 @@ public class OrcamentoController {
             @RequestBody OrcamentoDTO dto
     ) {
         Orcamento criado = orcamentoService.criarOrcamento(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(orcamentoRepository.save(criado));
+        return ResponseEntity.status(HttpStatus.CREATED).body(criado);
     }
 
 
@@ -122,54 +124,39 @@ public class OrcamentoController {
     }
 
     // ----------------------------------------------------------------------
+    // KPIs
+    // ----------------------------------------------------------------------
+
+    @Operation(summary = "Retorna as KPIs dos orçamentos (aprovados, pendentes e concluídos)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "KPIs retornadas com sucesso",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = KpisOrcamentoDTO.class)))
+    })
+    @GetMapping("/kpis")
+    public ResponseEntity<KpisOrcamentoDTO> getKpis() {
+        return ResponseEntity.ok(orcamentoService.getKpis());
+    }
+
+    // ----------------------------------------------------------------------
     // PUT /orcamento/{id} → Atualizar orcamento
     // ----------------------------------------------------------------------
     @PutMapping("/{id}")
     public ResponseEntity<Orcamento> atualizarOrcamento(@PathVariable("id") Long id, @RequestBody OrcamentoDTO dto) {
-        Orcamento orcamento = orcamentoService.criarOrcamento(dto);
-        orcamento.setId(id);
-        return ResponseEntity.ok(orcamentoRepository.save(orcamento));
-    }
-
-    // ----------------------------------------------------------------------
-    // PUT /orcamento/{id}/status → Alterar status (DISPARA OBSERVER)
-    // ----------------------------------------------------------------------
-    @PutMapping("/{id}/status")
-    @Operation(
-            summary = "Atualizar status do orçamento",
-            description = """
-                    Altera o status de um orçamento existente.
-                    
-                    Regra importante:
-                    - Quando o status muda para 'Confirmado', o Observer reduz
-                      automaticamente as quantidades disponíveis dos equipamentos usados.
-                    - Quando o status deixa de ser 'Confirmado', o Observer devolve
-                      as quantidades ao estoque.
-                    """
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
-            @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
-    })
-    public ResponseEntity<Orcamento> atualizarStatus(
-            @Parameter(description = "ID do orçamento", example = "1")
-            @PathVariable Long id,
-            @RequestBody AtualizarStatusRequest body
-    ) {
-        if (body == null || body.getStatus() == null || body.getStatus().isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
-
         try {
-            Orcamento atualizado = orcamentoService.atualizarStatus(id, body.getStatus());
+            Orcamento atualizado = orcamentoService.editarOrcamento(id, dto);
             return ResponseEntity.ok(atualizado);
-
-        } catch (RuntimeException ex) {
-            if (ex.getMessage() != null && ex.getMessage().contains("não encontrado")) {
+        } catch (ResponseStatusException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            } else if (ex.getStatusCode() == HttpStatus.CONFLICT) {
+                // opcional: retornar mensagem ou corpo com detalhes
+                return ResponseEntity.status(HttpStatus.CONFLICT).build();
             }
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(ex.getStatusCode()).build();
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(null);
         }
     }
 

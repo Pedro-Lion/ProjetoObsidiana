@@ -1,0 +1,109 @@
+// import { Pie } from 'react-chartjs-2';
+// import {
+//   Chart as ChartJS,
+//   CategoryScale,
+//   LinearScale,
+//   PointElement,
+//   LineElement,
+//   ArcElement,
+//   Title,
+//   Tooltip,
+//   Legend,
+// } from 'chart.js';
+// import { Line } from 'react-chartjs-2';
+// import { useEffect, useState } from "react";
+// import DashboardKpi from '../components/Kpis/DashboardKpi';
+// import { api } from "../api.js";
+
+// ChartJS.register(
+//   CategoryScale,
+//   LinearScale,
+//   PointElement,
+//   LineElement,
+//   ArcElement,
+//   Title,
+//   Tooltip,
+//   Legend
+// );
+
+// export function Dashboard() {
+
+//   const [kpis, setKpis] = useState({
+//     aprovados: 0,
+//     pendentes: 0,
+//     concluidos: 0
+//   });
+
+//   useEffect(() => {
+//     async function fetchKpis() {
+//       try {
+//         const response = await api.get("/orcamento/kpis", {
+//           headers: {
+//             Authorization: "Bearer " + sessionStorage.getItem("token"),
+//           },
+//         });
+
+//         setKpis(response.data);
+//         console.log(response.data);
+
+//       } catch (error) {
+//         console.error("Erro ao buscar KPIs:", error);
+//       }
+//     }
+
+//     fetchKpis();
+//   }, []);
+
+
+//   const data = {
+//     labels: ['Aprovados', 'Pendentes', 'Concluídos'],
+//     datasets: [
+//       {
+//         label: '# of Votes',
+//         data: [kpis.aprovados, kpis.pendentes, kpis.concluidos],
+//         backgroundColor: [
+//           'rgba(168, 85, 247, 0.3)',
+//           'rgba(139, 92, 246, 0.3)',
+//           'rgba(196, 181, 253, 0.3)',
+//         ],
+//         borderColor: [
+//           'rgba(168, 85, 247, 1)',
+//           'rgba(139, 92, 246, 1)',
+//           'rgba(196, 181, 253, 1)',
+//         ],
+//         borderWidth: 1,
+//       },
+//     ],
+//   };
+
+//   const labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July'];
+
+//   const dataLinha = {
+//     labels,
+//     datasets: [
+//       {
+//         label: 'Valor por mês',
+//         data: [1, 4, 6, 8, 10, 12, 14],
+//         borderColor: 'rgba(139, 92, 246, 1)',
+//         backgroundColor: 'rgba(139, 92, 246, 0.4)',
+//       },
+//     ],
+//   };
+
+//   return (
+//     <>
+//       <h1 className="">Dashboard</h1>
+
+//       <DashboardKpi kpis={kpis} />
+
+//       <div className='flex w-full justify-between gap-15 justify-center'>
+//         <div className='flex w-full p-10 border-3 rounded-lg border-purple-200'>
+//           <Line data={dataLinha} />
+//         </div>
+//         <div className='flex w-full h-200 border-3 rounded-lg justify-center p-10 border-purple-200'>
+//           <Pie data={data} />
+//         </div>
+//       </div>
+//     </>
+//   );
+// }

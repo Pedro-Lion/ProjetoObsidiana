@@ -10,12 +10,19 @@ import { InputDataBordaLabel } from "../components/Inputs/InputDataBordaLabel";
 import { useMsal } from "@azure/msal-react";
 import { loginRequest } from "../authConfig";
 import moment from "moment";
+import { Modal } from "../components/Modal/Modal.jsx";
 
 export function CadastroOrcamento() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { instance } = useMsal();
   const account = instance.getActiveAccount();
+
+  // Estados do modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitulo, setModalTitulo] = useState("");
+  const [modalDescricao, setModalDescricao] = useState("");
+  const [modalActions, setModalActions] = useState(null);
 
   const state = useLocation().state;
   function definirState() {
@@ -45,7 +52,6 @@ export function CadastroOrcamento() {
     copiaState.dataInicio = formatarData(copiaState.dataInicio);
     copiaState.dataTermino = formatarData(copiaState.dataTermino);
 
-    console.log(copiaState);
     return copiaState;
   }
 
@@ -70,6 +76,43 @@ export function CadastroOrcamento() {
     return lista.map((item) => {
       return { value: item.id, label: item.nome };
     });
+  }
+  // Normaliza a lista de equipamentos (pode ser [id,id,...] ou [{id:..}, ...])
+  function obterListaIdsEquipamentos(rawLista) {
+    if (!rawLista) return [];
+    return rawLista.map(item => (typeof item === "number" ? item : item?.id)).filter(Boolean);
+  }
+
+  // Converte equipamentos (ids) em usosEquipamentos [{ idEquipamento, quantidadeUsada }]
+  function equipamentosParaUsos(equipamentoIds) {
+    const mapa = new Map();
+    equipamentoIds.forEach(id => {
+      mapa.set(id, (mapa.get(id) || 0) + 1);
+    });
+    const usos = [];
+    mapa.forEach((qtd, id) => usos.push({ idEquipamento: id, quantidadeUsada: qtd }));
+    return usos;
+  }
+
+  // Normaliza um possível usosEquipamentos vindo da UI (pode conter equipamento aninhado)
+  function normalizarUsos(usosRaw, equipamentosFallback) {
+    if (usosRaw && usosRaw.length > 0) {
+      return usosRaw.map(u => {
+        // se já vier { idEquipamento, quantidadeUsada } usa direto
+        if (u.idEquipamento) return { idEquipamento: u.idEquipamento, quantidadeUsada: u.quantidadeUsada ?? 1 };
+        // se vier { equipamento: { id: ... }, quantidadeUsada }
+        if (u.equipamento && (u.equipamento.id || u.equipamento.id === 0)) {
+          return { idEquipamento: u.equipamento.id, quantidadeUsada: u.quantidadeUsada ?? 1 };
+        }
+        // se vier { id, ... } (uso antigo)
+        if (u.id) return { idEquipamento: u.id, quantidadeUsada: u.quantidadeUsada ?? 1 };
+        // fallback
+        return null;
+      }).filter(Boolean);
+    }
+    // fallback para equipamentos simples
+    const ids = obterListaIdsEquipamentos(equipamentosFallback);
+    return equipamentosParaUsos(ids);
   }
 
   useEffect(() => {
@@ -102,37 +145,61 @@ export function CadastroOrcamento() {
 
   async function cadastrar() {
     try {
-      const request = await api.post("/orcamento", orcamento, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
+      // preparar payload padronizado
+      const orcamentoFormatado = { ...orcamento };
+      orcamentoFormatado.servicos = orcamentoFormatado.servicos ? obterListaIdsEquipamentos(orcamentoFormatado.servicos) : [];
+      orcamentoFormatado.profissionais = orcamentoFormatado.profissionais ? obterListaIdsEquipamentos(orcamentoFormatado.profissionais) : [];
+
+      // montar usosEquipamentos do jeito que o backend espera
+      orcamentoFormatado.usosEquipamentos = normalizarUsos(orcamentoFormatado.usosEquipamentos, orcamentoFormatado.equipamentos);
+
+      const request = await api.post("/orcamento", orcamentoFormatado, {
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
 
       if (request.status == 201) {
-        const confirmacao = confirm(
+        setModalTitulo("Sucesso!");
+        setModalDescricao(
           "Cadastrado com sucesso! Quer retornar à lista de orçamentos?"
         );
-
-        if (confirmacao) {
-          navigate("/orcamentos");
-        }
-        return;
+        setModalActions(
+          <>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded mr-3"
+              onClick={() => navigate("/orcamentos")}
+            >
+              Ir para lista
+            </button>
+            <button
+              className="bg-gray-300 px-4 py-2 rounded"
+              onClick={() => setModalOpen(false)}
+            >
+              Continuar
+            </button>
+          </>
+        );
+        setModalOpen(true);
       }
     } catch (error) {
       console.log(error);
-      alert("Orçamento não pôde ser cadastrado. Tente novamente.");
+      const msg = error?.response?.data?.message || error?.response?.data || "Orçamento não pôde ser cadastrado. Tente novamente.";
+      console.log(error);
+      setModalTitulo("Erro");
+      setModalDescricao(msg);
+      setModalActions(
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Fechar
+        </button>
+      );
+      setModalOpen(true);
     }
   }
 
-  async function editar() {
-    let orcamentoFormatado = { ...orcamento };
 
-    const chaves = ["servicos", "equipamentos", "profissionais"];
-    chaves.forEach((chave) => {
-      const lista = orcamentoFormatado[chave];
-      if (!lista[0]?.id) return;
-      orcamentoFormatado[chave] = lista.map((item) => item.id);
-    });
+  async function editar() {
 
     async function tratarEvento() {
       if (!account) return;
@@ -146,8 +213,8 @@ export function CadastroOrcamento() {
         const accessToken = response.accessToken;
 
         if (
-          orcamentoFormatado.status != "Confirmado" &&
-          orcamentoFormatado.idCalendar
+          orcamento.status != "Confirmado" &&
+          orcamento.idCalendar
         ) {
           await fetch(
             `https://graph.microsoft.com/v1.0/me/calendar/events/${orcamento.idCalendar}`,
@@ -160,26 +227,26 @@ export function CadastroOrcamento() {
             }
           );
 
-          orcamentoFormatado.idCalendar = null;
+          orcamento.idCalendar = null;
           return;
         }
 
         if (orcamento.status != "Confirmado") return;
 
         const event = {
-          subject: orcamentoFormatado.descricao,
+          subject: orcamento.descricao,
           start: {
-            dateTime: orcamentoFormatado.dataInicio.slice(0, 19),
+            dateTime: orcamento.dataInicio.slice(0, 19),
             timeZone: "America/Sao_Paulo",
           },
           end: {
-            dateTime: orcamentoFormatado.dataTermino.slice(0, 19),
+            dateTime: orcamento.dataTermino.slice(0, 19),
             timeZone: "America/Sao_Paulo",
           },
-          location: { displayName: orcamentoFormatado.localEvento },
+          location: { displayName: orcamento.localEvento },
         };
 
-        if (!orcamentoFormatado.idCalendar) {
+        if (!orcamento.idCalendar) {
           const idCalendar = await fetch(
             "https://graph.microsoft.com/v1.0/me/events",
             {
@@ -194,10 +261,10 @@ export function CadastroOrcamento() {
 
           const data = await idCalendar.json();
 
-          orcamentoFormatado.idCalendar = data.id;
+          orcamento.idCalendar = data.id;
         } else {
           await fetch(
-            `https://graph.microsoft.com/v1.0/me/events/${orcamentoFormatado.idCalendar}`,
+            `https://graph.microsoft.com/v1.0/me/events/${orcamento.idCalendar}`,
             {
               method: "PATCH",
               headers: {
@@ -217,21 +284,66 @@ export function CadastroOrcamento() {
     tratarEvento();
 
     try {
+      // clona e formata listas many-to-many (servicos/profissionais/equipamentos)
+      let orcamentoFormatado = { ...orcamento };
+      const chaves = ["servicos", "equipamentos", "profissionais"];
+
+      chaves.forEach((chave) => {
+        const lista = orcamentoFormatado[chave];
+        if (!lista[0]?.id) return;
+        orcamentoFormatado[chave] = lista.map((item) => item.id);
+      });
+
+      // garantir usosEquipamentos no formato { idEquipamento, quantidadeUsada }
+      orcamentoFormatado.usosEquipamentos = normalizarUsos(orcamentoFormatado.usosEquipamentos, orcamentoFormatado.equipamentos);
+
       const request = await api.put(`/orcamento/${id}`, orcamentoFormatado, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
 
       if (request.status == 200) {
-        alert("Editado com sucesso! Retornando à lista de orçamentos.");
-        return navigate("/orcamentos");
+        setModalTitulo("Sucesso!");
+        setModalDescricao(
+          "Editado com sucesso! Retornando à lista de orçamentos."
+        );
+        setModalActions(
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={() => navigate("/orcamentos")}
+          >
+            Ok
+          </button>
+        );
+        setModalOpen(true);
+      } else {
+        setModalTitulo("Erro");
+        setModalDescricao("Orçamento não pôde ser editado. Tente novamente.");
+        setModalActions(
+          <button
+            className="bg-gray-300 px-4 py-2 rounded"
+            onClick={() => setModalOpen(false)}
+          >
+            Fechar
+          </button>
+        );
+        setModalOpen(true);
       }
     } catch (error) {
       console.log(error);
-      alert("Orcamento não pôde ser editado. Tente novamente.");
+      setModalTitulo("Erro");
+      setModalDescricao("Erro ao editar orçamento.");
+      setModalActions(
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Fechar
+        </button>
+      );
+      setModalOpen(true);
     }
   }
+
 
   return (
     <>
@@ -301,19 +413,29 @@ export function CadastroOrcamento() {
             })
           }
         />
+
         <ContainerSelectTags
           titulo="Equipamentos"
           itens={opcoes.equipamento}
           preSelecao={() =>
             orcamento.equipamentos ? formatarOpcoes(orcamento.equipamentos) : []
           }
-          onChange={(itens) =>
+          temQuantidade={true}
+          onChange={(itensComQtd) => {
+            // itensComQtd = [{ value, label, quantidade }] quando temQuantidade=true
+            const equipamentoIds = (itensComQtd || []).map(i => i.value);
+            const usos = (itensComQtd || []).map(i => ({
+              idEquipamento: i.value,
+              quantidadeUsada: i.quantidade ?? 1
+            }));
             setOrcamento({
               ...orcamento,
-              equipamentos: itens.map((item) => item.value),
-            })
-          }
+              equipamentos: equipamentoIds,
+              usosEquipamentos: usos
+            });
+          }}
         />
+
         <ContainerSelectTags
           titulo="Profissionais"
           itens={opcoes.profissional}
@@ -329,6 +451,7 @@ export function CadastroOrcamento() {
             })
           }
         />
+
       </section>
 
       {!state ? (
@@ -338,7 +461,13 @@ export function CadastroOrcamento() {
           onClick={cadastrar}
         />
       ) : (
-        <BotaoPrimario titulo="Editar" className="self-end" onClick={editar} />
+        <BotaoPrimario titulo="Salvar alterações" className="self-end" onClick={editar} />
+      )}
+
+      {modalOpen && (
+        <Modal titulo={modalTitulo} descricao={modalDescricao}>
+          {modalActions}
+        </Modal>
       )}
     </>
   );

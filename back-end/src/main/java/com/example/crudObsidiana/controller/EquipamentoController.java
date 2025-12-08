@@ -106,14 +106,25 @@ public class EquipamentoController {
             @ApiResponse(responseCode = "404", description = "Equipamento não encontrado")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Equipamento> atualizar(@PathVariable("id") Long id, @RequestBody Equipamento equipamento) {
-        if (repository.existsById(id)) {
-            equipamento.setId(id);
-            repository.save(equipamento);
-            return ResponseEntity.ok(equipamento);
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Equipamento> atualizar(@PathVariable("id") Long id, @RequestBody Equipamento equipamentoBody) {
+        return repository.findById(id).map(existente -> {
+            // atualiza somente campos que fazem sentido atualizar via PUT (ou os que não vieram nulos)
+            if (equipamentoBody.getNome() != null) existente.setNome(equipamentoBody.getNome());
+            if (equipamentoBody.getCategoria() != null) existente.setCategoria(equipamentoBody.getCategoria());
+            if (equipamentoBody.getMarca() != null) existente.setMarca(equipamentoBody.getMarca());
+            if (equipamentoBody.getNumeroSerie() != null) existente.setNumeroSerie(equipamentoBody.getNumeroSerie());
+            if (equipamentoBody.getModelo() != null) existente.setModelo(equipamentoBody.getModelo());
+            if (equipamentoBody.getValorPorHora() != null) existente.setValorPorHora(equipamentoBody.getValorPorHora());
+
+            // para quantidadeTotal: usa o setter (que agora aplica delta corretamente)
+            if (equipamentoBody.getQuantidadeTotal() != null) {
+                existente.setQuantidadeTotal(equipamentoBody.getQuantidadeTotal());
+            }
+            Equipamento salvo = repository.save(existente);
+            return ResponseEntity.ok(salvo);
+        }).orElseGet(() -> ResponseEntity.notFound().build());
     }
+
 
     // --- ENDPOINTS DE IMAGEM ---
 

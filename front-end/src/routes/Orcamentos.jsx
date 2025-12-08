@@ -5,6 +5,7 @@ import { api } from "../api";
 import { CardOrcamento } from "../components/Cards/CardOrcamento";
 import { useMsal } from "@azure/msal-react";
 import { loginRequest } from "../authConfig";
+import { Modal } from "../components/Modal/Modal.jsx";
 
 export function Orcamentos() {
   const navigate = useNavigate();
@@ -13,16 +14,25 @@ export function Orcamentos() {
 
   const [orcamentos, setOrcamentos] = useState([]);
 
+  // Estados do modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitulo, setModalTitulo] = useState("");
+  const [modalDescricao, setModalDescricao] = useState("");
+  const [modalActions, setModalActions] = useState(null);
+
   useEffect(() => {
     async function getOrcamentos() {
-      const request = await api.get("/orcamento", {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
-      });
-
-      if ((request.status = 200)) {
-        setOrcamentos(request.data);
+      try {
+        const request = await api.get("/orcamento", {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("token"),
+          },
+        });
+        if (request.status === 200) {
+          setOrcamentos(request.data);
+        }
+      } catch (err) {
+        console.error(err);
       }
     }
     getOrcamentos();
@@ -81,7 +91,7 @@ export function Orcamentos() {
       </div>
 
       <section className="flex flex-wrap gap-5">
-        {orcamentos.length != 0 ? (
+        {orcamentos.length !== 0 ? (
           orcamentos.map((o) => (
             <CardOrcamento key={o.id} dados={o} onClickDel={() => deletar(o)} />
           ))
@@ -89,6 +99,12 @@ export function Orcamentos() {
           <p className="text-xl">Nenhum orçamento cadastrado.</p>
         )}
       </section>
+
+      {modalOpen && (
+        <Modal titulo={modalTitulo} descricao={modalDescricao}>
+          {modalActions}
+        </Modal>
+      )}
     </>
   );
 }
