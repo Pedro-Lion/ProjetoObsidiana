@@ -1,8 +1,8 @@
 package com.example.crudObsidiana.dto;
 
 public record KpisOrcamentoDTO(
-        Integer aprovados,
+        Integer confirmados,
         Integer pendentes,
-        Integer concluidos
+        Integer cancelados
 ) {}
 
