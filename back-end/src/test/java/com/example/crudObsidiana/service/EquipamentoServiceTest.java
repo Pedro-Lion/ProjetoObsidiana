@@ -26,27 +26,27 @@ public class EquipamentoServiceTest {
     @Test
     void deveCriarEquipamento() {
         EquipamentoDTO dto = new EquipamentoDTO();
-        dto.setNome("Furadeira Industrial");
-        dto.setQuantidade(10);
-        dto.setCategoria("Ferramenta Elétrica");
-        dto.setMarca("Bosch");
-        dto.setNumeroSerie("ABC12345");
-        dto.setModelo("X2000");
-        dto.setValorPorHora(55.90);
+        dto.setNome("Câmera Canon EOS R6");
+        dto.setQuantidadeTotal(5);
+        dto.setCategoria("Câmeras");
+        dto.setMarca("Canon");
+        dto.setNumeroSerie("CN123456");
+        dto.setModelo("EOS R6");
+        dto.setValorPorHora(250.0);
 
         when(equipamentoRepository.save(any(Equipamento.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
         Equipamento equipamento = service.criarEquipamento(dto);
 
-        assertEquals("Furadeira Industrial", equipamento.getNome());
-        assertEquals(10, equipamento.getQuantidade());
-        assertEquals("Ferramenta Elétrica", equipamento.getCategoria());
-        assertEquals("Bosch", equipamento.getMarca());
-        assertEquals("ABC12345", equipamento.getNumeroSerie());
-        assertEquals("X2000", equipamento.getModelo());
-        assertEquals(55.90, equipamento.getValorPorHora());
-        assertEquals(10, equipamento.getQuantidadeDisponivel()); // Setado igual ao quantidade!
+        assertEquals("Câmera Canon EOS R6", equipamento.getNome());
+        assertEquals(5, equipamento.getQuantidadeTotal());
+        assertEquals("Câmeras", equipamento.getCategoria());
+        assertEquals("Canon", equipamento.getMarca());
+        assertEquals("CN123456", equipamento.getNumeroSerie());
+        assertEquals("EOS R6", equipamento.getModelo());
+        assertEquals(250.0, equipamento.getValorPorHora());
+        assertEquals(5, equipamento.getQuantidadeDisponivel()); // quantidadeDisponivel = quantidadeTotal na criação
 
         verify(equipamentoRepository, times(1)).save(any(Equipamento.class));
     }

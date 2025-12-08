@@ -26,12 +26,12 @@ public class EquipamentoControllerTest {
     void deveCriarEquipamentoCorretamente() {
         // Arrange
         EquipamentoDTO dto = new EquipamentoDTO();
-        dto.setNome("Furadeira");
-        dto.setQuantidade(10);
-        dto.setCategoria("Ferramenta");
-        dto.setMarca("Bosch");
-        dto.setNumeroSerie("ABC-123");
-        dto.setModelo("X1000");
+        dto.setNome("Câmera Canon");
+        dto.setQuantidadeTotal(10);
+        dto.setCategoria("Câmeras");
+        dto.setMarca("Sony");
+        dto.setNumeroSerie("N00123");
+        dto.setModelo("C9-20mm DisplayHD");
         dto.setValorPorHora(50.0);
 
         Equipamento equipamentoSalvo = new Equipamento();
@@ -52,12 +52,12 @@ public class EquipamentoControllerTest {
 
         Equipamento capturado = captor.getValue();
 
-        assertEquals("Furadeira", capturado.getNome());
-        assertEquals(10, capturado.getQuantidade());
-        assertEquals("Ferramenta", capturado.getCategoria());
-        assertEquals("Bosch", capturado.getMarca());
-        assertEquals("ABC-123", capturado.getNumeroSerie());
-        assertEquals("X1000", capturado.getModelo());
+        assertEquals("Câmera Canon", capturado.getNome());
+        assertEquals(10, capturado.getQuantidadeTotal());
+        assertEquals("Câmeras", capturado.getCategoria());
+        assertEquals("Sony", capturado.getMarca());
+        assertEquals("N00123", capturado.getNumeroSerie());
+        assertEquals("C9-20mm DisplayHD", capturado.getModelo());
         assertEquals(50.0, capturado.getValorPorHora());
         assertEquals(10, capturado.getQuantidadeDisponivel());
     }
