@@ -1,5 +1,6 @@
 package com.example.crudObsidiana.service;
 
+import com.example.crudObsidiana.dto.KpisOrcamentoDTO;
 import com.example.crudObsidiana.dto.OrcamentoDTO;
 import com.example.crudObsidiana.model.Equipamento;
 import com.example.crudObsidiana.model.Orcamento;
@@ -129,6 +130,18 @@ public class OrcamentoService implements OrcamentoSubject {
         for (OrcamentoObserver observer : observers) {
             observer.onOrcamentoUpdated(orcamento, statusAnterior, novoStatus);
         }
+    }
+    
+    // ---------------------------------------------------------------------
+    // KPIs
+    // ---------------------------------------------------------------------
+
+    public KpisOrcamentoDTO getKpis() {
+        Integer confirmados = orcamentoRepository.countByStatus("Confirmado");
+        Integer pendentes = orcamentoRepository.countByStatus("Em análise");
+        Integer cancelados = orcamentoRepository.countByStatus("Cancelado");
+
+        return new KpisOrcamentoDTO(confirmados, pendentes, cancelados);
     }
 
 

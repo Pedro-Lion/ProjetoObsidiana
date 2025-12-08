@@ -35,7 +35,7 @@ public class SecurityConfig {
     SecurityFilter securityFilter;
 
     @Bean
-    // Esse mét0do permite que nossa aplicação front-end (mais precisamente o localhost:5173) possa mandar requisições para nossa API
+        // Esse mét0do permite que nossa aplicação front-end (mais precisamente o localhost:5173) possa mandar requisições para nossa API
     UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));

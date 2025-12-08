@@ -1,5 +1,6 @@
 package com.example.crudObsidiana.controller;
 
+import com.example.crudObsidiana.dto.KpisOrcamentoDTO;
 import com.example.crudObsidiana.dto.OrcamentoDTO;
 import com.example.crudObsidiana.model.Orcamento;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
@@ -119,6 +120,21 @@ public class OrcamentoController {
         Optional<Orcamento> opt = orcamentoRepository.findById(id);
         return opt.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    // ----------------------------------------------------------------------
+    // KPIs
+    // ----------------------------------------------------------------------
+
+    @Operation(summary = "Retorna as KPIs dos orçamentos (aprovados, pendentes e concluídos)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "KPIs retornadas com sucesso",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = KpisOrcamentoDTO.class)))
+    })
+    @GetMapping("/kpis")
+    public ResponseEntity<KpisOrcamentoDTO> getKpis() {
+        return ResponseEntity.ok(orcamentoService.getKpis());
     }
 
     // ----------------------------------------------------------------------

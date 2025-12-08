@@ -12,6 +12,10 @@ public class EquipamentoService {
     @Autowired
     private EquipamentoRepository equipamentoRepository;
 
+    public EquipamentoService(EquipamentoRepository equipamentoRepository) {
+        this.equipamentoRepository = equipamentoRepository;
+    }
+
     public Equipamento criarEquipamento(EquipamentoDTO dto) {
         Equipamento equipamento = new Equipamento();
         equipamento.setNome(dto.getNome());
