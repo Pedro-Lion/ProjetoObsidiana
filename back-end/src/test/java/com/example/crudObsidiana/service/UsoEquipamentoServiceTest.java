@@ -66,4 +66,31 @@ public class UsoEquipamentoServiceTest {
         assertEquals(15, eq.getQuantidadeDisponivel());
     }
 
+
+    @Test
+    void deveRetirarUsoComOrcamento() {
+        UsoEquipamentoDTO dto = new UsoEquipamentoDTO();
+        dto.setIdEquipamento(1L);
+        dto.setQuantidadeUsada(5);
+        dto.setIdOrcamento(10L);
+        dto.setIdServico(null);
+
+        Equipamento eq = new Equipamento();
+        eq.setId(1L);
+        eq.setQuantidadeDisponivel(20);
+
+        Orcamento orc = new Orcamento();
+        orc.setId(10L);
+
+        when(equipamentoRepo.findById(1L)).thenReturn(Optional.of(eq));
+        when(orcRepo.findById(10L)).thenReturn(Optional.of(orc));
+        when(usoRepo.save(any(UsoEquipamento.class))).thenAnswer(i -> i.getArgument(0));
+
+        UsoEquipamento uso = service.registrarUso(dto);
+
+        assertEquals(eq, uso.getEquipamento());
+        assertEquals(orc, uso.getOrcamento());
+        assertEquals(15, eq.getQuantidadeDisponivel());
+    }
+
 }

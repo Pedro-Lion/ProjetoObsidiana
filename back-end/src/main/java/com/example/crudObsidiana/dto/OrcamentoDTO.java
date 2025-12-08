@@ -5,13 +5,13 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Dados para criação de um novo orçamento")
 public class OrcamentoDTO {
 
-    @Schema(description = "Descrição ou título do orçamento", example = "Gravação de vídeo institucional")
     private String descricao;
 
     /*
@@ -28,11 +28,7 @@ public class OrcamentoDTO {
 
     @Schema(description = "Local onde o evento ocorrerá", example = "Estúdio Central")
     private String localEvento;
-
-    @Schema(description = "Status atual do orçamento", example = "ATIVO")
     private String status;
-
-    @Schema(description = "Valor total calculado do orçamento", example = "2500.0")
     private Double valorTotal;
 
     private List<Long> servicos;

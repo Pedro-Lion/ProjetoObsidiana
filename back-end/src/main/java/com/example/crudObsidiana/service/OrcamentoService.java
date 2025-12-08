@@ -13,7 +13,6 @@ import com.example.crudObsidiana.repository.ServicoRepository;
 import com.example.crudObsidiana.observer.OrcamentoObserver;
 import com.example.crudObsidiana.observer.OrcamentoSubject;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
