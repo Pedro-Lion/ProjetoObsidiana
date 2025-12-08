@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
     public Optional<Orcamento> findByIdCalendar(String idCalendar);
+    Integer countByStatus(String status);
 }

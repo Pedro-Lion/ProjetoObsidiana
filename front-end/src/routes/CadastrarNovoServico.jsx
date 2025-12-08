@@ -5,6 +5,7 @@ import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { api } from "../api.js";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Modal } from "../components/Modal/Modal.jsx";
 
 export function CadastrarNovoServico() {
   const navigate = useNavigate();
@@ -18,6 +19,12 @@ export function CadastrarNovoServico() {
   const [valorHora, setValorHora] = useState(
     servico.valorPorHora ? servico.valorPorHora.toFixed(2) : "0.00"
   );
+
+  // Estados para o modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitulo, setModalTitulo] = useState("");
+  const [modalDescricao, setModalDescricao] = useState("");
+  const [modalActions, setModalActions] = useState(null);
 
   useEffect(() => {
     async function getEquipamentos() {
@@ -45,55 +52,100 @@ export function CadastrarNovoServico() {
   async function cadastrar() {
     try {
       const request = await api.post("/servico", servico, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
 
       if (request.status == 201) {
-        const confirmacao = confirm(
+        setModalTitulo("Sucesso!");
+        setModalDescricao(
           "Cadastrado com sucesso! Quer retornar à lista de serviços?"
         );
-
-        if (confirmacao) {
-          navigate("/servicos");
-        }
-        return;
+        setModalActions(
+          <>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded mr-3"
+              onClick={() => navigate("/servicos")}
+            >
+              Ir para lista
+            </button>
+            <button
+              className="bg-gray-300 px-4 py-2 rounded"
+              onClick={() => setModalOpen(false)}
+            >
+              Continuar
+            </button>
+          </>
+        );
+        setModalOpen(true);
       }
     } catch (error) {
       console.log(error);
-      alert("Serviço não pôde ser cadastrado. Tente novamente.");
+      setModalTitulo("Erro");
+      setModalDescricao("Serviço não pôde ser cadastrado. Tente novamente.");
+      setModalActions(
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Fechar
+        </button>
+      );
+      setModalOpen(true);
     }
   }
 
   async function editar() {
     let servicoFormatado = { ...servico };
     const equips = servicoFormatado.equipamentos;
-    // caso os equipamentos não forem alterardos, terá a propriedade id (que deve ser formatada)
     if (equips[0]?.id) {
-      servicoFormatado.equipamentos = equips.map(
-        (equip) => equip.id
-      );
+      servicoFormatado.equipamentos = equips.map((equip) => equip.id);
     }
-
-
-    console.log(servicoFormatado)
 
     try {
       const request = await api.put(`/servico/${id}`, servicoFormatado, {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
 
       if (request.status == 200) {
-        alert("Editado com sucesso! Retornando à lista de serviços.");
-        return navigate("/servicos");
+        setModalTitulo("Sucesso!");
+        setModalDescricao(
+          "Editado com sucesso! Retornando à lista de serviços."
+        );
+        setModalActions(
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={() => navigate("/servicos")}
+          >
+            Ok
+          </button>
+        );
+        setModalOpen(true);
+      } else {
+        setModalTitulo("Erro");
+        setModalDescricao("Serviço não pôde ser editado. Tente novamente.");
+        setModalActions(
+          <button
+            className="bg-gray-300 px-4 py-2 rounded"
+            onClick={() => setModalOpen(false)}
+          >
+            Fechar
+          </button>
+        );
+        setModalOpen(true);
       }
-
-      alert("Serviço não pôde ser editado. Tente novamente.");
     } catch (error) {
       console.log(error);
+      setModalTitulo("Erro");
+      setModalDescricao("Erro ao editar serviço.");
+      setModalActions(
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Fechar
+        </button>
+      );
+      setModalOpen(true);
     }
   }
 
@@ -132,10 +184,10 @@ export function CadastrarNovoServico() {
             value={valorHora}
             onInput={(e) => {
               let v = e.target.value;
-              v = v.replace(/\D/g, ""); // remove tudo que não for número
-              const numero = (Number(v) / 100).toFixed(2); // transforma centavos → valor real
-              setValorHora(numero); // formata no input a variável acima ↝
-              setServico({ ...servico, valorPorHora: Number(numero) }); // salva no objeto Servico como double
+              v = v.replace(/\D/g, "");
+              const numero = (Number(v) / 100).toFixed(2);
+              setValorHora(numero);
+              setServico({ ...servico, valorPorHora: Number(numero) });
             }}
           />
         </div>
@@ -177,6 +229,12 @@ export function CadastrarNovoServico() {
           />
         )}
       </section>
+
+      {modalOpen && (
+        <Modal titulo={modalTitulo} descricao={modalDescricao}>
+          {modalActions}
+        </Modal>
+      )}
     </>
   );
 }

@@ -61,7 +61,7 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => { }, onClick
             {dados.categoria || "—"}
           </label>
           <label className="sm:wrap-anywhere sm:hyphens-auto text-slate-700 text-[1.1rem] w-fit leading-5.5">
-            <b>{dados.quantidadeDisponivel ?? dados.quantidade ?? 0}</b> disponíveis
+            <b>{dados.quantidadeDisponivel ?? dados.quantidadeTotal ?? 0}</b> disponíveis
           </label>
         </div>
         <div className="flex flex-row justify-between items-start w-full px-7 lg:gap-10">

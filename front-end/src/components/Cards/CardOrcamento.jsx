@@ -53,12 +53,12 @@ export function CardOrcamento({
 
   function definirCorStatus() {
     const corPorStatus = {
-      confirmado: "oklch(62.7% 0.194 149.214)",
       "em análise": "oklch(68.1% 0.162 75.834)",
+      confirmado: "oklch(62.7% 0.194 149.214)",
       cancelado: "oklch(50.5% 0.213 27.518)",
     };
 
-    const cor = corPorStatus[dados.status.toLowerCase()];
+    const cor = corPorStatus[dados.status?.toLowerCase()];
     return cor ? cor : "black";
   }
   const corStatus = definirCorStatus();

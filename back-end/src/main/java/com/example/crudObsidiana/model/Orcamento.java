@@ -16,13 +16,12 @@ public class Orcamento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idOrcamento")
-    @Schema(description = "ID do orçamento", example = "1")
     private Long id;
 
     /*
     @Schema(description = "Data do evento", example = "2025-11-05")
     @Column(name = "data_evento")
-    private Date dataEvento;
+    private LocalDate dataEvento;
 
     @Schema(description = "Duração do evento em horas", example = "8")
     @Column(name = "duracao")
@@ -33,18 +32,18 @@ public class Orcamento {
 
     private Date dataTermino;
 
-    @Schema(description = "Local do evento", example = "Estúdio Principal")
+    @Schema(description = "Local do evento")
     @Column(name = "local_evento")
     private String localEvento;
 
-    @Schema(description = "Descrição geral do orçamento", example = "Gravação de videoclipe publicitário")
+    @Schema(description = "Descrição geral do orçamento")
     @Column(columnDefinition = "TEXT")
     private String descricao;
 
-    @Schema(description = "Status atual do orçamento", example = "Confirmado")
+    @Schema(description = "Status atual do orçamento")
     private String status;
 
-    @Schema(description = "Valor total estimado", example = "3500")
+    @Schema(description = "Valor total estimado")
     @Column(name = "valorTotal")
     private Double valorTotal;
 
@@ -54,7 +53,6 @@ public class Orcamento {
 
 
     @OneToMany(mappedBy = "orcamento", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Schema(description = "Lista de usos de equipamentos vinculados a este orçamento")
     @JsonManagedReference
     private List<UsoEquipamento> usosEquipamentos;
 
@@ -104,7 +102,6 @@ public class Orcamento {
     }
 
     // GETTERS & SETTERS
-
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

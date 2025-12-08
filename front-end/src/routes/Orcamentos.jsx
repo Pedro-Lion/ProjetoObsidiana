@@ -5,23 +5,34 @@ import { api } from "../api";
 import { CardOrcamento } from "../components/Cards/CardOrcamento";
 import { useMsal } from "@azure/msal-react";
 import { loginRequest } from "../authConfig";
+import { Modal } from "../components/Modal/Modal.jsx";
 
 export function Orcamentos() {
   const navigate = useNavigate();
-  const [orcamentos, setOrcamentos] = useState([]);
   const { instance } = useMsal();
   const account = instance.getActiveAccount();
 
+  const [orcamentos, setOrcamentos] = useState([]);
+
+  // Estados do modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitulo, setModalTitulo] = useState("");
+  const [modalDescricao, setModalDescricao] = useState("");
+  const [modalActions, setModalActions] = useState(null);
+
   useEffect(() => {
     async function getOrcamentos() {
-      const request = await api.get("/orcamento", {
-        headers: {
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
-      });
-
-      if ((request.status = 200)) {
-        setOrcamentos(request.data);
+      try {
+        const request = await api.get("/orcamento", {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("token"),
+          },
+        });
+        if (request.status === 200) {
+          setOrcamentos(request.data);
+        }
+      } catch (err) {
+        console.error(err);
       }
     }
     getOrcamentos();
@@ -31,42 +42,30 @@ export function Orcamentos() {
     const ok = window.confirm("Tem certeza que deseja excluir este orçamento?");
     if (!ok) return;
 
-    if(orcamento.idCalendar && account){
-      
-          try {
-              const response = await instance.acquireTokenSilent({
-                  ...loginRequest,
-                  account : account
-              });
-      
-              const accessToken = response.accessToken;
-      
-              // const event = {
-              //     subject: 'Reunião de Teste',
-              //     start: { dateTime: '2025-10-28T09:00:00', timeZone: 'America/Sao_Paulo' },
-              //     end: { dateTime: '2025-10-28T10:00:00', timeZone: 'America/Sao_Paulo' },
-              //     location: { displayName: 'Sala de Reuniões 1' },
-              //     attendees: [{ emailAddress: { address: 'exemplo@dominio.com', name: 'Convidado' }, type: 'required' }]
-              // };
-      
-              await fetch(`https://graph.microsoft.com/v1.0/me/calendar/events/${orcamento.idCalendar}`, {
-                  method: 'DELETE',
-                  headers: {
-                      Authorization: `Bearer ${accessToken}`,
-                      'Content-Type': 'application/json'
-                  }
-              });
-      
-              alert('Evento deletado com sucesso!');
-              // window.location.reload();
-              
-            } catch (error) {
-            alert('Erro ao deletar evento');
-            return console.log(error);
-              // console.error(error);
+    if (orcamento.idCalendar && account) {
+      try {
+        const response = await instance.acquireTokenSilent({
+          ...loginRequest,
+          account: account,
+        });
+
+        const accessToken = response.accessToken;
+
+        await fetch(
+          `https://graph.microsoft.com/v1.0/me/calendar/events/${orcamento.idCalendar}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
           }
-      };
-  
+        );
+      } catch (error) {
+        alert("Não foi possível excluir o evento associado ao orçamento.");
+        return console.log(error);
+      }
+    }
 
     try {
       const resposta = await api.delete(`/orcamento/${orcamento.id}`, {
@@ -92,18 +91,20 @@ export function Orcamentos() {
       </div>
 
       <section className="flex flex-wrap gap-5">
-        {orcamentos.length != 0 ? (
+        {orcamentos.length !== 0 ? (
           orcamentos.map((o) => (
-            <CardOrcamento
-              key={o.id}
-              dados={o}
-              onClickDel={() => deletar(o)}
-            />
+            <CardOrcamento key={o.id} dados={o} onClickDel={() => deletar(o)} />
           ))
         ) : (
           <p className="text-xl">Nenhum orçamento cadastrado.</p>
         )}
       </section>
+
+      {modalOpen && (
+        <Modal titulo={modalTitulo} descricao={modalDescricao}>
+          {modalActions}
+        </Modal>
+      )}
     </>
   );
 }

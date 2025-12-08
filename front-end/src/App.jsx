@@ -27,7 +27,7 @@ export function App() {
       <header
         className="w-114 py-10 flex-none flex flex-col text-gray-50 bg-gradient-to-t from-zinc-950 to-zinc-900 shadow-md"
       >
-        <div className="mb-10 flex justify-start items-center gap-5">
+        <div className="mb-10 flex justify-start items-center gap-5 cursor-pointer" onClick={()=> navigate("/")}>
           <div className="bg-[#f0f0f0] rounded-r-full w-fit py-5 pl-7 pr-6 justify-items-center">
             <img className="h-15" src="/logo.png" alt="Logo Obsidiana" />
           </div>
