@@ -19,7 +19,7 @@ public class ServicoDTO {
     private int horas;
 
     @Schema(description = "Valor por hora", example = "200")
-    private int valorPorHora;
+    private Double valorPorHora;
 
     @Schema(description = "Lista de IDs dos equipamentos usados", example = "[1, 2, 3]")
     private List<Long> equipamentos;
@@ -48,11 +48,11 @@ public class ServicoDTO {
         this.horas = horas;
     }
 
-    public int getValorPorHora() {
+    public Double getValorPorHora() {
         return valorPorHora;
     }
 
-    public void setValorPorHora(int valorPorHora) {
+    public void setValorPorHora(Double valorPorHora) {
         this.valorPorHora = valorPorHora;
     }
 

@@ -17,7 +17,7 @@ export function CadastroEquipamentos() {
       nome: "",
       categoria: "",
       marca: "",
-      quantidade: 0,
+      quantidadeTotal: 0,
       modelo: "",
       numeroSerie: "",
       valorPorHora: null,
@@ -182,8 +182,8 @@ export function CadastroEquipamentos() {
               titulo="Quantidade"
               type="number"
               placeholder="Ex: 10"
-              onInput={onChangeNumero("quantidade")}
-              value={equipamento.quantidade}
+              onInput={onChangeNumero("quantidadeTotal")}
+              value={equipamento.quantidadeTotal}
             />
           </div>
           <div className="flex flex-col justify-between h-full">

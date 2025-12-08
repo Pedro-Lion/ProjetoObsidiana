@@ -169,7 +169,7 @@ export function AplicacaoComponentes() {
         <ContainerListagem
           dados={{
             nome: "Câmera 01",
-            quantidade: 5,
+            quantidadeTotal: 5,
             categoria: "Gravação",
             marca: "Sony",
             modelo: "C9-20mm DisplayHD",
