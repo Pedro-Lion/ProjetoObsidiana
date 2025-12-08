@@ -56,7 +56,8 @@ public class OrcamentoService implements OrcamentoSubject {
             dto.getLocalEvento(),
             dto.getDescricao(),
             dto.getStatus(),
-            dto.getValorTotal()
+            dto.getValorTotal(),
+            dto.getIdCalendar()
         );
 
         // O status padrão é "Em análise",
