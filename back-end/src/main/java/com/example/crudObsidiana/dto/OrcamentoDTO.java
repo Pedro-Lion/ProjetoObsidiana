@@ -14,8 +14,6 @@ import com.example.crudObsidiana.dto.UsoEquipamentoDTO;
 @Schema(description = "Dados para criação de um novo orçamento")
 public class OrcamentoDTO {
 
-    private String idCalendar;
-
     private String descricao;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")

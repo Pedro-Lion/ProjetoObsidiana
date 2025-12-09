@@ -18,8 +18,6 @@ public class Orcamento {
     @Column(name = "idOrcamento")
     private Long id;
 
-    private String idCalendar;
-
     private Date dataInicio;
 
     private Date dataTermino;
@@ -76,7 +74,6 @@ public class Orcamento {
     }
 
     public Orcamento(
-        String idCalendar,
         Date dataInicio,
         Date dataTermino,
         String localEvento,
