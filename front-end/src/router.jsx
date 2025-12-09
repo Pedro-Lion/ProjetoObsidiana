@@ -76,6 +76,10 @@ export const router = createBrowserRouter([
         element: <CadastroProfissionais />
       },
       {
+        path: "/perfil",
+        element: <Perfil/>
+      },
+      {
       path: "/api",
       element: <API />
       }
