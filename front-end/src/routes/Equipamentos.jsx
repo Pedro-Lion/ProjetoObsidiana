@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
@@ -9,12 +9,14 @@ import { Modal } from "../components/Modal/Modal.jsx";
 
 export function Equipamentos() {
   const navigate = useNavigate();
+  // ref para guardar urls criadas (objectURLs) e limpar quando desmontar o componente
+  const previewsRef = useRef([]);
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
-
+  
   // Estados do modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitulo, setModalTitulo] = useState("");
@@ -33,8 +35,11 @@ export function Equipamentos() {
           },
         });
         if (!mounted) return;
+
         if (resposta.status === 200 && Array.isArray(resposta.data)) {
-          setData(resposta.data);
+          // carrega previews (faz fetch dos blobs e cria objectURLs)
+          const withPreviews = await carregarPreviews(resposta.data);
+          setData(withPreviews);
         } else {
           setData([]);
         }
@@ -47,10 +52,67 @@ export function Equipamentos() {
       }
     }
     buscar();
+
     return () => {
       mounted = false;
+      // limpa object URLs quando desmontar
+      if (previewsRef.current && previewsRef.current.length) {
+        previewsRef.current.forEach((u) => {
+          try {
+            URL.revokeObjectURL(u);
+          } catch (e) { }
+        });
+        previewsRef.current = [];
+      }
     };
   }, []);
+
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
+  async function carregarPreviews(equipamentos) {
+    // limpa previews antigos
+    if (previewsRef.current && previewsRef.current.length) {
+      previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) { } });
+      previewsRef.current = [];
+    }
+
+    const token = sessionStorage.getItem("token");
+    const promessas = equipamentos.map(async (eq) => {
+      if (!eq.nomeArquivoImagem) return { ...eq, preview: null };
+
+      try {
+        const url = `${API_BASE}/equipamento/${eq.id}/imagem`;
+        const resp = await fetch(url, {
+          method: "GET",
+          headers: { Authorization: token ? ("Bearer " + token) : "" },
+        });
+
+        if (!resp.ok) {
+          console.warn(`Preview não disponível para equipamento ${eq.id}: ${resp.status}`);
+          return { ...eq, preview: null };
+        }
+
+        // checando o content-type para garantir que veio imagem
+        const ctype = resp.headers.get("content-type") || "";
+        if (!ctype.startsWith("image/")) {
+          console.warn(`Resposta não é imagem para equipamento ${eq.id}, content-type=${ctype}`);
+          return { ...eq, preview: null };
+        }
+
+        const blob = await resp.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        previewsRef.current.push(objectUrl);
+        return { ...eq, preview: objectUrl };
+      } catch (err) {
+        console.error("Erro ao buscar preview do equipamento", eq.id, err);
+        return { ...eq, preview: null };
+      }
+    });
+
+    return Promise.all(promessas);
+  }
+
+
 
   const refresh = async () => {
     setLoading(true);
@@ -59,7 +121,8 @@ export function Equipamentos() {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
       if (resposta.status === 200 && Array.isArray(resposta.data)) {
-        setData(resposta.data);
+        const withPreviews = await carregarPreviews(resposta.data);
+        setData(withPreviews);
       } else {
         setData([]);
       }
@@ -86,7 +149,18 @@ export function Equipamentos() {
                 },
               });
               if (resposta.status === 200 || resposta.status === 204) {
-                setData((prev) => prev.filter((item) => item.id !== id));
+                // remover do state local e limpar a preview do item removido
+                setData((prev) => {
+                  const removed = prev.find((p) => p.id === id);
+                  if (removed && removed.preview) {
+                    try {
+                      URL.revokeObjectURL(removed.preview);
+                      // também remove da lista de previewsRef caso ainda esteja lá
+                      previewsRef.current = previewsRef.current.filter((u) => u !== removed.preview);
+                    } catch (e) { }
+                  }
+                  return prev.filter((item) => item.id !== id);
+                });
               } else {
                 await refresh();
               }
@@ -151,39 +225,37 @@ export function Equipamentos() {
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pr-5">
         <h1 className="text-4xl font-medium">Equipamentos</h1>
 
-        <div className="flex gap-3 items-end">
-          <InputBordaLabel
-            type="text"
-            titulo="Buscar"
-            placeholder="Nome, categoria ou marca"
-            value={search}
-            onInput={(e) => setSearch(e.target.value)}
-            className="w-72"
-          />
           <BotaoPrimario
             titulo="+ Novo equipamento"
             className="mb-0 mt-0"
             onClick={() => navigate("/cadastro/equipamentos")}
           />
-        </div>
+      </div>
+      <div className="w-full pr-5">
+        <InputBordaLabel
+            type="text"
+            titulo="Buscar"
+            placeholder="Nome, categoria ou marca"
+            value={search}
+            onInput={(e) => setSearch(e.target.value)}
+            className=""
+          />
       </div>
 
       <section className="h-full mt-5 space-y-3">
         {filtered.length !== 0 ? (
           filtered.map((e) => (
-            <div className="pr-5 flex items-center" key={e.id}>
-              <InputCheckbox className="mr-3" />
-              <ContainerListagem
-                dados={e}
-                onClickEdit={() =>
-                  navigate(`/editar/equipamento/${e.id}`, { state: e })
-                }
-                onClickDel={() => handleDelete(e.id)}
-              />
-            </div>
+            <ContainerListagem
+              key={e.id}
+              dados={e}
+              onClickEdit={() =>
+                navigate(`/editar/equipamento/${e.id}`, { state: e })
+              }
+              onClickDel={() => handleDelete(e.id)}
+            />
           ))
         ) : (
           <p className="text-xl italic text-gray-700">

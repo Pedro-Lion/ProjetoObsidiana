@@ -18,16 +18,6 @@ public class Orcamento {
     @Column(name = "idOrcamento")
     private Long id;
 
-    /*
-    @Schema(description = "Data do evento", example = "2025-11-05")
-    @Column(name = "data_evento")
-    private LocalDate dataEvento;
-
-    @Schema(description = "Duração do evento em horas", example = "8")
-    @Column(name = "duracao")
-    private Integer duracaoEvento;
-     */
-
     private Date dataInicio;
 
     private Date dataTermino;

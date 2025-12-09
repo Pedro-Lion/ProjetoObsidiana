@@ -10,23 +10,22 @@ import java.nio.file.*;
 @Service
 public class FileStorageService {
 
-    @Value("${upload.dir}")
+    @Value("${upload.dir}") //passando o caminho para salvar as imagens
     private String pastaUpload;
 
     public Path salvarArquivo(MultipartFile arquivo) throws IOException {
-//        Criar diretório se não existir:
+        // Criar diretório se não existir:
         Path pasta = Paths.get(pastaUpload);
         if (!Files.exists(pasta)) {
             Files.createDirectories(pasta);
         }
-        // Para evitar colisão, prefixe com timestamp (opcional)
+        // Prefixo com timestamp
         String nomeSeguro = System.currentTimeMillis() + "_" + arquivo.getOriginalFilename();
-//        Montar o caminho completo das imagens
+        // Montar o caminho completo das imagens
         Path caminho = pasta.resolve(nomeSeguro);
 
-        // Copiar (se já existir, sobrescreve? usamos REPLACE_EXISTING para segurança)
+        // Copiar (se já existir, sobrescreve)
         Files.copy(arquivo.getInputStream(), caminho, StandardCopyOption.REPLACE_EXISTING);
-
         return caminho;
     }
 
@@ -37,4 +36,4 @@ public class FileStorageService {
         }
         return Files.readAllBytes(caminho);
     }
-}
+} // FIM CLASSE

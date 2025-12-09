@@ -3,8 +3,18 @@ import Select from "react-select";
 
 export function ContainerSelectTags({ titulo = "Container", placeholder = "Escolha uma opção", itens, preSelecao, onChange, temQuantidade = false }) {
   const [itensSelecionados, setItensSelecionados] = useState(preSelecao ?? []);
-  const [quantidades, setQuantidades] = useState(temQuantidade ? {} : null);
 
+  function definirQuantidades() {
+    if (!temQuantidade) return null;
+    if (preSelecao) {
+      const qtd = {}
+      preSelecao().forEach((item) => {
+        qtd[item.value] = item.quantidade
+      })
+      return qtd;
+    } 
+  }
+  const [quantidades, setQuantidades] = useState(definirQuantidades());
 
   const handleRemove = (removerEste) => {
     setItensSelecionados(prev =>
@@ -26,8 +36,8 @@ export function ContainerSelectTags({ titulo = "Container", placeholder = "Escol
     setQuantidades(prev => {
       if (!temQuantidade) return prev;
       const copia = { ...(prev || {}) };
-      (novosItens || []).forEach(i => {
-        if (!copia[i.value]) copia[i.value] = 1;
+      (novosItens || []).forEach(item => {
+        if (!copia[item.value]) copia[item.value] = 1;
       });
       return copia;
     });
@@ -135,7 +145,7 @@ export function ContainerSelectTags({ titulo = "Container", placeholder = "Escol
           {titulo}
         </label>
         <label className="text-slate-700 text-[1.1rem] bg-transparent w-fit mb-1">
-          Selecionados: {itensSelecionados.length}
+          Selecionados: {itensSelecionados?.length}
         </label>
       </div>
       <Select
@@ -152,7 +162,7 @@ export function ContainerSelectTags({ titulo = "Container", placeholder = "Escol
       />
 
       <div className="flex flex-wrap gap-2 mt-4">
-        {itensSelecionados.length > 0 ?
+        {itensSelecionados?.length > 0 ?
           (
             itensSelecionados.map((selecionado) => (
               <div
@@ -161,11 +171,10 @@ export function ContainerSelectTags({ titulo = "Container", placeholder = "Escol
                 {temQuantidade ? (
                   <input
                     type="number"
-                    name="qtdUtilizadas"
                     placeholder="nº"
                     className="bg-violet-100 rounded-md w-16 focus:outline-none text-center"
                     min={1}
-                    value={quantidades && quantidades[selecionado.value] ? quantidades[selecionado.value] : 1}
+                    value={quantidades[selecionado.value] ?? 1}
                     onChange={(e) => handleQuantidadeChange(selecionado.value, e.target.value)}
                   />
                 ) : null}

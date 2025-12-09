@@ -128,7 +128,7 @@ public class EquipamentoController {
 
     // --- ENDPOINTS DE IMAGEM ---
 
-    // Upload de imagem para equipamento (usa o bean fileStorageService corretamente)
+    // Upload de imagem para equipamento
     @PostMapping("/{id}/imagem")
     public ResponseEntity<?> uploadImagemEquipamento(@PathVariable Long id,
                                                      @RequestParam("arquivo") MultipartFile arquivo) {
@@ -137,7 +137,7 @@ public class EquipamentoController {
                 return ResponseEntity.notFound().build();
             }
 
-            // chama o método de instância (NÃO estático)
+            // chama o metodo de instância (NÃO estático)
             Path caminho = fileStorageService.salvarArquivo(arquivo);
 
             Equipamento equipamento = repository.findById(id).get();
@@ -173,7 +173,7 @@ public class EquipamentoController {
         }
 
         try {
-            // Lê os bytes do arquivo (FileStorageService.lerArquivo deve receber o NOME do arquivo)
+            // Lê os bytes do arquivo
             byte[] dados = fileStorageService.lerArquivo(nomeArquivo);
 
             String tipo = eqp.getTipoImagem();

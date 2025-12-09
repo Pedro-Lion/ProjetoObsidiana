@@ -44,7 +44,10 @@ public class Equipamento {
     @ManyToMany(mappedBy = "equipamentos")
     private List<Servico> servicos = new ArrayList<>();
 
-//    Metadados da imagem
+    @ManyToMany(mappedBy = "equipamentos")
+    private List<Orcamento> orcamentos = new ArrayList<>();
+
+    //    Metadados da imagem
     @Schema(description = "Nome do arquivo de imagem salvo", example = "1632938123456_camera.jpg")
     private String nomeArquivoImagem;
 
@@ -152,9 +155,11 @@ public class Equipamento {
 
     public Integer getQuantidadeDisponivel() { return quantidadeDisponivel; }
     public void setQuantidadeDisponivel(Integer quantidadeDisponivel) {
+        int total = (this.quantidadeTotal == null) ? 0 : this.quantidadeTotal;
+
         this.quantidadeDisponivel =
                 (quantidadeDisponivel == null) ? 0
-                : Math.max(0, Math.min(quantidadeDisponivel, this.quantidadeTotal));
+                        : Math.max(0, Math.min(quantidadeDisponivel, total));
     }
     public String getNomeArquivoImagem() {
         return nomeArquivoImagem;

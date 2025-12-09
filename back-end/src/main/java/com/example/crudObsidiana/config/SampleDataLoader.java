@@ -61,11 +61,11 @@ public class SampleDataLoader implements CommandLineRunner {
         // ========================
         if (usuarioRepository.count() == 0) {
             Usuario u = new Usuario();
-            u.setNome("Usuário Teste");
-            u.setEmail("w@w");
+            u.setNome("Administrador");
+            u.setEmail("admin@obsidiana.com");
             u.setSenha(passwordEncoder.encode("123"));
             usuarioRepository.save(u);
-            System.out.println("✔ Usuário criado: w@w / 123");
+            System.out.println("✔ Usuário criado: admin@obsidiana.com / 123");
         }
 
         // ========================
@@ -95,6 +95,17 @@ public class SampleDataLoader implements CommandLineRunner {
             eq2.setValorPorHora(40.0);
             eq2 = equipamentoRepository.save(eq2);
 
+            Equipamento eq3 = new Equipamento();
+            eq3.setNome("Tripé");
+            eq3.setCategoria("Suporte");
+            eq3.setMarca("Tripex");
+            eq3.setModelo("Novo");
+            eq3.setNumeroSerie("DEL-E14");
+            eq3.setQuantidadeTotal(50);
+            eq3.setQuantidadeDisponivel(50);
+            eq3.setValorPorHora(40.0);
+            eq3 = equipamentoRepository.save(eq3);
+
             System.out.println("✔ Equipamentos criados");
         }
 
@@ -104,11 +115,12 @@ public class SampleDataLoader implements CommandLineRunner {
         if (servicoRepository.count() == 0) {
 
             List<Equipamento> equipamentos = equipamentoRepository.findAll();
+            equipamentos.removeLast();
 
             Servico serv = new Servico();
             serv.setNome("Cobertura de Evento - Foto/Vídeo");
             serv.setDescricao("Serviço com câmera e iluminação.");
-            serv.setHoras(4);
+            serv.setHoras(1);
             serv.setValorPorHora(200.0);
             serv.setEquipamentos(equipamentos);
 
@@ -123,9 +135,9 @@ public class SampleDataLoader implements CommandLineRunner {
         if (profissionalRepository.count() == 0) {
 
             Profissional p = new Profissional(
-                    "Hannah Montana",
+                    "Haidê Landim",
                     "Disponível",
-                    "soueuhannah@email.com"
+                    "haide.landim@outlook.com"
             );
 
             profissionalRepository.save(p);
@@ -142,12 +154,14 @@ public class SampleDataLoader implements CommandLineRunner {
             List<Equipamento> equipamentosExistentes = equipamentoRepository.findAll();
             List<Profissional> profissionaisExistentes = profissionalRepository.findAll();
 
+            equipamentosExistentes.removeLast();
+
             // Monta um orçamento simples usando os campos do model/construtor
             Orcamento orc = new Orcamento(
                     new Date(),                    // dataInicio
                     new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 4), // dataTermino (+4h)
-                    "Malibu Beach",             // localEvento
-                    "YeeeEEeAahh....", // descricao
+                    "São Paulo",             // localEvento
+                    "Gravação de frigorífico industrial", // descricao
                     "Em análise",                  // status (inicial)
                     0.0,                     // valorTotal (será calculado pelo serviço quando necessário)
                     null // idCalendar só é usado após orçamento ser aprovado
