@@ -208,7 +208,7 @@ export function Equipamentos() {
   if (data.length === 0)
     return (
       <>
-        <div className="flex items-center">
+        <div className="flex items-center justify-between">
           <h1 className="text-4xl font-medium">Equipamentos</h1>
 
           <BotaoPrimario
