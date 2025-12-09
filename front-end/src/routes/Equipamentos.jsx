@@ -208,7 +208,7 @@ export function Equipamentos() {
   if (data.length === 0)
     return (
       <>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <h1 className="text-4xl font-medium">Equipamentos</h1>
 
           <BotaoPrimario
@@ -224,24 +224,24 @@ export function Equipamentos() {
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pr-5">
         <h1 className="text-4xl font-medium">Equipamentos</h1>
 
-        <div className="flex gap-3 content-between">
-          <InputBordaLabel
-            type="text"
-            titulo="Buscar"
-            placeholder="Nome, categoria ou marca"
-            value={search}
-            onInput={(e) => setSearch(e.target.value)}
-            className="w-72"
-          />
           <BotaoPrimario
             titulo="+ Novo equipamento"
             className="mb-0 mt-0"
             onClick={() => navigate("/cadastro/equipamentos")}
           />
-        </div>
+      </div>
+      <div className="w-full pr-5">
+        <InputBordaLabel
+            type="text"
+            titulo="Buscar"
+            placeholder="Nome, categoria ou marca"
+            value={search}
+            onInput={(e) => setSearch(e.target.value)}
+            className=""
+          />
       </div>
 
       <section className="h-full mt-5 space-y-3">
