@@ -31,6 +31,10 @@ public class OrcamentoDTO {
     private String status;
     private Double valorTotal;
 
+    @Schema(description = "Id recebido da API Microsoft ao cadastrar o evento", example = "Anucvbweo214...")
+    private String idCalendar;
+
+
     private List<Long> servicos;
 
     private List<Long> equipamentos;
@@ -60,6 +64,9 @@ public class OrcamentoDTO {
 
     public Double getValorTotal() { return valorTotal; }
     public void setValorTotal(Double valorTotal) { this.valorTotal = valorTotal; }
+
+    public String getIdCalendar() {return idCalendar;}
+    public void setIdCalendar(String idCalendar) {this.idCalendar = idCalendar;}
 
     public List<Long> getServicos() { return servicos; }
     public void setServicos(List<Long> servicos) { this.servicos = servicos; }

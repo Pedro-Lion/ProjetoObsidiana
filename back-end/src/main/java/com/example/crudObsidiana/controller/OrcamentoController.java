@@ -124,9 +124,29 @@ public class OrcamentoController {
     }
 
     // ----------------------------------------------------------------------
+    // GET /orcamento/calendar/{idCalendar} → Buscar por IDCalendar
+    // ----------------------------------------------------------------------
+    @GetMapping("/calendar/{idCalendar}")
+    @Operation(
+            summary = "Buscar orçamento por ID do Calendário Outlook",
+            description = "Retorna os detalhes de um orçamento específico."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Orçamento encontrado"),
+            @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
+    })
+    public ResponseEntity<Orcamento> buscarPorIdCalendar(
+            @Parameter(description = "IDCalendar do orçamento", example = "ASAICuyvcaUICya234...")
+            @PathVariable String idCalendar
+    ) {
+        Optional<Orcamento> opt = orcamentoRepository.findByIdCalendar(idCalendar);
+        return opt.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    // ----------------------------------------------------------------------
     // KPIs
     // ----------------------------------------------------------------------
-
     @Operation(summary = "Retorna as KPIs dos orçamentos (aprovados, pendentes e concluídos)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "KPIs retornadas com sucesso",

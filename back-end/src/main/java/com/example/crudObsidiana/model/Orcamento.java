@@ -39,6 +39,11 @@ public class Orcamento {
     @Column(name = "valorTotal")
     private Double valorTotal;
 
+    @Schema(description = "Valor recebido da API Outlook ", example = "AybcaefSYc75....")
+    @Column(name = "id_calendario")
+    private String idCalendar;
+
+
     @OneToMany(mappedBy = "orcamento", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<UsoEquipamento> usosEquipamentos;
@@ -77,7 +82,8 @@ public class Orcamento {
         String localEvento,
         String descricao,
         String status,
-        Double valorTotal
+        Double valorTotal,
+        String idCalendar
     ) {
         this.dataInicio = dataInicio;
         this.dataTermino = dataTermino;
@@ -85,6 +91,7 @@ public class Orcamento {
         this.descricao = descricao;
         this.status = status;
         this.valorTotal = valorTotal;
+        this.idCalendar = idCalendar;
     }
 
     // GETTERS & SETTERS
