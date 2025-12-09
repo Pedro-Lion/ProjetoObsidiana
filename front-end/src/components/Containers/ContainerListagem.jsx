@@ -1,9 +1,9 @@
 import { Foto } from "../Foto";
+import { InputFoto } from "../Inputs/InputFoto";
 import { formatarPreco } from "../../../utils/formatarPreco";
 
 export function ContainerListagem({ dados = {}, onClickEdit = () => { }, onClickDel = () => { } }) {
-  // Valor formatado (tratando null/undefined/string)
-  const valorFormatado = formatarPreco(dados.valorPorHora);
+  const valorFormatado = formatarPreco(dados.valorPorHora); //tratando null/undefined/string
   return (
     <>
       <style>
@@ -67,12 +67,12 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => { }, onClick
         <div className="flex flex-row justify-between items-start w-full px-7 lg:gap-10">
           {dados.nomeArquivoImagem ? (
             <img
-              src={`${process.env.REACT_APP_API_BASE_URL || ""}/equipamento/${dados.id}/imagem`}
+            src={`${import.meta.env.VITE_API_BASE_URL || ""}/equipamento/${dados.id}/imagem`}
               alt={dados.nome}
               className="w-full h-full object-cover"
             />
           ) : (
-            <Foto /> //componente placeholder
+            <InputFoto dstv={true} /> //upload desativado = componente apenas de exibição da imagem
           )}
 
           <div className="estilo-campos">
