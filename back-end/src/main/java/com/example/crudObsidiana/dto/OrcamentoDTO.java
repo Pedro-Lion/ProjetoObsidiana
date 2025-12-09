@@ -42,9 +42,6 @@ public class OrcamentoDTO {
     private List<UsoEquipamentoDTO> usosEquipamentos;
 
     // Getters e Setters
-    public String getIdCalendar() { return idCalendar; }
-    public void setIdCalendar(String idCalendar) { this.idCalendar = idCalendar;}
-
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
 
