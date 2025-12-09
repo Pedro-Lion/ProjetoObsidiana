@@ -1,18 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { api } from "../api.js";
 import { useNavigate } from "react-router-dom";
+import { Modal } from "../components/Modal/Modal.jsx";
 
 export function Equipamentos() {
   const navigate = useNavigate();
+  // ref para guardar urls criadas (objectURLs) e limpar quando desmontar o componente
+  const previewsRef = useRef([]);
 
-  const [data, setData] = useState([]); // array de objetos Equipamento
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
+  // Estados do modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitulo, setModalTitulo] = useState("");
+  const [modalDescricao, setModalDescricao] = useState("");
+  const [modalActions, setModalActions] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -26,8 +34,11 @@ export function Equipamentos() {
           },
         });
         if (!mounted) return;
+
         if (resposta.status === 200 && Array.isArray(resposta.data)) {
-          setData(resposta.data);
+          // carrega previews (faz fetch dos blobs e cria objectURLs)
+          const withPreviews = await carregarPreviews(resposta.data);
+          setData(withPreviews);
         } else {
           setData([]);
         }
@@ -40,10 +51,53 @@ export function Equipamentos() {
       }
     }
     buscar();
+
     return () => {
       mounted = false;
+      // limpa object URLs quando desmontar
+      if (previewsRef.current && previewsRef.current.length) {
+        previewsRef.current.forEach((u) => {
+          try {
+            URL.revokeObjectURL(u);
+          } catch (e) {}
+        });
+        previewsRef.current = [];
+      }
     };
   }, []);
+
+  async function carregarPreviews(equipamentos) {
+    // antes de criar novos previews, limpa os antigos
+    if (previewsRef.current && previewsRef.current.length) {
+      previewsRef.current.forEach((u) => {
+        try {
+          URL.revokeObjectURL(u);
+        } catch (e) {}
+      });
+      previewsRef.current = [];
+    }
+
+    const token = sessionStorage.getItem("token");
+    const promessas = equipamentos.map(async (eq) => {
+      try {
+        const resp = await fetch(`/equipamento/${eq.id}/imagem`, {
+          method: "GET",
+          headers: { Authorization: "Bearer " + token },
+        });
+        if (!resp.ok) return { ...eq, preview: null };
+
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        // guarda para limpar depois
+        previewsRef.current.push(url);
+        return { ...eq, preview: url };
+      } catch (err) {
+        return { ...eq, preview: null };
+      }
+    });
+
+    return Promise.all(promessas);
+  }
 
   const refresh = async () => {
     setLoading(true);
@@ -52,7 +106,8 @@ export function Equipamentos() {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
       if (resposta.status === 200 && Array.isArray(resposta.data)) {
-        setData(resposta.data);
+        const withPreviews = await carregarPreviews(resposta.data);
+        setData(withPreviews);
       } else {
         setData([]);
       }
@@ -64,24 +119,64 @@ export function Equipamentos() {
     }
   };
 
-  const handleDelete = async (id) => {
-    const ok = window.confirm(
-      "Tem certeza que deseja excluir este equipamento?"
+  const handleDelete = (id) => {
+    setModalTitulo("Confirmar exclusão");
+    setModalDescricao("Tem certeza que deseja excluir este equipamento?");
+    setModalActions(
+      <>
+        <button
+          className="bg-red-500 text-white px-4 py-2 rounded mr-3"
+          onClick={async () => {
+            try {
+              const resposta = await api.delete(`/equipamento/${id}`, {
+                headers: {
+                  Authorization: "Bearer " + sessionStorage.getItem("token"),
+                },
+              });
+              if (resposta.status === 200 || resposta.status === 204) {
+                // remover do state local e limpar a preview do item removido
+                setData((prev) => {
+                  const removed = prev.find((p) => p.id === id);
+                  if (removed && removed.preview) {
+                    try {
+                      URL.revokeObjectURL(removed.preview);
+                      // também remove da lista de previewsRef caso ainda esteja lá
+                      previewsRef.current = previewsRef.current.filter((u) => u !== removed.preview);
+                    } catch (e) {}
+                  }
+                  return prev.filter((item) => item.id !== id);
+                });
+              } else {
+                await refresh();
+              }
+              setModalOpen(false);
+            } catch (err) {
+              console.error(err);
+              setModalTitulo("Erro");
+              setModalDescricao("Não foi possível excluir. Tente novamente.");
+              setModalActions(
+                <button
+                  className="bg-gray-300 px-4 py-2 rounded"
+                  onClick={() => setModalOpen(false)}
+                >
+                  Fechar
+                </button>
+              );
+              setModalOpen(true);
+            }
+          }}
+        >
+          Excluir
+        </button>
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
+          Cancelar
+        </button>
+      </>
     );
-    if (!ok) return;
-    try {
-      const resposta = await api.delete(`/equipamento/${id}`, {
-        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-      if (resposta.status === 200 || resposta.status === 204) {
-        setData((prev) => prev.filter((item) => item.id !== id));
-      } else {
-        await refresh();
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Não foi possível excluir. Verifique console.");
-    }
+    setModalOpen(true);
   };
 
   const filtered = data.filter((e) => {
@@ -118,7 +213,7 @@ export function Equipamentos() {
       <div className="flex items-center justify-between">
         <h1 className="text-4xl font-medium">Equipamentos</h1>
 
-        <div className="flex gap-3 items-end">
+        <div className="flex gap-3 content-between">
           <InputBordaLabel
             type="text"
             titulo="Buscar"
@@ -136,10 +231,10 @@ export function Equipamentos() {
       </div>
 
       <section className="h-full mt-5 space-y-3">
-        {filtered.length != 0 ? (
+        {filtered.length !== 0 ? (
           filtered.map((e) => (
             <div className="pr-5 flex items-center" key={e.id}>
-              <InputCheckbox className="mr-3" />
+
               <ContainerListagem
                 dados={e}
                 onClickEdit={() =>
@@ -155,6 +250,12 @@ export function Equipamentos() {
           </p>
         )}
       </section>
+
+      {modalOpen && (
+        <Modal titulo={modalTitulo} descricao={modalDescricao}>
+          {modalActions}
+        </Modal>
+      )}
     </>
   );
 }
