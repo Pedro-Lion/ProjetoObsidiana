@@ -78,7 +78,8 @@ export function Home() {
 
       <h3>Próximos eventos</h3>
 
-      <div className="h-full w-full overflow-auto border-1 border-indigo-200 p-1.5">
+      {/* border-1 border-indigo-200 */}
+      <div className="h-full w-full overflow-auto  p-1.5"> 
         {/* <iframe src="https://outlook.office365.com/calendar/published/05caa2e2759545539d3d0baaf1160008@sptech.school/79f2802dcb82431ebc51f3fc61e6114a3537960576227375636/calendar.html"
           className="h-full w-full"></iframe> */}
       <AuthenticatedTemplate>
@@ -93,11 +94,14 @@ export function Home() {
         ) : null}
         </AuthenticatedTemplate>
         <UnauthenticatedTemplate>
-          <h3>Conecte-se na sua conta Outlook para acessar o calendário. ...
-            
+          <div className="flex flex-col gap-4">
+          <p className="text-xl">Conecte-se na sua conta Outlook para acessar o calendário.</p>
+
           <BotaoSecundario titulo = "Login Outlook" className="w-60" onClick={handleRedirect} variant="primary">
                   
-                </BotaoSecundario></h3>
+                </BotaoSecundario>
+
+        </div>
         </UnauthenticatedTemplate>
         
       

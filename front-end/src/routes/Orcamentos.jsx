@@ -86,7 +86,7 @@ export function Orcamentos() {
         <h1>Orçamentos</h1>
         <BotaoPrimario
           titulo="+ Novo orçamento"
-          onClick={() => navigate("/cadastro/orcamento")}
+          onClick={() => navigate("/cadastro/orcamentos")}
         />
       </div>
 

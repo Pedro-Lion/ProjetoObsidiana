@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import Select from "react-select";
 
 export function ContainerSelectTags({ titulo = "Container", placeholder = "Escolha uma opção", itens, preSelecao, onChange, temQuantidade = false }) {
-  const [itensSelecionados, setItensSelecionados] = useState(preSelecao ?? []);
+  const [itensSelecionados, setItensSelecionados] = useState(preSelecao != undefined ? preSelecao : []);
 
   function definirQuantidades() {
     if (!temQuantidade) return null;
     if (preSelecao) {
       const qtd = {}
-      preSelecao().forEach((item) => {
+      preSelecao.forEach((item) => {
         qtd[item.value] = item.quantidade
       })
       return qtd;
