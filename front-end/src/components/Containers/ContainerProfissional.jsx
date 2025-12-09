@@ -25,7 +25,7 @@ export function ContainerProfissional({ dados = {}, onClickEdit = () => { }, onC
                 color: #334155;
                 font-size:1.1rem;
                 line-height: 1.25;
-                width:auto;
+                width:fit-content;
                 overflow-wrap: break-word;
                 hyphens: auto;
                 }
