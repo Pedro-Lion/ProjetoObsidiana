@@ -295,7 +295,7 @@ export function CadastroOrcamento() {
 
           const data = await idCalendar.json();
 
-          orcamento.idCalendar = data.id;
+          setOrcamento({ ...orcamento, idCalendar: data.id });
         } else {
           await fetch(
             `https://graph.microsoft.com/v1.0/me/events/${orcamento.idCalendar}`,

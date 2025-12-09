@@ -44,7 +44,10 @@ public class Equipamento {
     @ManyToMany(mappedBy = "equipamentos")
     private List<Servico> servicos = new ArrayList<>();
 
-//    Metadados da imagem
+    @ManyToMany(mappedBy = "equipamentos")
+    private List<Orcamento> orcamentos = new ArrayList<>();
+
+    //    Metadados da imagem
     @Schema(description = "Nome do arquivo de imagem salvo", example = "1632938123456_camera.jpg")
     private String nomeArquivoImagem;
 
