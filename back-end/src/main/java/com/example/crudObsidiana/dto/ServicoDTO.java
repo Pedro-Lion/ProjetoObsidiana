@@ -27,7 +27,6 @@ public class ServicoDTO {
     public String getNome() {
         return nome;
     }
-
     public void setNome(String nome) {
         this.nome = nome;
     }
@@ -35,7 +34,6 @@ public class ServicoDTO {
     public String getDescricao() {
         return descricao;
     }
-
     public void setDescricao(String descricao) {
         this.descricao = descricao;
     }
@@ -43,7 +41,6 @@ public class ServicoDTO {
     public int getHoras() {
         return horas;
     }
-
     public void setHoras(int horas) {
         this.horas = horas;
     }
@@ -51,14 +48,10 @@ public class ServicoDTO {
     public Double getValorPorHora() {
         return valorPorHora;
     }
-
     public void setValorPorHora(Double valorPorHora) {
         this.valorPorHora = valorPorHora;
     }
 
     public List<Long> getEquipamentos() { return equipamentos; }
-
-    public void setEquipamentosIds(List<Long> equipamentosIds) {
-        this.equipamentos = equipamentos;
-    }
+    public void setEquipamentos(List<Long> equipamentos) { this.equipamentos = equipamentos; }
 }

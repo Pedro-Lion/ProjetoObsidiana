@@ -248,16 +248,14 @@ export function Equipamentos() {
       <section className="h-full mt-5 space-y-3">
         {filtered.length !== 0 ? (
           filtered.map((e) => (
-            <div className="pr-5 flex items-center" key={e.id}>
-
-              <ContainerListagem
-                dados={e}
-                onClickEdit={() =>
-                  navigate(`/editar/equipamento/${e.id}`, { state: e })
-                }
-                onClickDel={() => handleDelete(e.id)}
-              />
-            </div>
+            <ContainerListagem
+              key={e.id}
+              dados={e}
+              onClickEdit={() =>
+                navigate(`/editar/equipamento/${e.id}`, { state: e })
+              }
+              onClickDel={() => handleDelete(e.id)}
+            />
           ))
         ) : (
           <p className="text-xl italic text-gray-700">

@@ -18,15 +18,7 @@ public class Orcamento {
     @Column(name = "idOrcamento")
     private Long id;
 
-    /*
-    @Schema(description = "Data do evento", example = "2025-11-05")
-    @Column(name = "data_evento")
-    private LocalDate dataEvento;
-
-    @Schema(description = "Duração do evento em horas", example = "8")
-    @Column(name = "duracao")
-    private Integer duracaoEvento;
-     */
+    private String idCalendar;
 
     private Date dataInicio;
 
@@ -79,6 +71,7 @@ public class Orcamento {
     }
 
     public Orcamento(
+        String idCalendar,
         Date dataInicio,
         Date dataTermino,
         String localEvento,
@@ -97,6 +90,9 @@ public class Orcamento {
     // GETTERS & SETTERS
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public String getIdCalendar() { return idCalendar; }
+    public void setIdCalendar(String idCalendar) { this.idCalendar = idCalendar; }
 
     public Date getDataInicio() { return dataInicio;}
     public void setDataInicio(Date dataInicio) { this.dataInicio = dataInicio; }

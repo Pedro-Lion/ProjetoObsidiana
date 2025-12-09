@@ -96,6 +96,7 @@ public class OrcamentoService implements OrcamentoSubject {
     public Orcamento criarOrcamento(OrcamentoDTO dto) {
         // Mapear DTO -> Model Orcamento
         Orcamento novoOrcamento = new Orcamento(
+                dto.getIdCalendar(),
                 dto.getDataInicio(),
                 dto.getDataTermino(),
                 dto.getLocalEvento(),
