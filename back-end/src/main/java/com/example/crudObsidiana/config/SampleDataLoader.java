@@ -149,7 +149,8 @@ public class SampleDataLoader implements CommandLineRunner {
                     "Malibu Beach",             // localEvento
                     "YeeeEEeAahh....", // descricao
                     "Em análise",                  // status (inicial)
-                    0.0                             // valorTotal (será calculado pelo serviço quando necessário)
+                    0.0,                     // valorTotal (será calculado pelo serviço quando necessário)
+                    null // idCalendar só é usado após orçamento ser aprovado
             );
 
             // Persistir para obter ID

@@ -11,6 +11,9 @@ import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 import DashboardKpi from "../components/Kpis/DashboardKpi";
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import  Calendar from '../components/CalendarAPI/Calendar';
+import { MsalProvider, AuthenticatedTemplate, useMsal, UnauthenticatedTemplate } from '@azure/msal-react';
+import { loginRequest } from '../authConfig';
 
 export function Home() {
 
@@ -40,6 +43,33 @@ export function Home() {
     fetchKpis();
   }, []);
 
+
+  // API Outlook - Calendar 
+    const { instance } = useMsal();
+    const activeAccount = instance.getActiveAccount();
+
+     const handleRedirect = () => {
+        instance
+            .loginRedirect({
+                ...loginRequest,
+                prompt: 'create',
+            })
+            .catch((error) => console.log(error));
+    };
+
+     const handleLogoutRedirect = () => {
+        instance.logoutRedirect().catch((error) => console.log(error));
+    };
+
+      const getAccessToken = async () => {
+      const response = await instance.acquireTokenSilent({
+        ...loginRequest,
+        account: activeAccount
+      });
+      return response.accessToken;
+    };
+
+
   return (
     <>
       <h1 className="">Boas-vindas!</h1>
@@ -49,9 +79,31 @@ export function Home() {
       <h3>Próximos eventos</h3>
 
       <div className="h-full w-full overflow-auto border-1 border-indigo-200 p-1.5">
-        <iframe src="https://outlook.office365.com/calendar/published/05caa2e2759545539d3d0baaf1160008@sptech.school/79f2802dcb82431ebc51f3fc61e6114a3537960576227375636/calendar.html"
-          className="h-full w-full"></iframe>
+        {/* <iframe src="https://outlook.office365.com/calendar/published/05caa2e2759545539d3d0baaf1160008@sptech.school/79f2802dcb82431ebc51f3fc61e6114a3537960576227375636/calendar.html"
+          className="h-full w-full"></iframe> */}
+      <AuthenticatedTemplate>
+        {activeAccount ? ( 
+        <>
+        <Calendar getAccessToken={getAccessToken} />
+        <BotaoSecundario variant="warning" onClick={handleLogoutRedirect}
+          titulo="Sign out"
+          className="w-60"
+        />
+        </>
+        ) : null}
+        </AuthenticatedTemplate>
+        <UnauthenticatedTemplate>
+          <h3>Conecte-se na sua conta Outlook para acessar o calendário. ...
+            
+          <BotaoSecundario titulo = "Login Outlook" className="w-60" onClick={handleRedirect} variant="primary">
+                  
+                </BotaoSecundario></h3>
+        </UnauthenticatedTemplate>
+        
+      
       </div>
+      
+
 
     </>
   )
