@@ -8,30 +8,42 @@ import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { ContainerSelectTags } from "../components/Containers/ContainerSelectTags";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
+import DashboardKpi from "../components/Kpis/DashboardKpi";
+import { useEffect, useState } from "react";
+import { api } from "../api.js";
 
 export function Home() {
+
+  const [kpis, setKpis] = useState({
+    aprovados: 0,
+    pendentes: 0,
+    concluidos: 0
+  });
+
+  useEffect(() => {
+    async function fetchKpis() {
+      try {
+        const response = await api.get("/orcamento/kpis", {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("token"),
+          },
+        });
+
+        setKpis(response.data);
+
+      } catch (error) {
+        console.error("Erro ao buscar KPIs:", error);
+      }
+    }
+
+    fetchKpis();
+  }, []);
+
   return (
     <>
       <h1 className="">Boas-vindas!</h1>
 
-      <div className="flex gap-3.5">
-        <BotaoSecundario
-          titulo="Novo orçamento"
-          className="w-60"
-        />
-        <BotaoSecundario
-          titulo="Novo serviço"
-          className="w-60"
-        />
-        <BotaoSecundario
-          titulo="Novo equipamento"
-          className="w-60"
-        />
-        <BotaoSecundario
-          titulo="Novo profissional"
-          className="w-60"
-        />
-      </div>
+      <DashboardKpi kpis={kpis} />
 
       <h3>Próximos eventos</h3>
 
