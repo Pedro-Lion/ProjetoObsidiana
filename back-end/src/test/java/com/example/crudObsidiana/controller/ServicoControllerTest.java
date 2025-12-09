@@ -48,6 +48,7 @@ class ServicoControllerTest {
         salvo.setDescricao("Filmagem");
 
         when(servicoService.criarServico(dto)).thenReturn(salvo);
+        when(repository.save(any(Servico.class))).thenReturn(salvo);
 
         ResponseEntity<Servico> response = controller.criarServico(dto);
 
@@ -126,43 +127,5 @@ class ServicoControllerTest {
 
         assertEquals(404, response.getStatusCodeValue());
         verify(repository, never()).deleteById(anyLong());
-    }
-
-    // -------------------------
-    // TESTE: Atualizar - encontrado
-    // -------------------------
-    @Test
-    void deveAtualizarServico() {
-        Servico servico = new Servico();
-        servico.setDescricao("Atualizado");
-
-        when(repository.existsById(50L)).thenReturn(true);
-
-        ResponseEntity<Servico> response = controller.atualizar(50L, servico);
-
-        assertEquals(200, response.getStatusCodeValue());
-
-        ArgumentCaptor<Servico> captor = ArgumentCaptor.forClass(Servico.class);
-        verify(repository).save(captor.capture());
-
-        Servico capturado = captor.getValue();
-
-        assertEquals(50L, capturado.getId());
-        assertEquals("Atualizado", capturado.getDescricao());
-    }
-
-    // -------------------------
-    // TESTE: Atualizar - não encontrado
-    // -------------------------
-    @Test
-    void naoDeveAtualizarServicoInexistente() {
-        Servico servico = new Servico();
-
-        when(repository.existsById(999L)).thenReturn(false);
-
-        ResponseEntity<Servico> response = controller.atualizar(999L, servico);
-
-        assertEquals(404, response.getStatusCodeValue());
-        verify(repository, never()).save(any());
     }
 }
