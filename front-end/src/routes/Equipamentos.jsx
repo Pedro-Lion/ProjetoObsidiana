@@ -59,45 +59,59 @@ export function Equipamentos() {
         previewsRef.current.forEach((u) => {
           try {
             URL.revokeObjectURL(u);
-          } catch (e) {}
+          } catch (e) { }
         });
         previewsRef.current = [];
       }
     };
   }, []);
 
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
   async function carregarPreviews(equipamentos) {
-    // antes de criar novos previews, limpa os antigos
+    // limpa previews antigos
     if (previewsRef.current && previewsRef.current.length) {
-      previewsRef.current.forEach((u) => {
-        try {
-          URL.revokeObjectURL(u);
-        } catch (e) {}
-      });
+      previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) { } });
       previewsRef.current = [];
     }
 
     const token = sessionStorage.getItem("token");
     const promessas = equipamentos.map(async (eq) => {
+      if (!eq.nomeArquivoImagem) return { ...eq, preview: null };
+
       try {
-        const resp = await fetch(`/equipamento/${eq.id}/imagem`, {
+        const url = `${API_BASE}/equipamento/${eq.id}/imagem`;
+        const resp = await fetch(url, {
           method: "GET",
-          headers: { Authorization: "Bearer " + token },
+          headers: { Authorization: token ? ("Bearer " + token) : "" },
         });
-        if (!resp.ok) return { ...eq, preview: null };
+
+        if (!resp.ok) {
+          console.warn(`Preview não disponível para equipamento ${eq.id}: ${resp.status}`);
+          return { ...eq, preview: null };
+        }
+
+        // checando o content-type para garantir que veio imagem
+        const ctype = resp.headers.get("content-type") || "";
+        if (!ctype.startsWith("image/")) {
+          console.warn(`Resposta não é imagem para equipamento ${eq.id}, content-type=${ctype}`);
+          return { ...eq, preview: null };
+        }
 
         const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        // guarda para limpar depois
-        previewsRef.current.push(url);
-        return { ...eq, preview: url };
+        const objectUrl = URL.createObjectURL(blob);
+        previewsRef.current.push(objectUrl);
+        return { ...eq, preview: objectUrl };
       } catch (err) {
+        console.error("Erro ao buscar preview do equipamento", eq.id, err);
         return { ...eq, preview: null };
       }
     });
 
     return Promise.all(promessas);
   }
+
+
 
   const refresh = async () => {
     setLoading(true);
@@ -142,7 +156,7 @@ export function Equipamentos() {
                       URL.revokeObjectURL(removed.preview);
                       // também remove da lista de previewsRef caso ainda esteja lá
                       previewsRef.current = previewsRef.current.filter((u) => u !== removed.preview);
-                    } catch (e) {}
+                    } catch (e) { }
                   }
                   return prev.filter((item) => item.id !== id);
                 });

@@ -1,21 +1,53 @@
 import { useState, useEffect } from "react";
 
-export function InputFoto({ onChange, icone = "bi bi-camera", tamanho = "8", initialPreview = null, dstv = false }) {
+export function InputFoto({
+    onChange,
+    icone = "bi bi-camera",
+    tamanho = "8",
+    initialPreview = null,
+    dstv = false }) {
+        
     const [preview, setPreview] = useState(null);
+    // guarda o objectURL gerado a partir do input para poder limpá-lo depois
+    const [objectUrlGerado, setObjectUrlGerado] = useState(null);
 
     useEffect(() => {
         // se o componente pai passar uma URL de imagem já existente, usa como preview inicial
         if (initialPreview) {
             setPreview(initialPreview);
+        } else {
+            // se o parent limpou o preview, limpa também aqui
+            setPreview(null);
         }
     }, [initialPreview]);
+
+    // limpa o objectURL anterior quando trocar preview gerado localmente
+    useEffect(() => {
+        return () => {
+            if (objectUrlGerado) {
+                try {
+                    URL.revokeObjectURL(objectUrlGerado);
+                } catch (e) { /* ignore */ }
+            }
+        };
+    }, [objectUrlGerado]);
 
     function handleFileChange(e) {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // se já havia um objectURL gerado por este componente, limpa antes de criar outro
+        if (objectUrlGerado) {
+            try {
+                URL.revokeObjectURL(objectUrlGerado);
+            } catch (err) { /* ignore */ }
+            setObjectUrlGerado(null);
+        }
+
         const imageUrl = URL.createObjectURL(file);
         setPreview(imageUrl);
+        setObjectUrlGerado(imageUrl);
+
         if (onChange) onChange(e);
     }
 

@@ -4,6 +4,7 @@ import { formatarPreco } from "../../../utils/formatarPreco";
 
 export function ContainerListagem({ dados = {}, onClickEdit = () => { }, onClickDel = () => { } }) {
   const valorFormatado = formatarPreco(dados.valorPorHora); //tratando null/undefined/string
+
   return (
     <>
       <style>
@@ -65,15 +66,15 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => { }, onClick
           </label>
         </div>
         <div className="flex flex-row justify-between items-start w-full px-7 lg:gap-10">
-          {dados.nomeArquivoImagem ? (
-            <img
-            src={`${import.meta.env.VITE_API_BASE_URL || ""}/equipamento/${dados.id}/imagem`}
-              alt={dados.nome}
-              className="w-full h-full object-cover"
-            />
+
+          {dados.nomeArquivoImagem && dados.preview ? (
+            <a href={dados.preview} target="_blank" rel="noopener noreferrer">
+              <InputFoto dstv={true} initialPreview={dados.preview} />
+            </a>
           ) : (
-            <InputFoto dstv={true} /> //upload desativado = componente apenas de exibição da imagem
+            <InputFoto dstv={true} />
           )}
+
 
           <div className="estilo-campos">
             <label className="estilo-titulo-campo w-fit">

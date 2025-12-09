@@ -4,7 +4,7 @@ import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Modal } from "../components/Modal/Modal.jsx";
 
 export function CadastroEquipamentos() {
@@ -13,6 +13,11 @@ export function CadastroEquipamentos() {
   const state = useLocation().state;
   const [arquivoImagem, setArquivoImagem] = useState(null); // arquivo selecionado
   const [previewImagem, setPreviewImagem] = useState(null); // url para preview
+  // referência para guardar objectURL criado e poder revogar corretamente
+  const previewRef = useRef(null);
+  // base do Vite: deve apontar para o backend (localhost:8080)
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
   const [equipamento, setEquipamento] = useState(
     state ?? {
       nome: "",
@@ -54,17 +59,29 @@ export function CadastroEquipamentos() {
   /* Carrega a imagem atual do equipamento e faz o set da preview */
   useEffect(() => {
     async function carregarPreviewExistente() {
-      if (!id) return; // só age se não tiver id, ou seja, se tiver editando (não cadastrando)
+      if (!id) return; // só age se tiver id (edição)
       try {
         const token = sessionStorage.getItem("token");
-        const resp = await fetch(`/equipamento/${id}/imagem`, {
+        const url = `${API_BASE}/equipamento/${id}/imagem`;
+        const resp = await fetch(url, {
           method: "GET",
-          headers: { Authorization: "Bearer " + token },
+          headers: { Authorization: token ? ("Bearer " + token) : "" },
         });
-        if (!resp.ok) return; //equipamento sem imagem 
+        if (!resp.ok) return; // equipamento sem imagem ou não autorizado
+        const ctype = resp.headers.get("content-type") || "";
+        if (!ctype.startsWith("image/")) {
+          console.warn(`Preview não é imagem (content-type=${ctype}) para equipamento ${id}`);
+          return;
+        }
         const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        setPreviewImagem(url);
+        const objectUrl = URL.createObjectURL(blob);
+
+        // revogar objectURL anterior se existir
+        if (previewRef.current) {
+          try { URL.revokeObjectURL(previewRef.current); } catch (e) { /* ignore */ }
+        }
+        previewRef.current = objectUrl;
+        setPreviewImagem(objectUrl);
       } catch (err) {
         console.log("Sem imagem existente ou erro ao buscar:", err);
       }
@@ -73,11 +90,13 @@ export function CadastroEquipamentos() {
 
     // cleanup: liberar objectURL quando componente desmontar
     return () => {
-      if (previewImagem) {
-        URL.revokeObjectURL(previewImagem);
+      if (previewRef.current) {
+        try { URL.revokeObjectURL(previewRef.current); } catch (e) { /* ignore */ }
+        previewRef.current = null;
       }
     };
-  }, [id]);
+  }, [id]); // roda quando id mudar
+
 
   /* Métodos de cadastro e edição de equipamentos */
   async function cadastrar() {
@@ -87,7 +106,7 @@ export function CadastroEquipamentos() {
       });
 
       if (request.status == 201) {
-        const criado = response.data;
+        const criado = request.data;
         // Se tiver arquivo para subir, chamar a função de upload:
         if (arquivoImagem && criado && criado.id) {
           await uploadImagem(criado.id);
@@ -280,7 +299,7 @@ export function CadastroEquipamentos() {
               />
             ) : (
               <BotaoPrimario
-                titulo="Editar"
+                titulo="Salvar alterações"
                 className="w-full mb-0 mt-7"
                 onClick={editar}
               />

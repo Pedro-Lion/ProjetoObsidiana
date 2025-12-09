@@ -103,7 +103,7 @@ export function CadastroProfissionais() {
         ) : (
           <BotaoPrimario
             className="mb-0 mt-10"
-            titulo="Editar"
+            titulo="Salvar alterações"
             onClick={editar}
           />
         )}
