@@ -65,7 +65,8 @@ export function CadastroOrcamento() {
   });
 
   function preSelecaoUsos() {
-    const preSelecao = state.usosEquipamentos?.map((u) => {
+    if (state == null && state.usosEquipamentos == null) return undefined;
+    const preSelecao = state.usosEquipamentos.map((u) => {
       return {
         value: u.id,
         label: u.equipamento.nome,
@@ -238,6 +239,7 @@ export function CadastroOrcamento() {
   }
 
   async function editar() {
+    const orcamentoCopia = { ...orcamento };
     async function tratarEvento() {
       if (!account) return;
 
@@ -261,7 +263,7 @@ export function CadastroOrcamento() {
             }
           );
 
-          orcamento.idCalendar = null;
+          orcamentoCopia.idCalendar = null;
           return;
         }
 
@@ -281,7 +283,7 @@ export function CadastroOrcamento() {
         };
 
         if (!orcamento.idCalendar) {
-          const idCalendar = await fetch(
+          const req = await fetch(
             "https://graph.microsoft.com/v1.0/me/events",
             {
               method: "POST",
@@ -293,9 +295,9 @@ export function CadastroOrcamento() {
             }
           );
 
-          const data = await idCalendar.json();
+          const data = await req.json();
 
-          setOrcamento({ ...orcamento, idCalendar: data.id });
+          orcamentoCopia.idCalendar = data.id;
         } else {
           await fetch(
             `https://graph.microsoft.com/v1.0/me/events/${orcamento.idCalendar}`,
@@ -315,11 +317,11 @@ export function CadastroOrcamento() {
         return;
       }
     }
-    tratarEvento();
+    await tratarEvento();
 
     try {
       // clona e formata listas many-to-many (servicos/profissionais/equipamentos)
-      let orcamentoFormatado = { ...orcamento };
+      let orcamentoFormatado = { ...orcamentoCopia };
       const chaves = ["servicos", "equipamentos", "profissionais"];
 
       chaves.forEach((chave) => {
@@ -334,9 +336,15 @@ export function CadastroOrcamento() {
         orcamentoFormatado.equipamentos
       );
 
+      console.log(orcamentoFormatado.idCalendar);
+      console.log("esse é o idCalendar: " + orcamentoFormatado.idCalendar);
+      console.log(orcamentoFormatado);
+
       const request = await api.put(`/orcamento/${id}`, orcamentoFormatado, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
+
+      console.log(request);
 
       if (request.status == 200) {
         setModalTitulo("Sucesso!");
@@ -453,7 +461,9 @@ export function CadastroOrcamento() {
         <ContainerSelectTags
           titulo="Equipamentos"
           itens={opcoes.equipamento}
-          preSelecao={preSelecaoUsos}
+          preSelecao={ orcamento.equipamentos
+              ? formatarOpcoes(orcamento.equipamentos)
+              : []}
           temQuantidade={true}
           onChange={(itensComQtd) => {
             // itensComQtd = [{ value, label, quantidade }] quando temQuantidade=true

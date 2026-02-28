@@ -6,6 +6,7 @@ import FullCalendar from "@fullcalendar/react";
 import { formatDate } from "@fullcalendar/core";
 import Grid from "@mui/material/Unstable_Grid2";
 import dayGridPlugin from "@fullcalendar/daygrid";
+import ptBrLocale from '@fullcalendar/core/locales/pt-br'
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import listPlugin from "@fullcalendar/list"; 
@@ -139,6 +140,8 @@ export default function Calendar({getAccessToken}) {
         end: selected.endStr,
         allDay: selected.allDay,
       });
+
+      navigate(`/cadastro/orcamentos/`); //, {state: response.data}
     }
   };
 
@@ -164,33 +167,39 @@ export default function Calendar({getAccessToken}) {
   return (
     <>
     <Box m="20px">
-      <Header title="Calendar" subtitle="Full Calendar Interactive Page" />
+      {/* <Header title="Calendar" subtitle="Full Calendar Interactive Page" /> */}
       <Grid container spacing={2}>
         <Grid xs={12} md={4}>
-          <Box
-            backgroundColor={colors.primary[400]}
-            p="15px"
-            borderRadius="4px"
+          <Box className="w-full p-4 bg-purple-50"
+            // backgroundColor={colors.primary[400]}
+            // p="15px"
+            // borderRadius="4px" 
           >
-            <Typography variant="h5">Events</Typography>
+            {/* <Typography variant="h5">Eventos</Typography> */}
             <List>
+              
+
               {events.map((event) => (
                 <ListItem
                   key={event.id}
+                  onClick={() => onEventClick({ event })}
                   sx={{
-                    backgroundColor: colors.greenAccent[500],
+                    backgroundColor:  "#DDD6FE",
                     margin: "10px 0",
                     borderRadius: "2px",
+                    fontFamily: "var(--font-family-app), Inter, sans-serif", // <- Fonte da aplicação
+
                   }}
                 >
                   <ListItemText
                     primary={event.title}
                     secondary={
-                      <Typography>
+                      <Typography sx={{ fontFamily: "var(--font-family-app), Inter, sans-serif" }}>
                         {formatDate(event.start, {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
+                          locale: "pt-br",
                         })}
                       </Typography>
                     }
@@ -203,6 +212,7 @@ export default function Calendar({getAccessToken}) {
         <Grid xs={12} md={8}>
           <Box ml="15px">
             <FullCalendar
+              locale={ptBrLocale}
               height="75vh"
               plugins={[
                 dayGridPlugin,
@@ -243,7 +253,7 @@ export default function Calendar({getAccessToken}) {
         </Grid>
       </Grid>
     </Box>
-    <div className="p-4 bg-white rounded shadow">
+    {/* <div className="p-4 bg-white rounded shadow">
       <FullCalendar
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
@@ -251,7 +261,7 @@ export default function Calendar({getAccessToken}) {
         eventClick={onEventClick}
         datesSet={loadCalendarRange}
       />
-    </div>
+    </div> */}
     </>
   );
   

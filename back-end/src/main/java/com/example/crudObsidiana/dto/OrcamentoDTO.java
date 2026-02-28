@@ -14,8 +14,6 @@ import com.example.crudObsidiana.dto.UsoEquipamentoDTO;
 @Schema(description = "Dados para criação de um novo orçamento")
 public class OrcamentoDTO {
 
-    private String idCalendar;
-
     private String descricao;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -31,6 +29,10 @@ public class OrcamentoDTO {
     private String status;
     private Double valorTotal;
 
+    @Schema(description = "Id recebido da API Microsoft ao cadastrar o evento", example = "Anucvbweo214...")
+    private String idCalendar;
+
+
     private List<Long> servicos;
 
     private List<Long> equipamentos;
@@ -40,9 +42,6 @@ public class OrcamentoDTO {
     private List<UsoEquipamentoDTO> usosEquipamentos;
 
     // Getters e Setters
-    public String getIdCalendar() { return idCalendar; }
-    public void setIdCalendar(String idCalendar) { this.idCalendar = idCalendar;}
-
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
 
@@ -60,6 +59,9 @@ public class OrcamentoDTO {
 
     public Double getValorTotal() { return valorTotal; }
     public void setValorTotal(Double valorTotal) { this.valorTotal = valorTotal; }
+
+    public String getIdCalendar() {return idCalendar;}
+    public void setIdCalendar(String idCalendar) {this.idCalendar = idCalendar;}
 
     public List<Long> getServicos() { return servicos; }
     public void setServicos(List<Long> servicos) { this.servicos = servicos; }
