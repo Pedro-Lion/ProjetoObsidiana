@@ -39,12 +39,20 @@ public class TokenService {
     public String validateToken(String token){
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
+//            String subject = JWT.require(algorithm)
             return JWT.require(algorithm)
                     .withIssuer("login-auth-api")
                     .build()
                     .verify(token)
                     .getSubject();
+
+//            securityLogger.info("Token válido para usuário: {}", subject);
+//                return subject;
+
         } catch (JWTVerificationException exception) {
+//            securityLogger.warn("Token inválido: {} - Motivo: {}",
+//                    token.substring(0,Math.min(20, token.length())) + "...",
+//                    exception.getMessage());
             return null;
         }
     }

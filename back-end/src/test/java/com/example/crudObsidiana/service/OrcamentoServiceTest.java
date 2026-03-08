@@ -73,7 +73,7 @@ public class OrcamentoServiceTest {
         org.springframework.test.util.ReflectionTestUtils.setField(orcamentoService, "usoEquipamentoRepository", usoEquipamentoRepository);
 
         // Mocks de Entidades
-        orcamento = new Orcamento(new Date(), new Date(), "Local", "Desc", "Em análise", 0.0);
+        orcamento = new Orcamento(new Date(), new Date(), "Local", "Desc", "Em análise", 0.0, "");
         orcamento.setId(1L);
 
         equipamento = new Equipamento();
