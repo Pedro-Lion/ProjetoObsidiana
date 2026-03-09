@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Dropdown } from "../Icons/Dropdown.jsx";
+import { Dropdown } from "./Dropdown.jsx";
 
 export function NavbarBotao(props) {
   const navigate = useNavigate();

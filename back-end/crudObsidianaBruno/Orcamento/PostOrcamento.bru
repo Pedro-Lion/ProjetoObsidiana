@@ -1,0 +1,31 @@
+meta {
+  name: PostOrcamento
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/orcamento
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "descricao": "Gravação de videoclipe",
+    "dataEvento": "2025-05-10",
+    "duracaoEvento": 8,
+    "localEvento": "Estúdio A",
+    "valorTotal": 4500,
+    "equipamentos":[3],
+    "status":"Em análise",
+    "servicos":[1],
+    "profissionais":[1]
+    
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

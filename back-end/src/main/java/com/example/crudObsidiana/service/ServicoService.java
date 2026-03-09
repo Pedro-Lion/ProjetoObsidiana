@@ -20,17 +20,24 @@ import java.util.List;
         @Autowired
         private EquipamentoRepository equipamentoRepository;
 
-        public Servico criarServico(ServicoDTO dto) {
+    public ServicoService(ServicoRepository servicoRepository, EquipamentoRepository equipamentoRepository) {
+        this.servicoRepository = servicoRepository;
+        this.equipamentoRepository = equipamentoRepository;
+    }
+
+    public Servico criarServico(ServicoDTO dto) {
             Servico servico = new Servico();
             servico.setNome(dto.getNome());
             servico.setDescricao(dto.getDescricao());
             servico.setHoras(dto.getHoras());
             servico.setValorPorHora(dto.getValorPorHora());
 
-            List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentosIds());
-            servico.setEquipamentos(equipamentos);
+            if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
+                List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
+                servico.setEquipamentos(equipamentos);
+            }
 
-            return servicoRepository.save(servico);
+            return servico;
         }
     }
 

@@ -5,7 +5,6 @@ import { Erro404 } from "./routes/Erro404";
 import { Login } from "./routes/Login";
 
 import { Home } from "./routes/Home";
-import { Novo } from "./routes/Novo";
 import { Equipamentos } from "./routes/Equipamentos";
 import { CadastroEquipamentos } from "./routes/CadastroEquipamento";
 import { Servicos } from "./routes/Servicos";
@@ -14,6 +13,9 @@ import { Orcamentos } from "./routes/Orcamentos";
 import { Profissionais } from "./routes/Profissionais";
 import { CadastroProfissionais } from "./routes/CadastroProfissionais";
 import { Perfil } from "./routes/Perfil";
+import { AplicacaoComponentes } from "./routes/AplicacaoComponentes";
+import { CadastroOrcamento } from "./routes/CadastroOrcamento";
+import {API} from "./routes/API";
 
 export const router = createBrowserRouter([
   {
@@ -26,10 +28,6 @@ export const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "/novo/:item",
-        element: <Novo />,
-      },
-      {
         path: "/equipamentos",
         element: <Equipamentos />,
       },
@@ -38,16 +36,32 @@ export const router = createBrowserRouter([
         element: <CadastroEquipamentos />
       },
       {
+        path: "/editar/equipamento/:id",
+        element: <CadastroEquipamentos />
+      },
+      {
         path: "/servicos",
         element: <Servicos />,
       },
       {
-        path: "/cadastro/servico",
+        path: "/cadastro/servicos",
+        element: <CadastrarNovoServico />
+      },
+      {
+        path: "/editar/servico/:id",
         element: <CadastrarNovoServico />
       },
       {
         path: "/orcamentos",
-        element: <Orcamentos />,
+        element: <Orcamentos />
+      },
+      {
+        path: "/cadastro/orcamentos",
+        element: <CadastroOrcamento />
+      },
+      {
+        path: "/editar/orcamento/:id",
+        element: <CadastroOrcamento />
       },
       {
         path: "/profissionais",
@@ -58,9 +72,17 @@ export const router = createBrowserRouter([
         element: <CadastroProfissionais />
       },
       {
-        path: "/perfil",
-        element: <Perfil />
+        path: "/editar/profissional/:id",
+        element: <CadastroProfissionais />
       },
+      {
+        path: "/perfil",
+        element: <Perfil/>
+      },
+      {
+      path: "/api",
+      element: <API />
+      }
     ],
   },
   {
@@ -73,5 +95,8 @@ export const router = createBrowserRouter([
     element: <Login funcao="cadastro" />,
     errorElement: <Erro404 />
   },
-
+  {
+    path: "/dev",
+    element: <AplicacaoComponentes />
+  }
 ]);

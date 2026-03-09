@@ -26,8 +26,6 @@ export function Login(props) {
       });
 
       if (res.ok) {
-        alert("Login bem-sucedido!");
-
         const dados = await res.json()
         sessionStorage.setItem("token", dados.token)
         navigate("/")

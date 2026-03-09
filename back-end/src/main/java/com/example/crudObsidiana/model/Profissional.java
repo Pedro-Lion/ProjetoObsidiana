@@ -1,10 +1,10 @@
 package com.example.crudObsidiana.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Schema(description = "Modelo do Profissional ")
@@ -25,11 +25,13 @@ public class Profissional {
     @Schema(description = "Contato do profissional", example = "(11)883992883 // osv.filma@email.com")
     private String contato;
 
+    @ManyToMany(mappedBy = "profissionais")
+    private List<Orcamento> orcamentos = new ArrayList<>();
+
     public Profissional() {
     }
 
-    public Profissional(Long id, String nome, String disponibilidade, String contato) {
-        this.id = id;
+    public Profissional(String nome, String disponibilidade, String contato) {
         this.nome = nome;
         this.disponibilidade = disponibilidade;
         this.contato = contato;

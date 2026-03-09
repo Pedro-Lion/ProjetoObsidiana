@@ -30,7 +30,7 @@ public class Servico  {
     private int horas;
 
     @Schema(description = "Valor total do serviço em reais", example = "250")
-    private int valorPorHora;
+    private Double valorPorHora;
 
     @ManyToMany
     @JoinTable(
@@ -42,7 +42,7 @@ public class Servico  {
 
     public Servico() {}
 
-    public Servico(Long id, String nome, int horas, int valor) {
+    public Servico(Long id, String nome, int horas, Double valor) {
         this.id = id;
         this.nome = nome;
         this.horas = horas;
@@ -61,13 +61,12 @@ public class Servico  {
     public int getHoras() { return horas; }
     public void setHoras(int horas) { this.horas = horas; }
 
-    public int getValorPorHora() { return valorPorHora; }
-    public void setValorPorHora(int valorPorHora) { this.valorPorHora = valorPorHora; }
+    public Double getValorPorHora() { return valorPorHora; }
+    public void setValorPorHora(Double valorPorHora) { this.valorPorHora = valorPorHora; }
 
     public List<Equipamento> getEquipamentos() {
         return equipamentos;
     }
-
     public void setEquipamentos(List<Equipamento> equipamentos) {
         this.equipamentos = equipamentos;
     }

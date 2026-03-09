@@ -1,4 +1,4 @@
-export function InputFundoCor({titulo, type = "text",placeholder = "Digite aqui", className = "w-80"}) {
+export function InputFundoCor({titulo, type = "text", placeholder = "Digite aqui", className = "w-80", onInput}) {
   return (
     <div className={"flex flex-col overflow-x-auto " + className}>
       <label
@@ -15,6 +15,7 @@ export function InputFundoCor({titulo, type = "text",placeholder = "Digite aqui"
         border-b-2 border-violet-400/5
         focus:outline-none
         placeholder:text-violet-300"
+        onInput={onInput}
       />
     </div>
   );

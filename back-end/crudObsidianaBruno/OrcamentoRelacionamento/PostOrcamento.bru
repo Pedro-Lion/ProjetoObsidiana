@@ -1,0 +1,29 @@
+meta {
+  name: PostOrcamento
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/orcamento
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "descricao": "Gravação de vídeo institucional",
+    "dataEvento": "2025-11-10",
+    "duracaoEvento": 8,
+    "localEvento": "Estúdio Central",
+    "status": "Concluído",
+    "servicos": [1],
+    "equipamentos": [2],
+    "profissionais": [1]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
