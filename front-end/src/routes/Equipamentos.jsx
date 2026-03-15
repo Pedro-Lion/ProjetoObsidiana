@@ -2,26 +2,25 @@ import { useEffect, useState, useRef } from "react";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
-import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { api } from "../api.js";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../components/Modal/Modal.jsx";
 
 export function Equipamentos() {
   const navigate = useNavigate();
-  // ref para guardar urls criadas (objectURLs) e limpar quando desmontar o componente
   const previewsRef = useRef([]);
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
-  
-  // Estados do modal
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalActions, setModalActions] = useState(null);
+
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
   useEffect(() => {
     let mounted = true;
@@ -30,14 +29,10 @@ export function Equipamentos() {
       setError(null);
       try {
         const resposta = await api.get("/equipamento", {
-          headers: {
-            Authorization: "Bearer " + sessionStorage.getItem("token"),
-          },
+          headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
         });
         if (!mounted) return;
-
         if (resposta.status === 200 && Array.isArray(resposta.data)) {
-          // carrega previews (faz fetch dos blobs e cria objectURLs)
           const withPreviews = await carregarPreviews(resposta.data);
           setData(withPreviews);
         } else {
@@ -52,67 +47,42 @@ export function Equipamentos() {
       }
     }
     buscar();
-
     return () => {
       mounted = false;
-      // limpa object URLs quando desmontar
-      if (previewsRef.current && previewsRef.current.length) {
-        previewsRef.current.forEach((u) => {
-          try {
-            URL.revokeObjectURL(u);
-          } catch (e) { }
-        });
+      if (previewsRef.current?.length) {
+        previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) {} });
         previewsRef.current = [];
       }
     };
   }, []);
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
-
   async function carregarPreviews(equipamentos) {
-    // limpa previews antigos
-    if (previewsRef.current && previewsRef.current.length) {
-      previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) { } });
+    if (previewsRef.current?.length) {
+      previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) {} });
       previewsRef.current = [];
     }
-
     const token = sessionStorage.getItem("token");
     const promessas = equipamentos.map(async (eq) => {
       if (!eq.nomeArquivoImagem) return { ...eq, preview: null };
-
       try {
         const url = `${API_BASE}/equipamento/${eq.id}/imagem`;
         const resp = await fetch(url, {
           method: "GET",
           headers: { Authorization: token ? ("Bearer " + token) : "" },
         });
-
-        if (!resp.ok) {
-          console.warn(`Preview não disponível para equipamento ${eq.id}: ${resp.status}`);
-          return { ...eq, preview: null };
-        }
-
-        // checando o content-type para garantir que veio imagem
+        if (!resp.ok) return { ...eq, preview: null };
         const ctype = resp.headers.get("content-type") || "";
-        if (!ctype.startsWith("image/")) {
-          console.warn(`Resposta não é imagem para equipamento ${eq.id}, content-type=${ctype}`);
-          return { ...eq, preview: null };
-        }
-
+        if (!ctype.startsWith("image/")) return { ...eq, preview: null };
         const blob = await resp.blob();
         const objectUrl = URL.createObjectURL(blob);
         previewsRef.current.push(objectUrl);
         return { ...eq, preview: objectUrl };
       } catch (err) {
-        console.error("Erro ao buscar preview do equipamento", eq.id, err);
         return { ...eq, preview: null };
       }
     });
-
     return Promise.all(promessas);
   }
-
-
 
   const refresh = async () => {
     setLoading(true);
@@ -127,7 +97,6 @@ export function Equipamentos() {
         setData([]);
       }
     } catch (err) {
-      console.error(err);
       setError("Erro ao atualizar lista.");
     } finally {
       setLoading(false);
@@ -144,20 +113,14 @@ export function Equipamentos() {
           onClick={async () => {
             try {
               const resposta = await api.delete(`/equipamento/${id}`, {
-                headers: {
-                  Authorization: "Bearer " + sessionStorage.getItem("token"),
-                },
+                headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
               });
               if (resposta.status === 200 || resposta.status === 204) {
-                // remover do state local e limpar a preview do item removido
                 setData((prev) => {
                   const removed = prev.find((p) => p.id === id);
-                  if (removed && removed.preview) {
-                    try {
-                      URL.revokeObjectURL(removed.preview);
-                      // também remove da lista de previewsRef caso ainda esteja lá
-                      previewsRef.current = previewsRef.current.filter((u) => u !== removed.preview);
-                    } catch (e) { }
+                  if (removed?.preview) {
+                    try { URL.revokeObjectURL(removed.preview); } catch (e) {}
+                    previewsRef.current = previewsRef.current.filter((u) => u !== removed.preview);
                   }
                   return prev.filter((item) => item.id !== id);
                 });
@@ -166,16 +129,10 @@ export function Equipamentos() {
               }
               setModalOpen(false);
             } catch (err) {
-              console.error(err);
               setModalTitulo("Erro");
               setModalDescricao("Não foi possível excluir. Tente novamente.");
               setModalActions(
-                <button
-                  className="bg-gray-300 px-4 py-2 rounded"
-                  onClick={() => setModalOpen(false)}
-                >
-                  Fechar
-                </button>
+                <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>Fechar</button>
               );
               setModalOpen(true);
             }
@@ -183,10 +140,7 @@ export function Equipamentos() {
         >
           Excluir
         </button>
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
+        <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
           Cancelar
         </button>
       </>
@@ -206,43 +160,44 @@ export function Equipamentos() {
 
   if (loading) return <p>Carregando equipamentos...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
+
   if (data.length === 0)
     return (
       <>
-        <div className="flex items-center justify-between">
+        {/* Cabeçalho responsivo: empilha em mobile */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h1 className="text-4xl font-medium">Equipamentos</h1>
-
           <BotaoPrimario
             titulo="+ Novo equipamento"
-            className="mb-0 mt-0"
+            className="mb-0 mt-0 w-full sm:w-auto"
             onClick={() => navigate("/cadastro/equipamentos")}
           />
         </div>
-
         <p className="mt-4">Nenhum equipamento cadastrado.</p>
       </>
     );
 
   return (
     <>
-      <div className="flex items-center justify-between pr-5">
+      {/* Cabeçalho responsivo: empilha em mobile */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-4xl font-medium">Equipamentos</h1>
-
-          <BotaoPrimario
-            titulo="+ Novo equipamento"
-            className="mb-0 mt-0"
-            onClick={() => navigate("/cadastro/equipamentos")}
-          />
+        <BotaoPrimario
+          titulo="+ Novo equipamento"
+          className="mb-0 mt-0 w-full sm:w-auto"
+          onClick={() => navigate("/cadastro/equipamentos")}
+        />
       </div>
-      <div className="w-full pr-5">
+
+      {/* Barra de busca */}
+      <div className="w-full">
         <InputBordaLabel
-            type="text"
-            titulo="Buscar"
-            placeholder="Nome, categoria ou marca"
-            value={search}
-            onInput={(e) => setSearch(e.target.value)}
-            className=""
-          />
+          type="text"
+          titulo="Buscar"
+          placeholder="Nome, categoria ou marca"
+          value={search}
+          onInput={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       <section className="h-full mt-5 space-y-3">
@@ -251,9 +206,7 @@ export function Equipamentos() {
             <ContainerListagem
               key={e.id}
               dados={e}
-              onClickEdit={() =>
-                navigate(`/editar/equipamento/${e.id}`, { state: e })
-              }
+              onClickEdit={() => navigate(`/editar/equipamento/${e.id}`, { state: e })}
               onClickDel={() => handleDelete(e.id)}
             />
           ))

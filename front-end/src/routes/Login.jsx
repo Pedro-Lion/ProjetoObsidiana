@@ -12,48 +12,31 @@ export function Login(props) {
 
   async function logar(e) {
     e.preventDefault();
-
     try {
       const res = await fetch("http://localhost:8080/usuario/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          senha,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, senha }),
       });
-
       if (res.ok) {
-        const dados = await res.json()
-        sessionStorage.setItem("token", dados.token)
-        navigate("/")
+        const dados = await res.json();
+        sessionStorage.setItem("token", dados.token);
+        navigate("/");
       }
-
-      if (res.status == 404) alert("Usuário não encontrado")
-
+      if (res.status == 404) alert("Usuário não encontrado");
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
   async function cadastrar(e) {
     e.preventDefault();
-
     try {
       const res = await fetch("http://localhost:8080/usuario/cadastrar", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          nome,
-          email,
-          senha,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome, email, senha }),
       });
-
       if (res.ok) {
         alert("Cadastro bem sucedido. Redirecionando para a página de login.");
         return navigate("/login");
@@ -66,22 +49,13 @@ export function Login(props) {
   const labelsCadastro =
     props.funcao == "cadastro"
       ? [
-          <Label placeholder="Fulano da Silva" onInput={setNome}>
-            Nome
-          </Label>,
-
-          <Label
-            type="password"
-            placeholder="••••••••••••"
-            onInput={setConfirmar}
-          >
-            Confirmar senha
-          </Label>,
+          <Label placeholder="Fulano da Silva" onInput={setNome}>Nome</Label>,
+          <Label type="password" placeholder="••••••••••••" onInput={setConfirmar}>Confirmar senha</Label>,
         ]
       : [null, null];
 
   const estilo = {
-    main: props.funcao == "cadastro" ? "flex-row-reverse" : "",
+    main: props.funcao == "cadastro" ? "md:flex-row-reverse" : "",
     logo: props.funcao == "cadastro" ? "right-0" : "",
     link: props.funcao == "cadastro" ? "self-end" : "",
   };
@@ -93,20 +67,17 @@ export function Login(props) {
 
   const link = {
     to: props.funcao == "cadastro" ? "/login" : "/cadastro",
-    texto:
-      props.funcao == "cadastro"
-        ? "Já tem conta? Entre"
-        : "Não tem conta? Cadastre-se",
+    texto: props.funcao == "cadastro" ? "Já tem conta? Entre" : "Não tem conta? Cadastre-se",
   };
 
   return (
     <main
       className={
-        "h-screen w-screen p-7.5 box-border flex justify-between items-center gap-7 text-xl " +
+        "h-screen w-screen p-7.5 box-border flex flex-col md:flex-row justify-center md:justify-between items-center gap-7 text-xl " +
         estilo.main
       }
     >
-      <section className="h-full w-120 relative flex-none flex flex-col justify-center">
+      <section className="w-full md:w-120 md:h-full relative flex-none flex flex-col justify-center">
         <img
           className={"h-15 top-4 absolute " + estilo.logo}
           src="/logo.png"
@@ -146,7 +117,8 @@ export function Login(props) {
         </Link>
       </section>
 
-      <section className="relative size-full rounded-3xl overflow-hidden">
+      {/* Seção decorativa: oculta em mobile */}
+      <section className="hidden md:block relative size-full rounded-3xl overflow-hidden">
         <div className="absolute bottom-0 w-full h-1/2 border rounded-t-full blur-[4.4rem] opacity-90 bg-gradient-to-r from-[#a5ccfe] via-[#9747ff] to-[#fca5fe]"></div>
       </section>
     </main>
