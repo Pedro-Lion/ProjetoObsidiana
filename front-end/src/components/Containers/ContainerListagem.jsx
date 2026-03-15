@@ -6,8 +6,8 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => {}, onClickD
 
   const Campo = ({ titulo, valor }) => (
     <div className="flex flex-row md:flex-col gap-1">
-      <span className="text-slate-700 text-[1.1rem] font-medium leading-snug">{titulo}<a className=" md:hidden">:</a></span>
-      <span className="text-slate-700 text-[1.1rem] leading-snug break-words">{valor || "—"}</span>
+      <span className="text-slate-700 md:text-[1.2rem] font-medium leading-snug">{titulo}<a className=" md:hidden">:</a></span>
+      <span className="text-slate-700 md:text-[1.2rem] leading-snug break-words">{valor || "—"}</span>
     </div>
   );
 
@@ -16,13 +16,13 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => {}, onClickD
 
       {/* Cabeçalho */}
       <div className="flex flex-row justify-between items-baseline bg-violet-200 px-5 py-1.5 mb-4 gap-2 flex-wrap">
-        <label className="text-slate-700 text-[1.1rem] font-bold leading-snug uppercase break-words hyphens-auto">
+        <label className="text-slate-700 md:text-[1.2rem] font-bold leading-snug uppercase break-words hyphens-auto">
           {dados.nome || "—"}
         </label>
-        <label className="text-slate-700 text-[1.1rem] leading-snug uppercase whitespace-nowrap">
+        <label className="text-slate-700 md:text-[1.2rem] leading-snug uppercase whitespace-nowrap">
           {dados.categoria || "—"}
         </label>
-        <label className="text-slate-700 text-[1.1rem] leading-snug whitespace-nowrap">
+        <label className="text-slate-700 md:text-[1.2rem] leading-snug whitespace-nowrap">
           <b>{dados.quantidadeDisponivel ?? dados.quantidadeTotal ?? 0}</b> disponíveis
         </label>
       </div>
@@ -42,7 +42,7 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => {}, onClickD
         </div>
 
         {/* Campos: coluna em mobile, linha em desktop */}
-        <div className="flex-1 flex flex-col md:flex-row md:flex-wrap md:gap-x-8 gap-y-3">
+        <div className="flex-1 flex flex-col md:justify-between md:px-15 md:flex-row md:flex-wrap md:gap-x-8 gap-y-3">
           <Campo titulo="Marca" valor={dados.marca} />
           <Campo titulo="Modelo" valor={dados.modelo} />
           <Campo titulo="Nº Série" valor={dados.numeroSerie} />

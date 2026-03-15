@@ -4,8 +4,8 @@ export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onCl
 
   const Campo = ({ titulo, valor }) => (
     <div className="flex flex-col gap-1">
-      <span className="text-slate-700 text-[1.1rem] font-medium leading-snug">{titulo}</span>
-      <span className="text-slate-700 text-[1.1rem] leading-snug break-words">{valor || "—"}</span>
+      <span className="text-slate-700 md:text-[1.2rem] font-medium leading-snug">{titulo}<a className=" md:hidden">:</a></span>
+      <span className="text-slate-700 md:text-[1.2rem] leading-snug break-words">{valor || "—"}</span>
     </div>
   );
 
@@ -14,7 +14,7 @@ export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onCl
 
       {/* Cabeçalho */}
       <div className="flex flex-row justify-between items-baseline bg-violet-200 px-5 py-1.5 mb-4">
-        <label className="text-slate-700 text-[1.1rem] font-bold leading-snug uppercase break-words hyphens-auto">
+        <label className="text-slate-700 md:text-[1.2rem] font-bold leading-snug uppercase break-words hyphens-auto">
           {dados.nome || "—"}
         </label>
       </div>
