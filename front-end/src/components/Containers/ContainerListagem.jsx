@@ -20,10 +20,10 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => {}, onClickD
           {dados.nome || "—"}
         </label>
         <label className="text-slate-700 md:text-[1.2rem] leading-snug uppercase whitespace-nowrap">
-          {dados.categoria || "—"}
+        {dados.categoria || "—"}
         </label>
         <label className="text-slate-700 md:text-[1.2rem] leading-snug whitespace-nowrap">
-          <b>{dados.quantidadeDisponivel ?? dados.quantidadeTotal ?? 0}</b> disponíveis
+          <b>{dados.quantidadeDisponivel ?? dados.quantidadeTotal ?? 0}</b> disponíveis de <b>{dados.quantidadeTotal}</b>
         </label>
       </div>
 
