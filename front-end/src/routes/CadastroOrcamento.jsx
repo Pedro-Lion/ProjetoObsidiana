@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
+import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { ContainerSelectTags } from "../components/Containers/ContainerSelectTags";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { SelectBordaLabel } from "../components/Inputs/SelectBordaLabel";
@@ -89,7 +90,7 @@ export function CadastroOrcamento() {
       return { value: item.id, label: item.nome };
     });
   }
-  // Normaliza a lista de equipamentos (pode ser [id,id,...] ou [{id:..}, ...])
+
   function obterListaIdsEquipamentos(rawLista) {
     if (!rawLista) return [];
     return rawLista
@@ -97,7 +98,6 @@ export function CadastroOrcamento() {
       .filter(Boolean);
   }
 
-  // Converte equipamentos (ids) em usosEquipamentos [{ idEquipamento, quantidadeUsada }]
   function equipamentosParaUsos(equipamentoIds) {
     const mapa = new Map();
     equipamentoIds.forEach((id) => {
@@ -110,36 +110,30 @@ export function CadastroOrcamento() {
     return usos;
   }
 
-  // Normaliza um possível usosEquipamentos vindo da UI (pode conter equipamento aninhado)
   function normalizarUsos(usosRaw, equipamentosFallback) {
     if (usosRaw && usosRaw.length > 0) {
       return usosRaw
         .map((u) => {
-          // se já vier { idEquipamento, quantidadeUsada } usa direto
           if (u.idEquipamento)
             return {
               idEquipamento: u.idEquipamento,
               quantidadeUsada: u.quantidadeUsada ?? 1,
             };
-          // se vier { equipamento: { id: ... }, quantidadeUsada }
           if (u.equipamento && (u.equipamento.id || u.equipamento.id === 0)) {
             return {
               idEquipamento: u.equipamento.id,
               quantidadeUsada: u.quantidadeUsada ?? 1,
             };
           }
-          // se vier { id, ... } (uso antigo)
           if (u.id)
             return {
               idEquipamento: u.id,
               quantidadeUsada: u.quantidadeUsada ?? 1,
             };
-          // fallback
           return null;
         })
         .filter(Boolean);
     }
-    // fallback para equipamentos simples
     const ids = obterListaIdsEquipamentos(equipamentosFallback);
     return equipamentosParaUsos(ids);
   }
@@ -174,7 +168,6 @@ export function CadastroOrcamento() {
 
   async function cadastrar() {
     try {
-      // preparar payload padronizado
       const orcamentoFormatado = { ...orcamento };
       orcamentoFormatado.servicos = orcamentoFormatado.servicos
         ? obterListaIdsEquipamentos(orcamentoFormatado.servicos)
@@ -183,7 +176,6 @@ export function CadastroOrcamento() {
         ? obterListaIdsEquipamentos(orcamentoFormatado.profissionais)
         : [];
 
-      // montar usosEquipamentos do jeito que o backend espera
       orcamentoFormatado.usosEquipamentos = normalizarUsos(
         orcamentoFormatado.usosEquipamentos,
         orcamentoFormatado.equipamentos
@@ -222,7 +214,6 @@ export function CadastroOrcamento() {
         error?.response?.data?.message ||
         error?.response?.data ||
         "Orçamento não pôde ser cadastrado. Tente novamente.";
-      console.log(error);
       setModalTitulo("Erro");
       setModalDescricao(msg);
       setModalActions(
@@ -268,37 +259,21 @@ export function CadastroOrcamento() {
         if (orcamento.status != "Confirmado") return;
 
         const event = {
-          subject: orcamento.descricao,
+          subject: orcamento.descricao || "Evento sem título",
           start: {
-            dateTime: orcamento.dataInicio.slice(0, 19),
+            dateTime: orcamento.dataInicio,
             timeZone: "America/Sao_Paulo",
           },
           end: {
-            dateTime: orcamento.dataTermino.slice(0, 19),
+            dateTime: orcamento.dataTermino,
             timeZone: "America/Sao_Paulo",
           },
-          location: { displayName: orcamento.localEvento },
+          location: { displayName: orcamento.localEvento || "" },
         };
 
-        if (!orcamento.idCalendar) {
-          const idCalendar = await fetch(
-            "https://graph.microsoft.com/v1.0/me/events",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(event),
-            }
-          );
-
-          const data = await idCalendar.json();
-
-          setOrcamento({ ...orcamento, idCalendar: data.id });
-        } else {
+        if (orcamento.idCalendar) {
           await fetch(
-            `https://graph.microsoft.com/v1.0/me/events/${orcamento.idCalendar}`,
+            `https://graph.microsoft.com/v1.0/me/calendar/events/${orcamento.idCalendar}`,
             {
               method: "PATCH",
               headers: {
@@ -308,27 +283,36 @@ export function CadastroOrcamento() {
               body: JSON.stringify(event),
             }
           );
+        } else {
+          const res = await fetch(
+            "https://graph.microsoft.com/v1.0/me/calendar/events",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(event),
+            }
+          );
+          const criado = await res.json();
+          orcamento.idCalendar = criado.id;
         }
-      } catch (error) {
-        alert("Erro ao criar evento");
-        console.error(error);
-        return;
+      } catch (err) {
+        console.error("Erro ao tratar evento no calendário:", err);
       }
     }
-    tratarEvento();
 
     try {
-      // clona e formata listas many-to-many (servicos/profissionais/equipamentos)
-      let orcamentoFormatado = { ...orcamento };
-      const chaves = ["servicos", "equipamentos", "profissionais"];
+      await tratarEvento();
 
-      chaves.forEach((chave) => {
-        const lista = orcamentoFormatado[chave];
-        if (!lista[0]?.id) return;
-        orcamentoFormatado[chave] = lista.map((item) => item.id);
-      });
-
-      // garantir usosEquipamentos no formato { idEquipamento, quantidadeUsada }
+      const orcamentoFormatado = { ...orcamento };
+      orcamentoFormatado.servicos = orcamentoFormatado.servicos
+        ? obterListaIdsEquipamentos(orcamentoFormatado.servicos)
+        : [];
+      orcamentoFormatado.profissionais = orcamentoFormatado.profissionais
+        ? obterListaIdsEquipamentos(orcamentoFormatado.profissionais)
+        : [];
       orcamentoFormatado.usosEquipamentos = normalizarUsos(
         orcamentoFormatado.usosEquipamentos,
         orcamentoFormatado.equipamentos
@@ -456,7 +440,6 @@ export function CadastroOrcamento() {
           preSelecao={preSelecaoUsos}
           temQuantidade={true}
           onChange={(itensComQtd) => {
-            // itensComQtd = [{ value, label, quantidade }] quando temQuantidade=true
             const equipamentoIds = (itensComQtd || []).map((i) => i.value);
             const usos = (itensComQtd || []).map((i) => ({
               idEquipamento: i.value,
@@ -487,19 +470,27 @@ export function CadastroOrcamento() {
         />
       </section>
 
-      {!state ? (
-        <BotaoPrimario
-          titulo="Cadastrar"
-          className="self-end"
-          onClick={cadastrar}
+      {/* Botões de ação */}
+      <div className="flex gap-3 self-end">
+        {!state ? (
+          <BotaoPrimario
+            titulo="Cadastrar"
+            className="mb-0 mt-0"
+            onClick={cadastrar}
+          />
+        ) : (
+          <BotaoPrimario
+            titulo="Salvar alterações"
+            className="mb-0 mt-0"
+            onClick={editar}
+          />
+        )}
+        <BotaoSecundario
+          titulo="Cancelar"
+          className="mb-0 mt-0"
+          onClick={() => navigate(-1)}
         />
-      ) : (
-        <BotaoPrimario
-          titulo="Salvar alterações"
-          className="self-end"
-          onClick={editar}
-        />
-      )}
+      </div>
 
       {modalOpen && (
         <Modal titulo={modalTitulo} descricao={modalDescricao}>
