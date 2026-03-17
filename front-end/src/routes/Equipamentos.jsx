@@ -2,9 +2,12 @@ import { useEffect, useState, useRef } from "react";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
+import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { api } from "../api.js";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../components/Modal/Modal.jsx";
+import { ModalFormulario } from "../components/Modal/ModalFormulario.jsx";
+import { CadastroEquipamentos } from "./CadastroEquipamento.jsx";
 
 export function Equipamentos() {
   const navigate = useNavigate();
@@ -15,52 +18,30 @@ export function Equipamentos() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
 
+  // Modal de confirmação/exclusão
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalActions, setModalActions] = useState(null);
 
+  // Modal de cadastro
+  const [modalCadastroAberta, setModalCadastroAberta] = useState(false);
+
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
-  useEffect(() => {
-    let mounted = true;
-    async function buscar() {
-      setLoading(true);
-      setError(null);
-      try {
-        const resposta = await api.get("/equipamento", {
-          headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-        });
-        if (!mounted) return;
-        if (resposta.status === 200 && Array.isArray(resposta.data)) {
-          const withPreviews = await carregarPreviews(resposta.data);
-          setData(withPreviews);
-        } else {
-          setData([]);
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Erro ao carregar equipamentos.");
-        setData([]);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-    buscar();
-    return () => {
-      mounted = false;
-      if (previewsRef.current?.length) {
-        previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) {} });
-        previewsRef.current = [];
-      }
-    };
-  }, []);
+  /* ── Carregamento da lista ── */
+  function recarregarLista() {
+    // Remonta o useEffect relançando a busca
+    setLoading(true);
+    buscarEquipamentos();
+  }
 
   async function carregarPreviews(equipamentos) {
     if (previewsRef.current?.length) {
-      previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) {} });
+      previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) { } });
       previewsRef.current = [];
     }
+
     const token = sessionStorage.getItem("token");
     const promessas = equipamentos.map(async (eq) => {
       if (!eq.nomeArquivoImagem) return { ...eq, preview: null };
@@ -68,7 +49,7 @@ export function Equipamentos() {
         const url = `${API_BASE}/equipamento/${eq.id}/imagem`;
         const resp = await fetch(url, {
           method: "GET",
-          headers: { Authorization: token ? ("Bearer " + token) : "" },
+          headers: { Authorization: token ? "Bearer " + token : "" },
         });
         if (!resp.ok) return { ...eq, preview: null };
         const ctype = resp.headers.get("content-type") || "";
@@ -77,15 +58,14 @@ export function Equipamentos() {
         const objectUrl = URL.createObjectURL(blob);
         previewsRef.current.push(objectUrl);
         return { ...eq, preview: objectUrl };
-      } catch (err) {
+      } catch {
         return { ...eq, preview: null };
       }
     });
     return Promise.all(promessas);
   }
 
-  const refresh = async () => {
-    setLoading(true);
+  async function buscarEquipamentos() {
     try {
       const resposta = await api.get("/equipamento", {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
@@ -97,50 +77,68 @@ export function Equipamentos() {
         setData([]);
       }
     } catch (err) {
-      setError("Erro ao atualizar lista.");
+      console.error(err);
+      setError("Erro ao carregar equipamentos.");
+      setData([]);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleDelete = (id) => {
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    setError(null);
+
+    buscarEquipamentos().then(() => {
+      if (!mounted) return;
+    });
+
+    return () => {
+      mounted = false;
+      if (previewsRef.current?.length) {
+        previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) { } });
+        previewsRef.current = [];
+      }
+    };
+  }, []);
+
+  /* ── Deletar ── */
+  const deletar = (equipamento) => {
     setModalTitulo("Confirmar exclusão");
-    setModalDescricao("Tem certeza que deseja excluir este equipamento?");
+    setModalDescricao(`Tem certeza que deseja excluir "${equipamento.nome}"?`);
     setModalActions(
       <>
         <button
           className="bg-red-500 text-white px-4 py-2 rounded mr-3"
           onClick={async () => {
             try {
-              const resposta = await api.delete(`/equipamento/${id}`, {
+              await api.delete(`/equipamento/${equipamento.id}`, {
                 headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
               });
-              if (resposta.status === 200 || resposta.status === 204) {
-                setData((prev) => {
-                  const removed = prev.find((p) => p.id === id);
-                  if (removed?.preview) {
-                    try { URL.revokeObjectURL(removed.preview); } catch (e) {}
-                    previewsRef.current = previewsRef.current.filter((u) => u !== removed.preview);
-                  }
-                  return prev.filter((item) => item.id !== id);
-                });
-              } else {
-                await refresh();
-              }
+              setData((prev) => prev.filter((e) => e.id !== equipamento.id));
               setModalOpen(false);
             } catch (err) {
+              console.error(err);
               setModalTitulo("Erro");
               setModalDescricao("Não foi possível excluir. Tente novamente.");
               setModalActions(
-                <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>Fechar</button>
+                <button
+                  className="bg-gray-300 px-4 py-2 rounded"
+                  onClick={() => setModalOpen(false)}
+                >
+                  Fechar
+                </button>
               );
-              setModalOpen(true);
             }
           }}
         >
           Excluir
         </button>
-        <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          onClick={() => setModalOpen(false)}
+        >
           Cancelar
         </button>
       </>
@@ -148,79 +146,70 @@ export function Equipamentos() {
     setModalOpen(true);
   };
 
-  const filtered = data.filter((e) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      (e.nome || "").toLowerCase().includes(q) ||
-      (e.categoria || "").toLowerCase().includes(q) ||
-      (e.marca || "").toLowerCase().includes(q)
-    );
-  });
-
-  if (loading) return <p>Carregando equipamentos...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
-
-  if (data.length === 0)
-    return (
-      <>
-        {/* Cabeçalho responsivo: empilha em mobile */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-4xl font-medium">Equipamentos</h1>
-          <BotaoPrimario
-            titulo="+ Novo equipamento"
-            className="mb-0 mt-0 w-full sm:w-auto"
-            onClick={() => navigate("/cadastro/equipamentos")}
-          />
-        </div>
-        <p className="mt-4">Nenhum equipamento cadastrado.</p>
-      </>
-    );
+  const filtrado = data.filter((e) =>
+    e.nome?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <>
-      {/* Cabeçalho responsivo: empilha em mobile */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-4xl font-medium">Equipamentos</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1>Equipamentos</h1>
         <BotaoPrimario
           titulo="+ Novo equipamento"
-          className="mb-0 mt-0 w-full sm:w-auto"
-          onClick={() => navigate("/cadastro/equipamentos")}
+          onClick={() => setModalCadastroAberta(true)}
         />
       </div>
 
-      {/* Barra de busca */}
-      <div className="w-full">
-        <InputBordaLabel
-          type="text"
-          titulo="Buscar"
-          placeholder="Nome, categoria ou marca"
-          value={search}
-          onInput={(e) => setSearch(e.target.value)}
-        />
-      </div>
+      <InputBordaLabel
+        titulo="Buscar"
+        placeholder="Buscar por nome..."
+        value={search}
+        onInput={(e) => setSearch(e.target.value)}
+        className="mb-6 max-w-sm"
+      />
 
-      <section className="h-full mt-5 space-y-3">
-        {filtered.length !== 0 ? (
-          filtered.map((e) => (
-            <ContainerListagem
-              key={e.id}
-              dados={e}
-              onClickEdit={() => navigate(`/editar/equipamento/${e.id}`, { state: e })}
-              onClickDel={() => handleDelete(e.id)}
-            />
-          ))
-        ) : (
-          <p className="text-xl italic text-gray-700">
-            Nenhum equipamento corresponde à sua busca.
-          </p>
-        )}
-      </section>
+      {loading && <p className="text-xl">Carregando equipamentos...</p>}
+      {error && <p className="text-red-500">{error}</p>}
 
+      {!loading && !error && (
+        <section className="flex flex-wrap gap-5">
+          {filtrado.length !== 0 ? (
+            filtrado.map((e) => (
+              <ContainerListagem
+                key={e.id}
+                dados={e}
+                preview={e.preview}
+                onClickDel={() => deletar(e)}
+                onClickEdit={() => navigate(`/editar/equipamento/${e.id}`, { state: e })}
+              />
+            ))
+          ) : (
+            <p className="text-xl">Nenhum equipamento encontrado.</p>
+          )}
+        </section>
+      )}
+
+      {/* Modal de confirmação/exclusão */}
       {modalOpen && (
         <Modal titulo={modalTitulo} descricao={modalDescricao}>
           {modalActions}
         </Modal>
+      )}
+
+      {/* Modal de cadastro de equipamento */}
+      {modalCadastroAberta && (
+        <ModalFormulario
+          titulo="Novo Equipamento"
+          onFechar={() => setModalCadastroAberta(false)}
+        >
+          <CadastroEquipamentos
+            onSucesso={() => {
+              setModalCadastroAberta(false);
+              recarregarLista();
+            }}
+            onCancelar={() => setModalCadastroAberta(false)}
+          />
+        </ModalFormulario>
       )}
     </>
   );
