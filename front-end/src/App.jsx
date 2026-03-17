@@ -1,20 +1,39 @@
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { Navbar } from "./components/Navbar/Navbar.jsx";
 import { Outlet, useNavigate } from "react-router-dom";
-import { Foto } from "./components/Foto.jsx"
+import { Foto } from "./components/Foto.jsx";
 import "./App.css";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 export function App() {
   const navigate = useNavigate();
-  const [menuAberto, setMenuAberto] = useState(false);
+    const [menuAberto, setMenuAberto] = useState(false);
+  const [nomeUsuario, setNomeUsuario] = useState("Usuário");
+  const [fotoUsuario, setFotoUsuario] = useState(null);
+
+  const carregarPerfil = useCallback(() => {
+    const nomeSalvo = sessionStorage.getItem("perfil_nome");
+    const fotoSalva = sessionStorage.getItem("perfil_foto");
+    setNomeUsuario(nomeSalvo || "Usuário");
+    setFotoUsuario(fotoSalva || null);
+  }, []);
 
   useEffect(() => {
     if (!sessionStorage.getItem("token")) {
-      alert("Faça login para usar a aplicação!")
+      alert("Faça login para usar a aplicação!");
       navigate("/login");
+      return;
     }
-  }, [])
+
+    carregarPerfil();
+
+    const onPerfilAtualizado = (e) => {
+      if (e.detail?.nome) setNomeUsuario(e.detail.nome);
+      setFotoUsuario(e.detail?.foto || null);
+    };
+    window.addEventListener("perfil-atualizado", onPerfilAtualizado);
+    return () => window.removeEventListener("perfil-atualizado", onPerfilAtualizado);
+  }, []);
 
   return (
     <>
@@ -45,7 +64,7 @@ export function App() {
           menuAberto ? "translate-x-0" : "-translate-x-full",
           "md:translate-x-0",
         ].join(" ")}
-      >
+>
         <div
           className="mb-10 flex justify-start items-center gap-5 cursor-pointer"
           onClick={() => { navigate("/"); setMenuAberto(false); }}
@@ -62,8 +81,8 @@ export function App() {
           onClick={() => { navigate("/perfil"); setMenuAberto(false); }}
           className="px-6 flex items-center gap-3.5 text-2xl cursor-pointer"
         >
-          <Foto icone="bi bi-person" tamanho="5" />
-          <span>Olá, Usuário</span>
+          <Foto icone="bi bi-person" tamanho="5" src={fotoUsuario} />
+          <span className="truncate max-w-[12rem]">Olá, {nomeUsuario}</span>
         </section>
       </header>
 
