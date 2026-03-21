@@ -17,7 +17,7 @@ import { ContainerSelectTags } from "../components/Containers/ContainerSelectTag
 import { CardServico } from "../components/Cards/CardServico";
 import { CardOrcamento } from "../components/Cards/CardOrcamento";
 import { ContainerProfissional } from "../components/Containers/ContainerProfissional";
-
+import { ContainerListagemDinamico } from "../components/Containers/ContainerListagemDinamico";
 
 export function AplicacaoComponentes() {
   // botões
@@ -49,7 +49,7 @@ export function AplicacaoComponentes() {
 
   // input data hora
   function verData(v) {
-    console.log(v.format())
+    console.log(v.format());
   }
 
   // contariner equipamento e cards
@@ -227,6 +227,20 @@ export function AplicacaoComponentes() {
             onClickDel={() => clickContainer("", "serviço")}
           />
         </div>
+      </section>
+
+      <section>
+        <h2>Containers de listagem dinâmicos</h2>
+
+        <ContainerListagemDinamico
+          dados={{
+            nome: "Roberto",
+            disponibilidade: "Terça das 15 às 16",
+            contato: "email@email.meu.com",
+            categoria: "trabalhador",
+            quantidadeDisponivel: "um só ne"
+          }}
+        />
       </section>
     </main>
   );
