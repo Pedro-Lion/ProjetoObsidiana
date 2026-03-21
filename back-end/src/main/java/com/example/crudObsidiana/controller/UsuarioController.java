@@ -14,15 +14,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Path;
 import java.io.IOException;
-import org.springframework.http.MediaType;
-import org.springframework.http.HttpHeaders;
 
 import java.util.List;
 
@@ -76,25 +76,20 @@ public class UsuarioController {
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
-  @Operation(summary = "Login de um usuário")
-  @ApiResponse(responseCode = "200", description = "Usuário logado com sucesso",
-          content = @Content(mediaType = "application/json", schema = @Schema(implementation = Usuario.class)))
+  @Value("${auth.microservice.url:http://localhost:8081}")
+  private String authServiceUrl;
+
+  private final RestTemplate restTemplate = new RestTemplate();
   @PostMapping("/login")
   public ResponseEntity<ResponseDTO> login(@RequestBody LoginRequestDTO body) {
-    Usuario usuario = repository.findByEmail(body.email()).orElse(null);
-
-    if (usuario == null) {
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    try {
+      HttpEntity<LoginRequestDTO> entity = new HttpEntity<>(body);
+      ResponseEntity<ResponseDTO> resp = restTemplate.postForEntity(
+              authServiceUrl + "/auth/login", entity, ResponseDTO.class);
+      return ResponseEntity.status(resp.getStatusCode()).body(resp.getBody());
+    } catch (HttpClientErrorException e) {
+      return ResponseEntity.status(e.getStatusCode()).build();
     }
-
-    if (!passwordEncoder.matches(body.senha(), usuario.getSenha())) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
-
-    String token = tokenService.generateToken(usuario);
-    ResponseDTO response =
-      new ResponseDTO(usuario.getNome(), usuario.getEmail(), token);
-    return ResponseEntity.ok(response);
   }
 
   @PostMapping("/{id}/imagem")
