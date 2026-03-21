@@ -3,6 +3,7 @@ import { ContainerSelectTags } from "../components/Containers/ContainerSelectTag
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
+import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { api } from "../api.js";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Modal } from "../components/Modal/Modal.jsx";
@@ -95,22 +96,14 @@ export function CadastrarNovoServico() {
   }
 
   async function editar() {
-    let servicoFormatado = { ...servico };
-    const equips = servicoFormatado.equipamentos;
-    if (equips[0]?.id) {
-      servicoFormatado.equipamentos = equips.map((equip) => equip.id);
-    }
-
     try {
-      const request = await api.put(`/servico/${id}`, servicoFormatado, {
+      const request = await api.put(`/servico/${id}`, servico, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
 
       if (request.status == 200) {
         setModalTitulo("Sucesso!");
-        setModalDescricao(
-          "Editado com sucesso! Retornando à lista de serviços."
-        );
+        setModalDescricao("Editado com sucesso! Retornando à lista de serviços.");
         setModalActions(
           <button
             className="bg-blue-500 text-white px-4 py-2 rounded"
@@ -120,23 +113,11 @@ export function CadastrarNovoServico() {
           </button>
         );
         setModalOpen(true);
-      } else {
-        setModalTitulo("Erro");
-        setModalDescricao("Serviço não pôde ser editado. Tente novamente.");
-        setModalActions(
-          <button
-            className="bg-gray-300 px-4 py-2 rounded"
-            onClick={() => setModalOpen(false)}
-          >
-            Fechar
-          </button>
-        );
-        setModalOpen(true);
       }
     } catch (error) {
       console.log(error);
       setModalTitulo("Erro");
-      setModalDescricao("Erro ao editar serviço.");
+      setModalDescricao("Serviço não pôde ser editado. Tente novamente.");
       setModalActions(
         <button
           className="bg-gray-300 px-4 py-2 rounded"
@@ -215,19 +196,27 @@ export function CadastrarNovoServico() {
           className="mt-10"
         />
 
-        {!state ? (
-          <BotaoPrimario
-            titulo="Cadastrar Serviço"
-            className="self-end"
-            onClick={cadastrar}
+        {/* Botões de ação */}
+        <div className="flex gap-3 self-end mt-4">
+          {!state ? (
+            <BotaoPrimario
+              titulo="Cadastrar Serviço"
+              className="mb-0 mt-0"
+              onClick={cadastrar}
+            />
+          ) : (
+            <BotaoPrimario
+              titulo="Editar Serviço"
+              className="mb-0 mt-0"
+              onClick={editar}
+            />
+          )}
+          <BotaoSecundario
+            titulo="Cancelar"
+            className="mb-0 mt-0"
+            onClick={() => navigate(-1)}
           />
-        ) : (
-          <BotaoPrimario
-            titulo="Editar Serviço"
-            className="self-end"
-            onClick={editar}
-          />
-        )}
+        </div>
       </section>
 
       {modalOpen && (

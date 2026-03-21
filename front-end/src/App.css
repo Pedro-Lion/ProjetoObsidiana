@@ -1,17 +1,21 @@
 body {
-  /* background-image: linear-gradient(to left,#a78bfa,#818cf8 40%,#f8fafc); */
-  background-color:#f0f0f0;
+  background-color: #f0f0f0;
   box-sizing: border-box;
   height: 100vh;
   overflow: hidden;
-  /* padding-top: 2rem; */
 }
 
 #root {
   height: 100%;
   width: 100%;
-  padding: 0rem 2rem;
-
   display: flex;
   gap: 2rem;
+  padding: 0 2rem;
+}
+
+@media (max-width: 768px) {
+  #root {
+    padding: 0;
+    gap: 0;
+  }
 }
