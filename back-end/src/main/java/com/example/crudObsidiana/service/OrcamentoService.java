@@ -209,7 +209,7 @@ public class OrcamentoService implements OrcamentoSubject {
         existente.setDataInicio(dto.getDataInicio());
         existente.setDataTermino(dto.getDataTermino());
         existente.setLocalEvento(dto.getLocalEvento());
-        // existente.setValorTotal(dto.getValorTotal());
+        existente.setIdCalendar(dto.getIdCalendar());
 
         // Buscar usos antigos vinculados
         List<UsoEquipamento> usosAntigos = usoEquipamentoRepository.findByOrcamento_Id(existente.getId());

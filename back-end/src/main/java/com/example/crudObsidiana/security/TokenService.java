@@ -65,19 +65,20 @@ public class TokenService {
     public String validateToken(String token){
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
-            String subject = JWT.require(algorithm)
+//            String subject = JWT.require(algorithm)
+            return JWT.require(algorithm)
                     .withIssuer("login-auth-api")
                     .build()
                     .verify(token)
                     .getSubject();
 
-            logger.info("Token válido para usuário: {}", subject);
-            return subject;
+//            securityLogger.info("Token válido para usuário: {}", subject);
+//                return subject;
 
         } catch (JWTVerificationException exception) {
-            logger.warn("Token inválido: {} - Motivo: {}",
-                    token.substring(0, Math.min(20, token.length())) + "...",
-                    exception.getMessage());
+//            securityLogger.warn("Token inválido: {} - Motivo: {}",
+//                    token.substring(0,Math.min(20, token.length())) + "...",
+//                    exception.getMessage());
             return null;
         }
     }
