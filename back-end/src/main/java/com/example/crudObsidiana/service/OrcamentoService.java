@@ -211,6 +211,21 @@ public class OrcamentoService implements OrcamentoSubject {
         existente.setLocalEvento(dto.getLocalEvento());
         existente.setIdCalendar(dto.getIdCalendar());
 
+        // atualização das listas
+        if (dto.getServicos() != null && !dto.getServicos().isEmpty()) {
+            List<Servico> servicos = servicoRepository.findAllById(dto.getServicos());
+            existente.setServicos(servicos);
+        } else {
+            existente.setServicos(new ArrayList<>());
+        }
+
+        if (dto.getProfissionais() != null && !dto.getProfissionais().isEmpty()) {
+            List<Profissional> profissionais = profissionalRepository.findAllById(dto.getProfissionais());
+            existente.setProfissionais(profissionais);
+        } else {
+            existente.setProfissionais(new ArrayList<>());
+        }
+
         // Buscar usos antigos vinculados
         List<UsoEquipamento> usosAntigos = usoEquipamentoRepository.findByOrcamento_Id(existente.getId());
         if (usosAntigos == null) usosAntigos = new ArrayList<>();
