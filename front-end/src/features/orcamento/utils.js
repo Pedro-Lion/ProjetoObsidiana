@@ -1,5 +1,4 @@
 export function formatarOrcamento(orcamento = {}) {
-
   const datasParaFormatar = ["dataInicio", "dataTermino"];
   datasParaFormatar.forEach((chave) => {
     orcamento[chave] = formatarDataParaEnvio(orcamento[chave])
@@ -20,8 +19,6 @@ export function formatarOrcamento(orcamento = {}) {
 }
 
 function formatarDataParaEnvio(data = "") {
-  console.log(data)
-  alert("data entrou para ser formatada")
   if (!data.includes("-03")) return data;
   return new Date(data).toISOString();
 }
