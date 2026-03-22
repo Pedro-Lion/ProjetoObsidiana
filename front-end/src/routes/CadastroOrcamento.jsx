@@ -13,6 +13,8 @@ import { loginRequest } from "../authConfig";
 import moment from "moment";
 import { Modal } from "../components/Modal/Modal.jsx";
 
+import { cadastrar } from "../features/orcamento/cadastrar.js";
+
 export function CadastroOrcamento() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -166,68 +168,6 @@ export function CadastroOrcamento() {
     }
     getOpcoes();
   }, []);
-
-  async function cadastrar() {
-    try {
-      const orcamentoFormatado = { ...orcamento };
-      orcamentoFormatado.servicos = orcamentoFormatado.servicos
-        ? obterListaIdsEquipamentos(orcamentoFormatado.servicos)
-        : [];
-      orcamentoFormatado.profissionais = orcamentoFormatado.profissionais
-        ? obterListaIdsEquipamentos(orcamentoFormatado.profissionais)
-        : [];
-
-      orcamentoFormatado.usosEquipamentos = normalizarUsos(
-        orcamentoFormatado.usosEquipamentos,
-        orcamentoFormatado.equipamentos
-      );
-
-      const request = await api.post("/orcamento", orcamentoFormatado, {
-        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status == 201) {
-        setModalTitulo("Sucesso!");
-        setModalDescricao(
-          "Cadastrado com sucesso! Quer retornar à lista de orçamentos?"
-        );
-        setModalActions(
-          <>
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded mr-3"
-              onClick={() => navigate("/orcamentos")}
-            >
-              Ir para lista
-            </button>
-            <button
-              className="bg-gray-300 px-4 py-2 rounded"
-              onClick={() => setModalOpen(false)}
-            >
-              Continuar
-            </button>
-          </>
-        );
-        setModalOpen(true);
-      }
-    } catch (error) {
-      console.log(error);
-      const msg =
-        error?.response?.data?.message ||
-        error?.response?.data ||
-        "Orçamento não pôde ser cadastrado. Tente novamente.";
-      setModalTitulo("Erro");
-      setModalDescricao(msg);
-      setModalActions(
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
-  }
 
   async function editar() {
     const orcamentoCopia = { ...orcamento };
@@ -490,7 +430,9 @@ export function CadastroOrcamento() {
           <BotaoPrimario
             titulo="Cadastrar"
             className="mb-0 mt-0"
-            onClick={cadastrar}
+            onClick={async () => {
+              if(await cadastrar(orcamento)) navigate("/orcamentos");
+            }}
           />
         ) : (
           <BotaoPrimario
