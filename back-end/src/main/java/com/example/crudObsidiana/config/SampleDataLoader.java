@@ -163,8 +163,8 @@ public class SampleDataLoader implements CommandLineRunner {
                     "São Paulo",             // localEvento
                     "Gravação de frigorífico industrial", // descricao
                     "Em análise",                  // status (inicial)
-                    0.0,                             // valorTotal (será calculado pelo serviço quando necessário),
-                    null                            // idCalendar
+                    0.0,                     // valorTotal (será calculado pelo serviço quando necessário)
+                    null // idCalendar só é usado após orçamento ser aprovado
             );
 
             // Persistir para obter ID

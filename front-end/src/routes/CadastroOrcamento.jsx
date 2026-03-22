@@ -66,7 +66,8 @@ export function CadastroOrcamento() {
   });
 
   function preSelecaoUsos() {
-    const preSelecao = state.usosEquipamentos?.map((u) => {
+    if (state == null && state.usosEquipamentos == null) return undefined;
+    const preSelecao = state.usosEquipamentos.map((u) => {
       return {
         value: u.id,
         label: u.equipamento.nome,
@@ -229,6 +230,7 @@ export function CadastroOrcamento() {
   }
 
   async function editar() {
+    const orcamentoCopia = { ...orcamento };
     async function tratarEvento() {
       if (!account) return;
 
@@ -252,7 +254,7 @@ export function CadastroOrcamento() {
             }
           );
 
-          orcamento.idCalendar = null;
+          orcamentoCopia.idCalendar = null;
           return;
         }
 
@@ -271,7 +273,23 @@ export function CadastroOrcamento() {
           location: { displayName: orcamento.localEvento || "" },
         };
 
-        if (orcamento.idCalendar) {
+        if (!orcamento.idCalendar) {
+          const req = await fetch(
+            "https://graph.microsoft.com/v1.0/me/events",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(event),
+            }
+          );
+
+          const data = await req.json();
+
+          orcamentoCopia.idCalendar = data.id;
+        } else {
           await fetch(
             `https://graph.microsoft.com/v1.0/me/calendar/events/${orcamento.idCalendar}`,
             {
@@ -283,30 +301,18 @@ export function CadastroOrcamento() {
               body: JSON.stringify(event),
             }
           );
-        } else {
-          const res = await fetch(
-            "https://graph.microsoft.com/v1.0/me/calendar/events",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(event),
-            }
-          );
-          const criado = await res.json();
-          orcamento.idCalendar = criado.id;
         }
       } catch (err) {
         console.error("Erro ao tratar evento no calendário:", err);
       }
     }
+    await tratarEvento();
 
     try {
-      await tratarEvento();
+      // clona e formata listas many-to-many (servicos/profissionais/equipamentos)
+      let orcamentoFormatado = { ...orcamentoCopia };
+      const chaves = ["servicos", "equipamentos", "profissionais"];
 
-      const orcamentoFormatado = { ...orcamento };
       orcamentoFormatado.servicos = orcamentoFormatado.servicos
         ? obterListaIdsEquipamentos(orcamentoFormatado.servicos)
         : [];
@@ -318,9 +324,15 @@ export function CadastroOrcamento() {
         orcamentoFormatado.equipamentos
       );
 
+      console.log(orcamentoFormatado.idCalendar);
+      console.log("esse é o idCalendar: " + orcamentoFormatado.idCalendar);
+      console.log(orcamentoFormatado);
+
       const request = await api.put(`/orcamento/${id}`, orcamentoFormatado, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
+
+      console.log(request);
 
       if (request.status == 200) {
         setModalTitulo("Sucesso!");
@@ -437,7 +449,9 @@ export function CadastroOrcamento() {
         <ContainerSelectTags
           titulo="Equipamentos"
           itens={opcoes.equipamento}
-          preSelecao={preSelecaoUsos}
+          preSelecao={ orcamento.equipamentos
+              ? formatarOpcoes(orcamento.equipamentos)
+              : []}
           temQuantidade={true}
           onChange={(itensComQtd) => {
             const equipamentoIds = (itensComQtd || []).map((i) => i.value);
