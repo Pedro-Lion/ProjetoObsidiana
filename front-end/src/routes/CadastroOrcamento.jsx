@@ -1,25 +1,27 @@
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+
+import { useMsal } from "@azure/msal-react";
+
+import { Modal } from "../components/Modal/Modal.jsx";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { ContainerSelectTags } from "../components/Containers/ContainerSelectTags";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { SelectBordaLabel } from "../components/Inputs/SelectBordaLabel";
 import { TextareaBordaLabel } from "../components/Inputs/TextareaBordaLabel";
-import { api } from "../api";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { InputDataBordaLabel } from "../components/Inputs/InputDataBordaLabel";
-import { useMsal } from "@azure/msal-react";
-import { loginRequest } from "../authConfig";
-import moment from "moment";
-import { Modal } from "../components/Modal/Modal.jsx";
 
-import { cadastrar } from "../features/orcamento/cadastrar.js";
+import moment from "moment";
+
+import { api } from "../api";
+import { cadastrar } from "../features/orcamento/services/cadastrar.js";
+import { editar } from "../features/orcamento/services/editar.js";
 
 export function CadastroOrcamento() {
   const navigate = useNavigate();
-  const { id } = useParams();
+
   const { instance } = useMsal();
-  const account = instance.getActiveAccount();
 
   // Estados do modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -94,53 +96,6 @@ export function CadastroOrcamento() {
     });
   }
 
-  function obterListaIdsEquipamentos(rawLista) {
-    if (!rawLista) return [];
-    return rawLista
-      .map((item) => (typeof item === "number" ? item : item?.id))
-      .filter(Boolean);
-  }
-
-  function equipamentosParaUsos(equipamentoIds) {
-    const mapa = new Map();
-    equipamentoIds.forEach((id) => {
-      mapa.set(id, (mapa.get(id) || 0) + 1);
-    });
-    const usos = [];
-    mapa.forEach((qtd, id) =>
-      usos.push({ idEquipamento: id, quantidadeUsada: qtd })
-    );
-    return usos;
-  }
-
-  function normalizarUsos(usosRaw, equipamentosFallback) {
-    if (usosRaw && usosRaw.length > 0) {
-      return usosRaw
-        .map((u) => {
-          if (u.idEquipamento)
-            return {
-              idEquipamento: u.idEquipamento,
-              quantidadeUsada: u.quantidadeUsada ?? 1,
-            };
-          if (u.equipamento && (u.equipamento.id || u.equipamento.id === 0)) {
-            return {
-              idEquipamento: u.equipamento.id,
-              quantidadeUsada: u.quantidadeUsada ?? 1,
-            };
-          }
-          if (u.id)
-            return {
-              idEquipamento: u.id,
-              quantidadeUsada: u.quantidadeUsada ?? 1,
-            };
-          return null;
-        })
-        .filter(Boolean);
-    }
-    const ids = obterListaIdsEquipamentos(equipamentosFallback);
-    return equipamentosParaUsos(ids);
-  }
-
   useEffect(() => {
     async function getOpcoes() {
       try {
@@ -168,154 +123,6 @@ export function CadastroOrcamento() {
     }
     getOpcoes();
   }, []);
-
-  async function editar() {
-    const orcamentoCopia = { ...orcamento };
-    async function tratarEvento() {
-      if (!account) return;
-
-      try {
-        const response = await instance.acquireTokenSilent({
-          ...loginRequest,
-          account: account,
-        });
-
-        const accessToken = response.accessToken;
-
-        if (orcamento.status != "Confirmado" && orcamento.idCalendar) {
-          await fetch(
-            `https://graph.microsoft.com/v1.0/me/calendar/events/${orcamento.idCalendar}`,
-            {
-              method: "DELETE",
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-
-          orcamentoCopia.idCalendar = null;
-          return;
-        }
-
-        if (orcamento.status != "Confirmado") return;
-
-        const event = {
-          subject: orcamento.descricao || "Evento sem título",
-          start: {
-            dateTime: orcamento.dataInicio,
-            timeZone: "America/Sao_Paulo",
-          },
-          end: {
-            dateTime: orcamento.dataTermino,
-            timeZone: "America/Sao_Paulo",
-          },
-          location: { displayName: orcamento.localEvento || "" },
-        };
-
-        if (!orcamento.idCalendar) {
-          const req = await fetch(
-            "https://graph.microsoft.com/v1.0/me/events",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(event),
-            }
-          );
-
-          const data = await req.json();
-
-          orcamentoCopia.idCalendar = data.id;
-        } else {
-          await fetch(
-            `https://graph.microsoft.com/v1.0/me/calendar/events/${orcamento.idCalendar}`,
-            {
-              method: "PATCH",
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(event),
-            }
-          );
-        }
-      } catch (err) {
-        console.error("Erro ao tratar evento no calendário:", err);
-      }
-    }
-    await tratarEvento();
-
-    try {
-      // clona e formata listas many-to-many (servicos/profissionais/equipamentos)
-      let orcamentoFormatado = { ...orcamentoCopia };
-      const chaves = ["servicos", "equipamentos", "profissionais"];
-
-      orcamentoFormatado.servicos = orcamentoFormatado.servicos
-        ? obterListaIdsEquipamentos(orcamentoFormatado.servicos)
-        : [];
-      orcamentoFormatado.profissionais = orcamentoFormatado.profissionais
-        ? obterListaIdsEquipamentos(orcamentoFormatado.profissionais)
-        : [];
-      orcamentoFormatado.usosEquipamentos = normalizarUsos(
-        orcamentoFormatado.usosEquipamentos,
-        orcamentoFormatado.equipamentos
-      );
-
-      console.log(orcamentoFormatado.idCalendar);
-      console.log("esse é o idCalendar: " + orcamentoFormatado.idCalendar);
-      console.log(orcamentoFormatado);
-
-      const request = await api.put(`/orcamento/${id}`, orcamentoFormatado, {
-        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      console.log(request);
-
-      if (request.status == 200) {
-        setModalTitulo("Sucesso!");
-        setModalDescricao(
-          "Editado com sucesso! Retornando à lista de orçamentos."
-        );
-        setModalActions(
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-            onClick={() => navigate("/orcamentos")}
-          >
-            Ok
-          </button>
-        );
-        setModalOpen(true);
-      } else {
-        setModalTitulo("Erro");
-        setModalDescricao("Orçamento não pôde ser editado. Tente novamente.");
-        setModalActions(
-          <button
-            className="bg-gray-300 px-4 py-2 rounded"
-            onClick={() => setModalOpen(false)}
-          >
-            Fechar
-          </button>
-        );
-        setModalOpen(true);
-      }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Erro ao editar orçamento.");
-      setModalActions(
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
-  }
 
   return (
     <>
@@ -438,7 +245,11 @@ export function CadastroOrcamento() {
           <BotaoPrimario
             titulo="Salvar alterações"
             className="mb-0 mt-0"
-            onClick={editar}
+            onClick={async () => {
+              if (await editar(orcamento, instance)) {
+                navigate("/orcamentos")
+              }
+            }}
           />
         )}
         <BotaoSecundario
