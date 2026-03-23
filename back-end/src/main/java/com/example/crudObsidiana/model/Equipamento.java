@@ -181,7 +181,7 @@ public class Equipamento {
     }
 
 //    METODOS
-//    Nota: Math.max eevita numeros negativos
+//    Nota: Math.max evita numeros negativos
     public void reduzirQuantidade(Integer quantidadeRecebida) {
         if (this.quantidadeDisponivel == null) this.quantidadeDisponivel = 0;
         if (quantidadeRecebida == null) quantidadeRecebida = 0;
