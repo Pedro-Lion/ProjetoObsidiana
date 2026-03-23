@@ -32,14 +32,12 @@ public class OrcamentoDTO {
     @Schema(description = "Id recebido da API Microsoft ao cadastrar o evento", example = "Anucvbweo214...")
     private String idCalendar;
 
-
     private List<Long> servicos;
-
     private List<Long> equipamentos;
-
     private List<Long> profissionais;
-
     private List<UsoEquipamentoDTO> usosEquipamentos;
+
+    private Double duracaoEvento;
 
     // Getters e Setters
     public String getDescricao() { return descricao; }
@@ -77,5 +75,12 @@ public class OrcamentoDTO {
     }
     public void setUsosEquipamentos(List<UsoEquipamentoDTO> usosEquipamentos) {
         this.usosEquipamentos = usosEquipamentos;
+    }
+
+    public Double getDuracaoEvento() {
+        return duracaoEvento;
+    }
+    public void setDuracaoEvento(Double duracaoEvento) {
+        this.duracaoEvento = duracaoEvento;
     }
 }

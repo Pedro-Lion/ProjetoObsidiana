@@ -41,6 +41,10 @@ public class Orcamento {
     @Column(name = "id_calendario")
     private String idCalendar;
 
+    @Transient //garante que o JPA ignore esse campo no banco, ele só existe em memória para ser serializado no JSON
+    @Schema(description = "Duração do evento em horas (calculado a partir de dataInicio e dataTermino)", example = "3.5")
+    private Double duracaoEvento;
+
 
     @OneToMany(mappedBy = "orcamento", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
@@ -48,25 +52,25 @@ public class Orcamento {
 
     @ManyToMany
     @JoinTable(
-        name = "orcamento_servicos",
-        joinColumns = @JoinColumn(name = "orcamento_id"),
-        inverseJoinColumns = @JoinColumn(name = "servico_id")
+            name = "orcamento_servicos",
+            joinColumns = @JoinColumn(name = "orcamento_id"),
+            inverseJoinColumns = @JoinColumn(name = "servico_id")
     )
     private List<Servico> servicos = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(
-        name = "orcamento_equipamentos",
-        joinColumns = @JoinColumn(name = "orcamento_id"),
-        inverseJoinColumns = @JoinColumn(name = "equipamento_id")
+            name = "orcamento_equipamentos",
+            joinColumns = @JoinColumn(name = "orcamento_id"),
+            inverseJoinColumns = @JoinColumn(name = "equipamento_id")
     )
     private List<Equipamento> equipamentos = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(
-    name = "orcamento_profissionais",
-    joinColumns = @JoinColumn(name = "orcamento_id"),
-    inverseJoinColumns = @JoinColumn(name = "profissional_id")
+            name = "orcamento_profissionais",
+            joinColumns = @JoinColumn(name = "orcamento_id"),
+            inverseJoinColumns = @JoinColumn(name = "profissional_id")
     )
     private List<Profissional> profissionais = new ArrayList<>();
 
@@ -74,13 +78,13 @@ public class Orcamento {
     }
 
     public Orcamento(
-        Date dataInicio,
-        Date dataTermino,
-        String localEvento,
-        String descricao,
-        String status,
-        Double valorTotal,
-        String idCalendar
+            Date dataInicio,
+            Date dataTermino,
+            String localEvento,
+            String descricao,
+            String status,
+            Double valorTotal,
+            String idCalendar
     ) {
         this.dataInicio = dataInicio;
         this.dataTermino = dataTermino;
@@ -127,4 +131,7 @@ public class Orcamento {
 
     public List<Profissional> getProfissionais() { return profissionais; }
     public void setProfissionais(List<Profissional> profissionais) { this.profissionais = profissionais; }
+
+    public Double getDuracaoEvento() { return duracaoEvento; }
+    public void setDuracaoEvento(Double duracaoEvento) { this.duracaoEvento = duracaoEvento; }
 }

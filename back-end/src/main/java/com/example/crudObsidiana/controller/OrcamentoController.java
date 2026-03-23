@@ -99,7 +99,7 @@ public class OrcamentoController {
     )
     @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso")
     public ResponseEntity<List<Orcamento>> listarTodos() {
-        return ResponseEntity.ok(orcamentoRepository.findAll());
+        return ResponseEntity.ok(orcamentoService.listarTodos());
     }
 
     // ----------------------------------------------------------------------
