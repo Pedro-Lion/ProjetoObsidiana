@@ -258,7 +258,10 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
 
       <div className="w-full">
         <div className="self-start">
-          <InputFoto onChange={handleInputFotoChange} initialPreview={previewImagem} />
+          <InputFoto onChange={handleInputFotoChange}
+          initialPreview={previewImagem}
+          inputId="equipamento-foto-upload"
+          />
         </div>
 
         <div className="mt-10 flex justify-between items-start gap-6 flex-wrap">

@@ -5,7 +5,9 @@ export function InputFoto({
     icone = "bi bi-camera",
     tamanho = "8",
     initialPreview = null,
-    dstv = false }) {
+    dstv = false,
+    inputId = "avatarUpload"  // <-- nova prop com fallback
+ }) {
         
     const [preview, setPreview] = useState(null);
     // guarda o objectURL gerado a partir do input para poder limpá-lo depois
@@ -54,7 +56,7 @@ export function InputFoto({
     return (
         <>
             <label
-                htmlFor="avatarUpload"
+                htmlFor={inputId}
                 style={{ width: `${tamanho}rem`, height: `${tamanho}rem` }}
                 className={`relative rounded-full
                    ${!dstv ? 'hover:opacity-80' : 'hover:opacity-100'} ${!dstv ? 'cursor-pointer' : 'cursor-auto'}
@@ -80,7 +82,7 @@ export function InputFoto({
             </label>
 
             <input
-                id="avatarUpload"
+                id={inputId}
                 type="file"
                 accept=".png, .jpg, .jpeg"
                 onChange={handleFileChange}
