@@ -29,6 +29,9 @@ export function CadastroOrcamento() {
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalActions, setModalActions] = useState(null);
 
+  // Erros de validação
+  const [erros, setErros] = useState({});
+
   const state = useLocation().state;
   function definirState() {
     if (!state) return undefined;
@@ -69,25 +72,53 @@ export function CadastroOrcamento() {
     profissional: [],
   });
 
-  function preSelecaoUsos() {
-    if (state == null && state.usosEquipamentos == null) return undefined;
-    const preSelecao = state.usosEquipamentos.map((u) => {
-      return {
-        value: u.id,
-        label: u.equipamento.nome,
-        quantidade: u.quantidadeUsada,
-      };
-    });
-
-    return preSelecao;
-  }
+  // Guarda o momento de dataInicio para bloquear o picker de término
+  const [momentoInicio, setMomentoInicio] = useState(
+    orcamento.dataInicio ? moment(orcamento.dataInicio) : null
+  );
 
   function registrarData(dt, atributo) {
     if (moment.isMoment(dt)) {
       const orcamentoCopia = { ...orcamento };
       orcamentoCopia[atributo] = dt.format();
       setOrcamento(orcamentoCopia);
+
+      if (atributo === "dataInicio") {
+        setMomentoInicio(dt);
+        // Se a data de término já está definida e é antes da nova início, limpa
+        if (orcamento.dataTermino && moment(orcamento.dataTermino).isBefore(dt)) {
+          setOrcamento((prev) => ({ ...prev, dataInicio: dt.format(), dataTermino: undefined }));
+        }
+      }
     }
+  }
+
+  // Função para bloquear datas inválidas no picker de término
+  function isValidDataTermino(currentDate) {
+    if (!momentoInicio) return true;
+    // Permite apenas datas/horas estritamente depois de dataInicio
+    return currentDate.isAfter(momentoInicio);
+  }
+
+  function validar() {
+    const novosErros = {};
+
+    if (!orcamento.dataInicio) {
+      novosErros.dataInicio = "Data de início é obrigatória.";
+    }
+    if (!orcamento.dataTermino) {
+      novosErros.dataTermino = "Data de término é obrigatória.";
+    }
+    if (
+      orcamento.dataInicio &&
+      orcamento.dataTermino &&
+      moment(orcamento.dataTermino).isSameOrBefore(moment(orcamento.dataInicio))
+    ) {
+      novosErros.dataTermino = "Data de término deve ser após a data de início.";
+    }
+
+    setErros(novosErros);
+    return Object.keys(novosErros).length === 0;
   }
 
   function formatarOpcoes(lista = []) {
@@ -124,6 +155,11 @@ export function CadastroOrcamento() {
     getOpcoes();
   }, []);
 
+  const ErroMsg = ({ campo }) =>
+    erros[campo] ? (
+      <span className="text-red-500 text-[1rem] mt-1">{erros[campo]}</span>
+    ) : null;
+
   return (
     <>
       <h1>{!state ? "Cadastrar" : "Editar"} orçamento</h1>
@@ -144,25 +180,36 @@ export function CadastroOrcamento() {
             }
             value={orcamento.status}
           />
-          <InputDataBordaLabel
-            titulo="Data de início"
-            className="w-full"
-            defaultValue={
-              orcamento.dataInicio ? new Date(orcamento.dataInicio) : undefined
-            }
-            onChange={(dt) => registrarData(dt, "dataInicio")}
-          />
-          <InputDataBordaLabel
-            titulo="Data de término"
-            className="w-full"
-            defaultValue={
-              orcamento.dataTermino
-                ? new Date(orcamento.dataTermino)
-                : undefined
-            }
-            onChange={(dt) => registrarData(dt, "dataTermino")}
-          />
+
+          <div className="flex flex-col w-full">
+            <InputDataBordaLabel
+              titulo="Data de início"
+              className="w-full"
+              defaultValue={
+                orcamento.dataInicio ? new Date(orcamento.dataInicio) : undefined
+              }
+              onChange={(dt) => registrarData(dt, "dataInicio")}
+            />
+            <ErroMsg campo="dataInicio" />
+          </div>
+
+          <div className="flex flex-col w-full">
+            <InputDataBordaLabel
+              titulo="Data de término"
+              className="w-full"
+              defaultValue={
+                orcamento.dataTermino
+                  ? new Date(orcamento.dataTermino)
+                  : undefined
+              }
+              onChange={(dt) => registrarData(dt, "dataTermino")}
+              // Passa a função de validação para bloquear datas inválidas no picker
+              isValidDate={isValidDataTermino}
+            />
+            <ErroMsg campo="dataTermino" />
+          </div>
         </div>
+
         <InputBordaLabel
           titulo="Local do evento"
           className="w-full -mt-4"
@@ -179,6 +226,7 @@ export function CadastroOrcamento() {
           }
           defaultValue={orcamento.descricao}
         />
+
         <ContainerSelectTags
           titulo="Serviços"
           itens={opcoes.servico}
@@ -196,9 +244,11 @@ export function CadastroOrcamento() {
         <ContainerSelectTags
           titulo="Equipamentos"
           itens={opcoes.equipamento}
-          preSelecao={ orcamento.equipamentos
+          preSelecao={
+            orcamento.equipamentos
               ? formatarOpcoes(orcamento.equipamentos)
-              : []}
+              : []
+          }
           temQuantidade={true}
           onChange={(itensComQtd) => {
             const equipamentoIds = (itensComQtd || []).map((i) => i.value);
@@ -238,7 +288,8 @@ export function CadastroOrcamento() {
             titulo="Cadastrar"
             className="mb-0 mt-0"
             onClick={async () => {
-              if(await cadastrar(orcamento)) navigate("/orcamentos");
+              if (!validar()) return;
+              if (await cadastrar(orcamento)) navigate("/orcamentos");
             }}
           />
         ) : (
@@ -246,8 +297,9 @@ export function CadastroOrcamento() {
             titulo="Salvar alterações"
             className="mb-0 mt-0"
             onClick={async () => {
+              if (!validar()) return;
               if (await editar(orcamento, instance)) {
-                navigate("/orcamentos")
+                navigate("/orcamentos");
               }
             }}
           />

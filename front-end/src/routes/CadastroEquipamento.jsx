@@ -7,13 +7,7 @@ import { api } from "../api";
 import { useState, useEffect, useRef } from "react";
 import { Modal } from "../components/Modal/Modal.jsx";
 
-// Props opcionais para uso em modal:
-//   onSucesso  → chamado após cadastro/edição bem-sucedidos (fecha modal e recarrega lista)
-//   onCancelar → chamado ao clicar em Cancelar (fecha modal)
-// Quando não passadas, o componente se comporta normalmente via navigate (rota direta).
 export function CadastroEquipamentos({ onSucesso, onCancelar }) {
-  // useNavigate/useParams/useLocation lançam erro fora de Router, mas como o componente
-  // sempre é renderizado dentro do App que já tem o Router, isso é seguro.
   const navigate = useNavigate();
   const { id } = useParams();
   const state = useLocation().state;
@@ -40,13 +34,14 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
       : "0.00"
   );
 
-  // Estados do modal interno (confirmações e erros)
+  // Erros de validação
+  const [erros, setErros] = useState({});
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalActions, setModalActions] = useState(null);
 
-  // Funções utilitárias para inputs
   const onChangeTexto = (campo) => (e) =>
     setEquipamento((prev) => ({ ...prev, [campo]: e.target.value }));
 
@@ -62,7 +57,7 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
     setEquipamento((prev) => ({ ...prev, valorPorHora: Number(numero) }));
   };
 
-  // Carrega preview da imagem existente (apenas no modo edição via rota)
+  // Carrega preview da imagem existente (modo edição via rota)
   useEffect(() => {
     async function carregarPreviewExistente() {
       if (!id) return;
@@ -97,10 +92,9 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
     };
   }, [id]);
 
-  /* ── Helpers de navegação/fechamento ── */
   function irParaLista() {
     if (onSucesso) {
-      onSucesso(); // fecha a modal e recarrega a lista
+      onSucesso();
     } else {
       navigate("/equipamentos");
     }
@@ -114,7 +108,24 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
     }
   }
 
-  /* ── Upload de imagem ── */
+  // Validação antes de salvar
+  function validar() {
+    const novosErros = {};
+
+    if (!equipamento.nome || equipamento.nome.trim() === "") {
+      novosErros.nome = "Nome é obrigatório.";
+    }
+    if (!equipamento.quantidadeTotal || Number(equipamento.quantidadeTotal) <= 0) {
+      novosErros.quantidadeTotal = "Quantidade deve ser maior que 0.";
+    }
+    if (!equipamento.valorPorHora || Number(equipamento.valorPorHora) <= 0) {
+      novosErros.valorPorHora = "Valor por hora não pode ser vazio ou zero.";
+    }
+
+    setErros(novosErros);
+    return Object.keys(novosErros).length === 0;
+  }
+
   async function uploadImagem(equipamentoId) {
     if (!arquivoImagem) return null;
     const formData = new FormData();
@@ -130,13 +141,15 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
     }
   }
 
+  // Fix: captura o arquivo diretamente do evento para usar no upload
   function handleInputFotoChange(e) {
     const file = e.target.files?.[0] ?? null;
     setArquivoImagem(file);
   }
 
-  /* ── Cadastrar ── */
   async function cadastrar() {
+    if (!validar()) return;
+
     try {
       const request = await api.post("/equipamento", equipamento, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
@@ -144,6 +157,7 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
 
       if (request.status == 201) {
         const criado = request.data;
+        // Fix upload via modal: usa o arquivo do state, não depende de ref perdida
         if (arquivoImagem && criado?.id) {
           await uploadImagem(criado.id);
         }
@@ -184,8 +198,9 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
     }
   }
 
-  /* ── Editar ── */
   async function editar() {
+    if (!validar()) return;
+
     try {
       const request = await api.put(`/equipamento/${id}`, equipamento, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
@@ -229,9 +244,14 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
     }
   }
 
+  // Componente auxiliar para exibir mensagem de erro abaixo do campo
+  const ErroMsg = ({ campo }) =>
+    erros[campo] ? (
+      <span className="text-red-500 text-[1rem] mt-1">{erros[campo]}</span>
+    ) : null;
+
   return (
     <>
-      {/* Título só aparece quando usado como página (sem onCancelar) */}
       {!onCancelar && (
         <h1 className="mb-16 text-4xl font-bold">Cadastrar Equipamento</h1>
       )}
@@ -244,12 +264,16 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
         <div className="mt-10 flex justify-between items-start gap-6 flex-wrap">
           {/* Coluna esquerda */}
           <div className="flex flex-col gap-4 flex-1 min-w-48">
-            <InputBordaLabel
-              titulo="Nome"
-              placeholder="Ex: Memória SD 128gb"
-              onInput={onChangeTexto("nome")}
-              value={equipamento.nome}
-            />
+            <div className="flex flex-col">
+              <InputBordaLabel
+                titulo="Nome"
+                placeholder="Ex: Memória SD 128gb"
+                onInput={onChangeTexto("nome")}
+                value={equipamento.nome}
+              />
+              <ErroMsg campo="nome" />
+            </div>
+
             <InputBordaLabel
               titulo="Categoria"
               placeholder="Ex: Armazenamento"
@@ -262,13 +286,16 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
               onInput={onChangeTexto("marca")}
               value={equipamento.marca}
             />
-            <InputBordaLabel
-              titulo="Quantidade"
-              type="number"
-              placeholder="Ex: 10"
-              onInput={onChangeNumero("quantidadeTotal")}
-              value={equipamento.quantidadeTotal}
-            />
+            <div className="flex flex-col">
+              <InputBordaLabel
+                titulo="Quantidade"
+                type="number"
+                placeholder="Ex: 10"
+                onInput={onChangeNumero("quantidadeTotal")}
+                value={equipamento.quantidadeTotal}
+              />
+              <ErroMsg campo="quantidadeTotal" />
+            </div>
           </div>
 
           {/* Coluna direita */}
@@ -287,17 +314,19 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
               onInput={onChangeTexto("numeroSerie")}
               value={equipamento.numeroSerie}
             />
-            <InputBordaLabel
-              titulo="Valor por Hora"
-              type="text"
-              placeholder="Ex: 150.00"
-              onInput={onInputValorHora}
-              value={valorHora}
-            />
+            <div className="flex flex-col">
+              <InputBordaLabel
+                titulo="Valor por Hora"
+                type="text"
+                placeholder="Ex: 150.00"
+                onInput={onInputValorHora}
+                value={valorHora}
+              />
+              <ErroMsg campo="valorPorHora" />
+            </div>
           </div>
         </div>
 
-        {/* Botões de ação */}
         <div className="flex gap-3 mt-10">
           {!state ? (
             <BotaoPrimario titulo="Cadastrar" className="mb-0 mt-0" onClick={cadastrar} />
@@ -308,7 +337,6 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
         </div>
       </div>
 
-      {/* Modal de confirmação/erro interno */}
       {modalOpen && (
         <Modal titulo={modalTitulo} descricao={modalDescricao}>
           {modalActions}

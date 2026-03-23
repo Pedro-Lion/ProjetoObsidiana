@@ -2,7 +2,7 @@ import Datetime from "react-datetime";
 import "react-datetime/css/react-datetime.css";
 
 export function InputDataBordaLabel({
-  titulo = "", placeholder = "Insira a data", value, defaultValue, className = "w-80", onChange
+  titulo = "", placeholder = "Insira a data", value, defaultValue, className = "w-80", onChange, isValidDate
 }) {
   return (
     <div className={"flex flex-col " + className}>
@@ -27,6 +27,8 @@ export function InputDataBordaLabel({
         value={value}
         initialValue={defaultValue}
         onChange={onChange ?? undefined}
+        // Bloqueia datas inválidas no calendar do picker quando a prop for passada
+        isValidDate={isValidDate ?? undefined}
       />   
     </div>
   );
