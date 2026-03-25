@@ -24,7 +24,7 @@ public class AuthDataLoader implements CommandLineRunner {
             UsuarioJpaEntity admin = new UsuarioJpaEntity();
             admin.setNome("Administrador");
             admin.setEmail("admin@obsidiana.com");
-            admin.setSenha(passwordEncoder.encode("123"));
+            admin.setSenha(passwordEncoder.encode("123456"));
             repository.save(admin);
             System.out.println("✔ [Auth-MS] Usuário admin criado.");
         }

@@ -63,9 +63,9 @@ public class SampleDataLoader implements CommandLineRunner {
             Usuario u = new Usuario();
             u.setNome("Administrador");
             u.setEmail("admin@obsidiana.com");
-            u.setSenha(passwordEncoder.encode("123"));
+            u.setSenha(passwordEncoder.encode("123456"));
             usuarioRepository.save(u);
-            System.out.println("✔ Usuário criado: admin@obsidiana.com / 123");
+            System.out.println("✔ Usuário criado: admin@obsidiana.com / 123456");
         }
 
         // ========================
