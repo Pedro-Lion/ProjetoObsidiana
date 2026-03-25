@@ -28,6 +28,19 @@ public class Profissional {
     @ManyToMany(mappedBy = "profissionais")
     private List<Orcamento> orcamentos = new ArrayList<>();
 
+    //    Metadados da imagem
+    @Schema(description = "Nome do arquivo de imagem salvo", example = "1632938123456_camera.jpg")
+    private String nomeArquivoImagem;
+
+    @Schema(description = "Tipo MIME da imagem", example = "image/jpeg")
+    private String tipoImagem;
+
+    @Schema(description = "Caminho absoluto ou relativo da imagem no servidor", example = "upload/1632938123456_camera.jpg")
+    private String caminhoImagem;
+
+
+//    CONSTRUCTORS
+
     public Profissional() {
     }
 
@@ -36,6 +49,9 @@ public class Profissional {
         this.disponibilidade = disponibilidade;
         this.contato = contato;
     }
+
+
+//    GETTERS & SETTERS
 
     public Long getId() {
         return id;
@@ -67,5 +83,29 @@ public class Profissional {
 
     public void setContato(String contato) {
         this.contato = contato;
+    }
+
+    public String getCaminhoImagem() {
+        return caminhoImagem;
+    }
+
+    public void setCaminhoImagem(String caminhoImagem) {
+        this.caminhoImagem = caminhoImagem;
+    }
+
+    public String getTipoImagem() {
+        return tipoImagem;
+    }
+
+    public void setTipoImagem(String tipoImagem) {
+        this.tipoImagem = tipoImagem;
+    }
+
+    public String getNomeArquivoImagem() {
+        return nomeArquivoImagem;
+    }
+
+    public void setNomeArquivoImagem(String nomeArquivoImagem) {
+        this.nomeArquivoImagem = nomeArquivoImagem;
     }
 }

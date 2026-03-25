@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -53,6 +54,20 @@ public class OrcamentoService implements OrcamentoSubject {
     @Autowired
     private UsoEquipamentoRepository usoEquipamentoRepository;
 
+
+    // ---------------------------------------------------------------------
+    // CALCULAR DURAÇÃO DO EVENTO
+    // ---------------------------------------------------------------------
+    // Retorna a diferença entre dataTermino e dataInicio em horas decimais.
+    // Ex: 3h30min → 3.5
+    private Double calcularDuracaoEvento(Orcamento orcamento) {
+        if (orcamento.getDataInicio() == null || orcamento.getDataTermino() == null) return null;
+        long diffMs = orcamento.getDataTermino().getTime() - orcamento.getDataInicio().getTime();
+        if (diffMs <= 0) return null;
+        // converte milissegundos → horas com precisão de 2 casas
+        double horas = diffMs / 3_600_000.0;
+        return Math.round(horas * 100.0) / 100.0;
+    }
 
     // ---------------------------------------------------------------------
     // CALCULAR BALOR TOTAL ORÇAMENTO
@@ -89,6 +104,15 @@ public class OrcamentoService implements OrcamentoSubject {
 
 
     // ---------------------------------------------------------------------
+    // LISTAR TODOS OS ORÇAMENTOS
+    // ---------------------------------------------------------------------
+    public List<Orcamento> listarTodos() {
+        List<Orcamento> lista = orcamentoRepository.findAll();
+        lista.forEach(o -> o.setDuracaoEvento(calcularDuracaoEvento(o)));
+        return lista;
+    }
+
+    // ---------------------------------------------------------------------
     // METODOS PADRÃO
     // ---------------------------------------------------------------------
 
@@ -96,13 +120,13 @@ public class OrcamentoService implements OrcamentoSubject {
     public Orcamento criarOrcamento(OrcamentoDTO dto) {
         // Mapear DTO -> Model Orcamento
         Orcamento novoOrcamento = new Orcamento(
-            dto.getDataInicio(),
-            dto.getDataTermino(),
-            dto.getLocalEvento(),
-            dto.getDescricao(),
-            dto.getStatus(),
-            dto.getValorTotal(),
-            dto.getIdCalendar()
+                dto.getDataInicio(),
+                dto.getDataTermino(),
+                dto.getLocalEvento(),
+                dto.getDescricao(),
+                dto.getStatus(),
+                dto.getValorTotal(),
+                dto.getIdCalendar()
         );
 
         // Persistir para obter ID
@@ -184,10 +208,12 @@ public class OrcamentoService implements OrcamentoSubject {
             salvo.setStatus("Confirmado");
             Orcamento salvoComStatus = orcamentoRepository.save(salvo);
             notifyObservers(salvoComStatus, statusAnterior, "Confirmado");
+            salvoComStatus.setDuracaoEvento(calcularDuracaoEvento(salvoComStatus));
             return salvoComStatus;
         }
 
         // não pediu confirmação imediata: retornar orcamento salvo (status como veio/por default)
+        salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
         return salvo;
     }
 
@@ -210,6 +236,21 @@ public class OrcamentoService implements OrcamentoSubject {
         existente.setDataTermino(dto.getDataTermino());
         existente.setLocalEvento(dto.getLocalEvento());
         existente.setIdCalendar(dto.getIdCalendar());
+
+        // atualização das listas
+        if (dto.getServicos() != null && !dto.getServicos().isEmpty()) {
+            List<Servico> servicos = servicoRepository.findAllById(dto.getServicos());
+            existente.setServicos(servicos);
+        } else {
+            existente.setServicos(new ArrayList<>());
+        }
+
+        if (dto.getProfissionais() != null && !dto.getProfissionais().isEmpty()) {
+            List<Profissional> profissionais = profissionalRepository.findAllById(dto.getProfissionais());
+            existente.setProfissionais(profissionais);
+        } else {
+            existente.setProfissionais(new ArrayList<>());
+        }
 
         // Buscar usos antigos vinculados
         List<UsoEquipamento> usosAntigos = usoEquipamentoRepository.findByOrcamento_Id(existente.getId());
@@ -330,7 +371,9 @@ public class OrcamentoService implements OrcamentoSubject {
         // Se não houve mudnça de status confirm<->nao-confirm, apenas persistir status e retornar
         if ( ("Confirmado".equalsIgnoreCase(statusAnterior)) == seraConfirmado ) {
             existente.setStatus(novoStatus);
-            return orcamentoRepository.save(existente);
+            Orcamento salvo = orcamentoRepository.save(existente);
+            salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
+            return salvo;
         }
 
         // Se vai virar Confirmado: checar estoque (usos já atualizados)
@@ -352,6 +395,7 @@ public class OrcamentoService implements OrcamentoSubject {
             existente.setStatus("Confirmado");
             Orcamento salvo = orcamentoRepository.save(existente);
             notifyObservers(salvo, statusAnterior, "Confirmado");
+            salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
             return salvo;
         }
 
@@ -360,12 +404,15 @@ public class OrcamentoService implements OrcamentoSubject {
             existente.setStatus(novoStatus);
             Orcamento salvo = orcamentoRepository.save(existente);
             notifyObservers(salvo, statusAnterior, novoStatus);
+            salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
             return salvo;
         }
 
         // fallback - persistir e retornar
         existente.setStatus(novoStatus);
-        return orcamentoRepository.save(existente);
+        Orcamento salvoFallback = orcamentoRepository.save(existente);
+        salvoFallback.setDuracaoEvento(calcularDuracaoEvento(salvoFallback));
+        return salvoFallback;
     }
 
 
@@ -384,7 +431,9 @@ public class OrcamentoService implements OrcamentoSubject {
         // Se não houve mudança de status confirmada<->não-confirmada, atualiza e retorna
         if (eraConfirmado == seraConfirmado) {
             orcamento.setStatus(novoStatus);
-            return orcamentoRepository.save(orcamento);
+            Orcamento salvo = orcamentoRepository.save(orcamento);
+            salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
+            return salvo;
         }
 
         // Buscar usos persistidos
@@ -417,6 +466,7 @@ public class OrcamentoService implements OrcamentoSubject {
             notifyObservers(salvo, statusAnterior, novoStatus);
         }
 
+        salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
         return salvo;
     }
 
@@ -444,7 +494,7 @@ public class OrcamentoService implements OrcamentoSubject {
             observer.onOrcamentoUpdated(orcamento, statusAnterior, novoStatus);
         }
     }
-    
+
     // ---------------------------------------------------------------------
     // KPIs
     // ---------------------------------------------------------------------

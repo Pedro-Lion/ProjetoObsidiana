@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
+import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { CardServico } from "../components/Cards/CardServico";
@@ -8,6 +9,7 @@ import { Modal } from "../components/Modal/Modal.jsx";
 export function Servicos() {
   const navigate = useNavigate();
   const [servicos, setServicos] = useState([]);
+  const [search, setSearch] = useState("");
 
   // Estados do modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -80,6 +82,29 @@ export function Servicos() {
     setModalOpen(true);
   };
 
+  // Pesquisa em qualquer campo string/number do serviço e seus equipamentos
+  const servicosFiltrados = servicos.filter((s) => {
+    if (!search.trim()) return true;
+    const termo = search.toLowerCase();
+
+    const camposServico = [
+      s.nome,
+      s.descricao,
+      s.valorPorHora?.toString(),
+      s.horas?.toString(),
+    ];
+
+    const camposEquipamentos = (s.equipamentos || []).flatMap((e) => [
+      e.nome,
+      e.categoria,
+      e.valorPorHora?.toString(),
+    ]);
+
+    return [...camposServico, ...camposEquipamentos]
+      .filter(Boolean)
+      .some((campo) => campo.toLowerCase().includes(termo));
+  });
+
   return (
     <>
       <div className="flex justify-between">
@@ -90,9 +115,17 @@ export function Servicos() {
         />
       </div>
 
+      <InputBordaLabel
+        titulo="Buscar"
+        placeholder="Buscar por nome, descrição, equipamento..."
+        value={search}
+        onInput={(e) => setSearch(e.target.value)}
+        className="mb-6 max-w-sm"
+      />
+
       <section className="flex flex-wrap gap-5">
-        {servicos.length !== 0 ? (
-          servicos.map((s) => (
+        {servicosFiltrados.length !== 0 ? (
+          servicosFiltrados.map((s) => (
             <CardServico
               key={s.id}
               dados={s}
@@ -100,7 +133,7 @@ export function Servicos() {
             />
           ))
         ) : (
-          <p className="text-xl">Nenhum serviço cadastrado.</p>
+          <p className="text-xl">Nenhum serviço encontrado.</p>
         )}
       </section>
 

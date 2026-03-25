@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
+import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { api } from "../api";
 import { ContainerProfissional } from "../components/Containers/ContainerProfissional";
 import { Modal } from "../components/Modal/Modal.jsx";
@@ -10,6 +11,7 @@ import { CadastroProfissionais } from "./CadastroProfissionais.jsx";
 export function Profissionais() {
   const navigate = useNavigate();
   const [profissionais, setProfissionais] = useState([]);
+  const [search, setSearch] = useState("");
 
   // Modal de confirmação/exclusão
   const [modalOpen, setModalOpen] = useState(false);
@@ -20,7 +22,6 @@ export function Profissionais() {
   // Modal de cadastro
   const [modalCadastroAberta, setModalCadastroAberta] = useState(false);
 
-  /* ── Carregamento da lista ── */
   async function getProfissionais() {
     try {
       const request = await api.get("/profissional", {
@@ -38,7 +39,6 @@ export function Profissionais() {
     getProfissionais();
   }, []);
 
-  /* ── Deletar ── */
   const deletar = (id) => {
     setModalTitulo("Confirmar exclusão");
     setModalDescricao("Tem certeza que deseja excluir este profissional?");
@@ -84,6 +84,14 @@ export function Profissionais() {
     setModalOpen(true);
   };
 
+  // Pesquisa em qualquer campo string do profissional
+  const profissionaisFiltrados = profissionais.filter((p) => {
+    if (!search.trim()) return true;
+    const termo = search.toLowerCase();
+    const campos = [p.nome, p.disponibilidade, p.contato, p.funcao];
+    return campos.filter(Boolean).some((c) => c.toLowerCase().includes(termo));
+  });
+
   return (
     <>
       <div className="flex justify-between">
@@ -94,9 +102,17 @@ export function Profissionais() {
         />
       </div>
 
+      <InputBordaLabel
+        titulo="Buscar"
+        placeholder="Buscar por nome, disponibilidade, contato..."
+        value={search}
+        onInput={(e) => setSearch(e.target.value)}
+        className="mb-6 max-w-sm"
+      />
+
       <section>
-        {profissionais.length !== 0 ? (
-          profissionais.map((p) => (
+        {profissionaisFiltrados.length !== 0 ? (
+          profissionaisFiltrados.map((p) => (
             <ContainerProfissional
               key={p.id}
               dados={p}
@@ -105,7 +121,7 @@ export function Profissionais() {
             />
           ))
         ) : (
-          <p className="text-xl">Nenhum profissional cadastrado.</p>
+          <p className="text-xl">Nenhum profissional encontrado.</p>
         )}
       </section>
 
