@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Label } from "../components/Login/Label";
+import { api } from "../api";
 
 // Regex para email válido
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -53,17 +54,14 @@ export function Login(props) {
     if (!validarLogin()) return;
 
     try {
-      const res = await fetch("http://localhost:8080/usuario/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, senha }),
+      const res = await api.post("/usuarios/login", {
+        email, senha
       });
-      if (res.ok) {
-        const dados = await res.json();
-        sessionStorage.setItem("token", dados.token);
-        navigate("/");
-      }
-      if (res.status == 404) alert("Usuário não encontrado");
+
+      if (res.status == 404) return alert("Usuário não encontrado");
+
+      sessionStorage.setItem("token", res.data.token);
+      navigate("/");
     } catch (error) {
       console.log(error);
     }
@@ -74,12 +72,11 @@ export function Login(props) {
     if (!validarCadastro()) return;
 
     try {
-      const res = await fetch("http://localhost:8080/usuario/cadastrar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, email, senha }),
-      });
-      if (res.ok) {
+      const res = await api.post("/usuarios/login", {
+        nome, email, senha
+      })
+
+      if (res.status == 201) {
         alert("Cadastro bem sucedido. Redirecionando para a página de login.");
         return navigate("/login");
       }
