@@ -21,6 +21,9 @@ export function CadastrarNovoServico() {
     servico.valorPorHora ? servico.valorPorHora.toFixed(2) : "0.00"
   );
 
+  // Erros de validação
+  const [erros, setErros] = useState({});
+
   // Estados para o modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitulo, setModalTitulo] = useState("");
@@ -50,7 +53,26 @@ export function CadastrarNovoServico() {
     getEquipamentos();
   }, []);
 
+  function validar() {
+    const novosErros = {};
+
+    if (!servico.nome || servico.nome.trim() === "") {
+      novosErros.nome = "Nome do serviço é obrigatório.";
+    }
+    if (!horas || Number(horas) <= 0) {
+      novosErros.horas = "Duração não pode ser 0.";
+    }
+    if (!servico.valorPorHora || Number(servico.valorPorHora) <= 0) {
+      novosErros.valorPorHora = "Valor por hora não pode ser 0.";
+    }
+
+    setErros(novosErros);
+    return Object.keys(novosErros).length === 0;
+  }
+
   async function cadastrar() {
+    if (!validar()) return;
+
     try {
       const request = await api.post("/servico", servico, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
@@ -96,6 +118,8 @@ export function CadastrarNovoServico() {
   }
 
   async function editar() {
+    if (!validar()) return;
+
     try {
       const request = await api.put(`/servico/${id}`, servico, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
@@ -130,47 +154,61 @@ export function CadastrarNovoServico() {
     }
   }
 
+  const ErroMsg = ({ campo }) =>
+    erros[campo] ? (
+      <span className="text-red-500 text-[1rem] mt-1">{erros[campo]}</span>
+    ) : null;
+
   return (
     <>
       {state ? <h1>Editar serviço</h1> : <h1>Cadastrar serviço</h1>}
 
       <section className="flex flex-col">
         <div className="flex justify-between gap-3 items-start mb">
-          <InputBordaLabel
-            titulo="Nome do Serviço"
-            placeholder="Insira o nome aqui"
-            className="w-full"
-            value={servico.nome}
-            onInput={(e) => setServico({ ...servico, nome: e.target.value })}
-          />
+          <div className="flex flex-col w-full">
+            <InputBordaLabel
+              titulo="Nome do Serviço"
+              placeholder="Insira o nome aqui"
+              className="w-full"
+              value={servico.nome}
+              onInput={(e) => setServico({ ...servico, nome: e.target.value })}
+            />
+            <ErroMsg campo="nome" />
+          </div>
 
-          <InputBordaLabel
-            type="number"
-            titulo="Duração em Horas"
-            className="w-full"
-            value={horas}
-            onInput={(e) => {
-              let v = Number(e.target.value);
-              if (v > 24) v = 24;
-              if (v < 0) v = 0;
-              setHoras(v);
-              setServico({ ...servico, horas: v });
-            }}
-          />
+          <div className="flex flex-col w-full">
+            <InputBordaLabel
+              type="number"
+              titulo="Duração em Horas"
+              className="w-full"
+              value={horas}
+              onInput={(e) => {
+                let v = Number(e.target.value);
+                if (v > 24) v = 24;
+                if (v < 0) v = 0;
+                setHoras(v);
+                setServico({ ...servico, horas: v });
+              }}
+            />
+            <ErroMsg campo="horas" />
+          </div>
 
-          <InputBordaLabel
-            type="text"
-            titulo="Valor por Hora"
-            className="w-full"
-            value={valorHora}
-            onInput={(e) => {
-              let v = e.target.value;
-              v = v.replace(/\D/g, "");
-              const numero = (Number(v) / 100).toFixed(2);
-              setValorHora(numero);
-              setServico({ ...servico, valorPorHora: Number(numero) });
-            }}
-          />
+          <div className="flex flex-col w-full">
+            <InputBordaLabel
+              type="text"
+              titulo="Valor por Hora"
+              className="w-full"
+              value={valorHora}
+              onInput={(e) => {
+                let v = e.target.value;
+                v = v.replace(/\D/g, "");
+                const numero = (Number(v) / 100).toFixed(2);
+                setValorHora(numero);
+                setServico({ ...servico, valorPorHora: Number(numero) });
+              }}
+            />
+            <ErroMsg campo="valorPorHora" />
+          </div>
         </div>
 
         <TextareaBordaLabel
@@ -196,7 +234,6 @@ export function CadastrarNovoServico() {
           className="mt-10"
         />
 
-        {/* Botões de ação */}
         <div className="flex gap-3 self-end mt-4">
           {!state ? (
             <BotaoPrimario

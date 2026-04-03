@@ -2,16 +2,56 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Label } from "../components/Login/Label";
 
+// Regex para email válido
+const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function Login(props) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmar, setConfirmar] = useState("");
+  const [erros, setErros] = useState({});
 
   const navigate = useNavigate();
 
+  function validarCadastro() {
+    const novosErros = {};
+
+    if (!nome.trim()) {
+      novosErros.nome = "Nome é obrigatório.";
+    }
+    if (!REGEX_EMAIL.test(email)) {
+      novosErros.email = "Insira um e-mail válido (ex: fulano@email.com).";
+    }
+    if (senha.length < 6) {
+      novosErros.senha = "A senha deve ter ao menos 6 dígitos.";
+    }
+    if (senha !== confirmar) {
+      novosErros.confirmar = "As senhas não coincidem.";
+    }
+
+    setErros(novosErros);
+    return Object.keys(novosErros).length === 0;
+  }
+
+  function validarLogin() {
+    const novosErros = {};
+
+    if (!REGEX_EMAIL.test(email)) {
+      novosErros.email = "Insira um e-mail válido.";
+    }
+    if (!senha) {
+      novosErros.senha = "Informe a senha.";
+    }
+
+    setErros(novosErros);
+    return Object.keys(novosErros).length === 0;
+  }
+
   async function logar(e) {
     e.preventDefault();
+    if (!validarLogin()) return;
+
     try {
       const res = await fetch("http://localhost:8080/usuario/login", {
         method: "POST",
@@ -31,6 +71,8 @@ export function Login(props) {
 
   async function cadastrar(e) {
     e.preventDefault();
+    if (!validarCadastro()) return;
+
     try {
       const res = await fetch("http://localhost:8080/usuario/cadastrar", {
         method: "POST",
@@ -46,11 +88,23 @@ export function Login(props) {
     }
   }
 
+  // Componente auxiliar de erro inline
+  const ErroMsg = ({ campo }) =>
+    erros[campo] ? (
+      <span className="text-red-400 text-sm mt-1 pl-1">{erros[campo]}</span>
+    ) : null;
+
   const labelsCadastro =
     props.funcao == "cadastro"
       ? [
-          <Label placeholder="Fulano da Silva" onInput={setNome}>Nome</Label>,
-          <Label type="password" placeholder="••••••••••••" onInput={setConfirmar}>Confirmar senha</Label>,
+          <>
+            <Label placeholder="Fulano da Silva" onInput={setNome}>Nome</Label>
+            <ErroMsg campo="nome" />
+          </>,
+          <>
+            <Label type="password" placeholder="••••••••••••" onInput={setConfirmar}>Confirmar senha</Label>
+            <ErroMsg campo="confirmar" />
+          </>,
         ]
       : [null, null];
 
@@ -87,13 +141,19 @@ export function Login(props) {
         <form className="flex flex-col">
           {labelsCadastro[0]}
 
-          <Label type="email" placeholder="fulano@email.com" onInput={setEmail}>
-            E-mail
-          </Label>
+          <>
+            <Label type="email" placeholder="fulano@email.com" onInput={setEmail}>
+              E-mail
+            </Label>
+            <ErroMsg campo="email" />
+          </>
 
-          <Label type="password" placeholder="••••••••••••" onInput={setSenha}>
-            Senha
-          </Label>
+          <>
+            <Label type="password" placeholder="••••••••••••" onInput={setSenha}>
+              Senha
+            </Label>
+            <ErroMsg campo="senha" />
+          </>
 
           {labelsCadastro[1]}
 

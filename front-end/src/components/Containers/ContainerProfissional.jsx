@@ -1,6 +1,39 @@
 import { Foto } from "../Foto";
+import { useState, useEffect } from "react";
 
 export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onClickDel = () => {} }) {
+  const [fotoUrl, setFotoUrl] = useState(null);
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
+  // Carrega a foto via fetch autenticado (mesmo padrão do equipamento)
+  useEffect(() => {
+    if (!dados.id || !dados.nomeArquivoImagem) return;
+
+    let objectUrl = null;
+    const token = sessionStorage.getItem("token");
+
+    fetch(`${API_BASE}/profissional/${dados.id}/imagem`, {
+      headers: { Authorization: token ? "Bearer " + token : "" },
+    })
+      .then((resp) => {
+        if (!resp.ok) return null;
+        const ctype = resp.headers.get("content-type") || "";
+        if (!ctype.startsWith("image/")) return null;
+        return resp.blob();
+      })
+      .then((blob) => {
+        if (!blob) return;
+        objectUrl = URL.createObjectURL(blob);
+        setFotoUrl(objectUrl);
+      })
+      .catch(() => {});
+
+    return () => {
+      if (objectUrl) {
+        try { URL.revokeObjectURL(objectUrl); } catch (e) { /* ignore */ }
+      }
+    };
+  }, [dados.id, dados.nomeArquivoImagem]);
 
   const Campo = ({ titulo, valor }) => (
     <div className="flex flex-col gap-1">
@@ -22,11 +55,11 @@ export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onCl
       {/* Corpo */}
       <div className="px-4 pb-4 flex flex-row items-start gap-4">
 
-        {/* Foto — sempre à esquerda */}
+        {/* Foto */}
         <div className="flex-none">
-          {dados.nomeArquivoImagem ? (
+          {fotoUrl ? (
             <img
-              src={`${import.meta.env.VITE_API_BASE_URL || ""}/profissional/${dados.id}/imagem`}
+              src={fotoUrl}
               alt={dados.nome}
               className="w-[8rem] h-[8rem] rounded-full object-cover"
             />
@@ -35,7 +68,7 @@ export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onCl
           )}
         </div>
 
-        {/* Campos: coluna em mobile, linha em desktop */}
+        {/* Campos */}
         <div className="flex-1 flex flex-col md:flex-row md:flex-wrap md:gap-x-8 gap-y-3">
           <Campo titulo="Disponibilidade" valor={dados.disponibilidade} />
           <Campo titulo="Contato" valor={dados.contato} />

@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { BotaoPrimario } from "../Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../Buttons/BotaoSecundario";
-import { Foto } from "../Foto";
 
 export function CardOrcamento({
   dados = {
@@ -36,7 +35,7 @@ export function CardOrcamento({
   );
 
   function formatarData() {
-    if (!dados.dataInicio) return "N/A"
+    if (!dados.dataInicio) return "N/A";
 
     const dataSemNormalizacao = Intl.DateTimeFormat("pt-br", {
       day: "numeric",
@@ -49,7 +48,21 @@ export function CardOrcamento({
     return dataNormalizada;
   }
 
+  // Formata decimal em horas legível: 3 → "3h", 3.5 → "3h30", 1.25 → "1h15"
+  function formatarDuracao(valor) {
+    if (valor === null || valor === undefined || valor === "") return "N/A";
+    const num = Number(valor);
+    if (isNaN(num) || num <= 0) return "N/A";
+
+    const horas = Math.floor(num);
+    const minutos = Math.round((num - horas) * 60);
+
+    if (minutos === 0) return `${horas}h`;
+    return `${horas}h${String(minutos).padStart(2, "0")}`;
+  }
+
   const dataFormatada = formatarData();
+  const duracaoFormatada = formatarDuracao(dados.duracaoEvento);
 
   function definirCorStatus() {
     const corPorStatus = {
@@ -86,7 +99,7 @@ export function CardOrcamento({
 
         <ul className="list-disc list-inside my-2.5">
           <li className="mb-1">{dados.localEvento}</li>
-          <li>Duração: {dados.duracaoEvento}h</li>
+          <li>Duração: {duracaoFormatada}</li>
         </ul>
 
         <p className="text-xl">{dados.descricao}</p>
