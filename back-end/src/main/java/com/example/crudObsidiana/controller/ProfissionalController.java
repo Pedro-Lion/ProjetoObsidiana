@@ -25,7 +25,7 @@ import java.util.List;
 
 @Tag(name = "Profissionais", description = "Operações relacionadas aos profissionais")
 @RestController
-@RequestMapping("/profissional")
+@RequestMapping("/api/profissional")
 public class ProfissionalController {
 
     private final ProfissionalRepository repository;

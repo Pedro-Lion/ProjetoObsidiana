@@ -54,8 +54,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/usuario/login").permitAll() // Esse endpoint não precisa de autenticação
-                        .requestMatchers(HttpMethod.POST, "/usuario/cadastrar").permitAll() // Esse endpoint não precisa de autenticação
+                        .requestMatchers(HttpMethod.POST, "/api/usuario/login").permitAll() // Esse endpoint não precisa de autenticação
+                        .requestMatchers(HttpMethod.POST, "/api/usuario/cadastrar").permitAll() // Esse endpoint não precisa de autenticação
                         .requestMatchers(
                                 "/v3/api-docs/**",  // documentação Swagger
                                 "/swagger-ui/**",           // interface Swagger

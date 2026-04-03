@@ -20,7 +20,7 @@ import java.util.List;
 
 @Tag(name = "Serviços", description = "Operações relacionadas aos serviços")
 @RestController
-@RequestMapping("/servico")
+@RequestMapping("/api/servico")
 public class ServicoController {
 
     private final ServicoRepository repository;

@@ -26,7 +26,7 @@ import java.util.List;
 
 @Tag(name = "Equipamentos", description = "Operações relacionadas aos equipamentos")
 @RestController
-@RequestMapping("/equipamento")
+@RequestMapping("/api/equipamento")
 public class EquipamentoController {
 
     private final EquipamentoRepository repository;
