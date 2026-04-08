@@ -49,7 +49,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         String path  = request.getRequestURI();
         String ip    = request.getRemoteAddr();
 
-        if (path.equals("/usuario/login") || path.equals("/usuario/cadastrar")) {
+        if (path.equals("/api/usuario/login") || path.equals("/api/usuario/cadastrar")) {
             filterChain.doFilter(request, response);
             return;
         }

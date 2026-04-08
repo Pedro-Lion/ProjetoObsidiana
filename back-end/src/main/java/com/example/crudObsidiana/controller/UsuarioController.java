@@ -28,7 +28,7 @@ import java.util.List;
 
 @Tag(name = "Usuários", description = "Operações relacionadas aos usuários")
 @RestController
-@RequestMapping("/usuario")
+@RequestMapping("/api/usuario")
 public class UsuarioController {
   private final UsuarioRepository repository;
   private final PasswordEncoder passwordEncoder;

@@ -17,7 +17,7 @@ import java.util.List;
 
 @Tag(name = "Uso de Equipamentos", description = "Operações relacionadas ao uso de equipamentos em orçamentos e serviços")
 @RestController
-@RequestMapping("/uso-equipamento")
+@RequestMapping("/api/uso-equipamento")
 public class UsoEquipamentoController {
 
     private final UsoEquipamentoRepository repository;

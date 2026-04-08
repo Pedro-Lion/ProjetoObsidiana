@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/orcamento")
+@RequestMapping("/api/orcamento")
 @Tag(
         name = "Orçamento",
         description = """
