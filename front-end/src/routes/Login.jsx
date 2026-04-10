@@ -54,7 +54,7 @@ export function Login(props) {
     if (!validarLogin()) return;
 
     try {
-      const res = await api.post("/usuarios/login", {
+      const res = await api.post("/usuario/login", {
         email, senha
       });
 
@@ -72,7 +72,7 @@ export function Login(props) {
     if (!validarCadastro()) return;
 
     try {
-      const res = await api.post("/usuarios/login", {
+      const res = await api.post("/usuario/cadastrar", {
         nome, email, senha
       })
 
