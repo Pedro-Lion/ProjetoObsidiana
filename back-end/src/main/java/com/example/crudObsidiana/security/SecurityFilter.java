@@ -29,7 +29,7 @@ import java.util.Collections;
 public class SecurityFilter extends OncePerRequestFilter {
 
     // Injete via @Value no application.properties
-    @Value("${auth.microservice.url:http://localhost:8081}")
+    @Value("${auth.microservice.url}")
     private String authServiceUrl;
 
     private final RestTemplate restTemplate;
