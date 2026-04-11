@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS orcamento (
     data_termino DATETIME,
     local_evento VARCHAR(255),
     descricao VARCHAR(255),
-    status VARCHAR(255),
+    status VARCHAR(100),
     valor_total DOUBLE,
     id_calendario VARCHAR(255)
 );
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS usuario (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255),
     email VARCHAR(255),
-    senha VARCHAR(255),
+    senha VARCHAR(1000),
     nome_arquivo_imagem VARCHAR(255),
     tipo_imagem VARCHAR(100),
     caminho_imagem VARCHAR(500)
