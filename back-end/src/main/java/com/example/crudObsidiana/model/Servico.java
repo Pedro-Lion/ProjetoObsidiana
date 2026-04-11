@@ -16,7 +16,6 @@ public class Servico  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idServico")
     @Schema(description = "ID do serviço", example = "1")
     private Long id;
 

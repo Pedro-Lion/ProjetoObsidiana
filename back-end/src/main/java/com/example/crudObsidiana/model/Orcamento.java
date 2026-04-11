@@ -10,12 +10,10 @@ import java.util.List;
 
 @Schema(description = "Modelo de orçamento")
 @Entity
-@Table(name = "orcamentos")
 public class Orcamento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idOrcamento")
     private Long id;
 
     private Date dataInicio;
