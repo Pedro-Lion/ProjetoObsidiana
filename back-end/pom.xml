@@ -54,6 +54,14 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Driver MYSQL -->
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<version>9.6.0</version>
+			<scope>compile</scope>
+		</dependency>
+
 		<!-- JWT -->
 		<dependency>
 			<groupId>com.auth0</groupId>

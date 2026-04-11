@@ -5,18 +5,24 @@ meta {
 }
 
 put {
-  url: http://localhost:8080/orcamento/1
+  url: http://localhost:8080/api/orcamento/1
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "equipamentos": [
-      { "id": 1,
-       "nome": "Câmera Sony A7S III"
-      }
-    ]
+    "dataInicio":"2026-03-23T14:32:17.000Z",
+    "dataTermino":"2026-03-23T18:32:17.000Z",
+    "localEvento":"São Paulo",
+    "descricao":"Testand",
+    "status":"Em análise",
+    "valorTotal":200,
+    "idCalendar":null,
+    "usosEquipamentos":[],
+    "servicos":[],
+    "equipamentos":[],
+    "profissionais":[]
   }
 }
 

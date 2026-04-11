@@ -14,6 +14,7 @@ import com.example.crudObsidiana.repository.UsuarioRepository;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
 import com.example.crudObsidiana.repository.UsoEquipamentoRepository;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,10 @@ import java.util.Date;
 
 @Component
 public class SampleDataLoader implements CommandLineRunner {
+
+    // variável para determinar se está usando H2 ou MYSQL
+    @Value("${spring.datasource.url}")
+    private String dataBaseUrl;
 
     private final EquipamentoRepository equipamentoRepository;
     private final ServicoRepository servicoRepository;
@@ -55,6 +60,9 @@ public class SampleDataLoader implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String[] args) throws Exception {
+        if (dataBaseUrl.contains("mysql")) {
+            return;
+        }
 
         // ========================
         //  USUÁRIO DE TESTE
