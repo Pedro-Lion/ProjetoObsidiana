@@ -11,11 +11,14 @@ public class AuthController {
 
     private final LoginUseCase loginUseCase;
     private final ValidateTokenUseCase validateTokenUseCase;
+    private final RefreshTokenUseCase refreshTokenUseCase;
 
     public AuthController(LoginUseCase loginUseCase,
-                          ValidateTokenUseCase validateTokenUseCase) {
+                          ValidateTokenUseCase validateTokenUseCase,
+                          RefreshTokenUseCase refreshTokenUseCase) {
         this.loginUseCase = loginUseCase;
         this.validateTokenUseCase = validateTokenUseCase;
+        this.refreshTokenUseCase = refreshTokenUseCase;
     }
 
     // DTOs inline (ou mova para classes separadas)
@@ -45,5 +48,18 @@ public class AuthController {
                     .body(new ValidateResponse(false, null));
         }
         return ResponseEntity.ok(new ValidateResponse(true, result.subject()));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            var result = refreshTokenUseCase.execute(token);
+            // Retorna novo token (nome/email podem ser buscados do subject se necessário)
+            return ResponseEntity.ok(new LoginResponse(null, null, result.token()));
+        } catch (TokenInvalidoException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 }

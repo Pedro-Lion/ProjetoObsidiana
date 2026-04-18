@@ -78,4 +78,45 @@ public class JwtTokenProvider {
         return sb.toString();
     }
 
+    public String validateTokenComTolerancia(String token) {
+        // Tenta validar normalmente primeiro
+        String subject = validateToken(token);
+        if (subject != null) return subject;
+
+        // Se falhou, tenta aceitar tokens expirados há menos de 30 minutos
+        for (String secret : getAllSecrets()) {
+            try {
+                // Decodifica sem verificar expiração para checar se é estruturalmente válido
+                com.auth0.jwt.interfaces.DecodedJWT decoded =
+                        JWT.decode(token);
+
+                // Verifica se expirou há menos de 30 minutos
+                java.util.Date expiration = decoded.getExpiresAt();
+                if (expiration != null) {
+                    long minutosExpirado = (System.currentTimeMillis()
+                            - expiration.getTime()) / 60000;
+                    if (minutosExpirado <= 30) {
+                        // Verifica assinatura manualmente
+                        Algorithm algorithm = Algorithm.HMAC256(secret);
+                        JWT.require(algorithm)
+                                .withIssuer(ISSUER)
+                                .acceptExpiresAt(30 * 60) // 30 min de tolerância
+                                .build()
+                                .verify(token);
+                        return decoded.getSubject();
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        return null;
+    }
+
+    // Método auxiliar para iterar todos os secrets
+    private java.util.List<String> getAllSecrets() {
+        java.util.List<String> all = new java.util.ArrayList<>();
+        all.add(currentSecret);
+        all.addAll(previousSecrets);
+        return all;
+    }
+
 }
