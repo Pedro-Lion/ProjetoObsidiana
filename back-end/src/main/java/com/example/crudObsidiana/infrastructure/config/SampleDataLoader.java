@@ -1,73 +1,57 @@
 package com.example.crudObsidiana.infrastructure.config;
 
-import com.example.crudObsidiana.domain.entities.Equipamento;
-import com.example.crudObsidiana.model.Servico;
-import com.example.crudObsidiana.model.Profissional;
-import com.example.crudObsidiana.model.Usuario;
-import com.example.crudObsidiana.model.Orcamento;
-import com.example.crudObsidiana.model.UsoEquipamento;
-
-import com.example.crudObsidiana.repository.EquipamentoRepository;
-import com.example.crudObsidiana.repository.ServicoRepository;
-import com.example.crudObsidiana.repository.ProfissionalRepository;
-import com.example.crudObsidiana.repository.UsuarioRepository;
-import com.example.crudObsidiana.repository.OrcamentoRepository;
-import com.example.crudObsidiana.repository.UsoEquipamentoRepository;
-
+import com.example.crudObsidiana.domain.entities.*;
+import com.example.crudObsidiana.domain.ports.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
 
+/**
+ * Popula o H2 com dados de exemplo na inicialização.
+ * Usa Ports (não JpaRepository diretamente) e domain entities (não model JPA).
+ */
 @Component
 public class SampleDataLoader implements CommandLineRunner {
 
-    // variável para determinar se está usando H2 ou MYSQL
     @Value("${spring.datasource.url}")
     private String dataBaseUrl;
 
-    private final EquipamentoRepository equipamentoRepository;
-    private final ServicoRepository servicoRepository;
-    private final ProfissionalRepository profissionalRepository;
-    private final UsuarioRepository usuarioRepository;
-    private final OrcamentoRepository orcamentoRepository;
-    private final UsoEquipamentoRepository usoEquipamentoRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final EquipamentoRepositoryPort    equipamentoRepository;
+    private final ServicoRepositoryPort        servicoRepository;
+    private final ProfissionalRepositoryPort   profissionalRepository;
+    private final UsuarioRepositoryPort        usuarioRepository;
+    private final OrcamentoRepositoryPort      orcamentoRepository;
+    private final UsoEquipamentoRepositoryPort usoEquipamentoRepository;
+    private final PasswordEncoder              passwordEncoder;
 
     public SampleDataLoader(
-            EquipamentoRepository equipamentoRepository,
-            ServicoRepository servicoRepository,
-            ProfissionalRepository profissionalRepository,
-            UsuarioRepository usuarioRepository,
-            OrcamentoRepository orcamentoRepository,
-            UsoEquipamentoRepository usoEquipamentoRepository,
-            PasswordEncoder passwordEncoder
-    ) {
-        this.equipamentoRepository = equipamentoRepository;
-        this.servicoRepository = servicoRepository;
-        this.profissionalRepository = profissionalRepository;
-        this.usuarioRepository = usuarioRepository;
-        this.orcamentoRepository = orcamentoRepository;
+            EquipamentoRepositoryPort equipamentoRepository,
+            ServicoRepositoryPort servicoRepository,
+            ProfissionalRepositoryPort profissionalRepository,
+            UsuarioRepositoryPort usuarioRepository,
+            OrcamentoRepositoryPort orcamentoRepository,
+            UsoEquipamentoRepositoryPort usoEquipamentoRepository,
+            PasswordEncoder passwordEncoder) {
+        this.equipamentoRepository    = equipamentoRepository;
+        this.servicoRepository        = servicoRepository;
+        this.profissionalRepository   = profissionalRepository;
+        this.usuarioRepository        = usuarioRepository;
+        this.orcamentoRepository      = orcamentoRepository;
         this.usoEquipamentoRepository = usoEquipamentoRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.passwordEncoder          = passwordEncoder;
     }
 
     @Override
     @Transactional
     public void run(String[] args) throws Exception {
-        if (dataBaseUrl.contains("mysql")) {
-            return;
-        }
+        if (dataBaseUrl.contains("mysql")) return;
 
-        // ========================
-        //  USUÁRIO DE TESTE
-        // ========================
-        if (usuarioRepository.count() == 0) {
+        // USUÁRIO
+        if (usuarioRepository.findAll().isEmpty()) {
             Usuario u = new Usuario();
             u.setNome("Administrador");
             u.setEmail("admin@obsidiana.com");
@@ -76,54 +60,39 @@ public class SampleDataLoader implements CommandLineRunner {
             System.out.println("✔ Usuário criado: admin@obsidiana.com / 123456");
         }
 
-        // ========================
-        //  EQUIPAMENTOS
-        // ========================
-        if (equipamentoRepository.count() == 0) {
-
+        // EQUIPAMENTOS
+        if (equipamentoRepository.findAll().isEmpty()) {
             Equipamento eq1 = new Equipamento();
             eq1.setNome("Câmera Canon EOS R6");
-            eq1.setCategoria("Câmeras");
-            eq1.setMarca("Canon");
-            eq1.setModelo("R6");
+            eq1.setCategoria("Câmeras"); eq1.setMarca("Canon"); eq1.setModelo("R6");
             eq1.setNumeroSerie("CAN-R6-001");
-            eq1.setQuantidadeTotal(3);
-            eq1.setQuantidadeDisponivel(3);
+            eq1.setQuantidadeTotal(3); eq1.setQuantidadeDisponivel(3);
             eq1.setValorPorHora(150.0);
             eq1 = equipamentoRepository.save(eq1);
 
             Equipamento eq2 = new Equipamento();
             eq2.setNome("Ilha de Luz LED 3x3");
-            eq2.setCategoria("Iluminação");
-            eq2.setMarca("Godox");
-            eq2.setModelo("LED-3x3");
+            eq2.setCategoria("Iluminação"); eq2.setMarca("Godox"); eq2.setModelo("LED-3x3");
             eq2.setNumeroSerie("GDX-300");
-            eq2.setQuantidadeTotal(5);
-            eq2.setQuantidadeDisponivel(5);
+            eq2.setQuantidadeTotal(5); eq2.setQuantidadeDisponivel(5);
             eq2.setValorPorHora(40.0);
             eq2 = equipamentoRepository.save(eq2);
 
             Equipamento eq3 = new Equipamento();
             eq3.setNome("Tripé");
-            eq3.setCategoria("Suporte");
-            eq3.setMarca("Tripex");
-            eq3.setModelo("Novo");
+            eq3.setCategoria("Suporte"); eq3.setMarca("Tripex"); eq3.setModelo("Novo");
             eq3.setNumeroSerie("DEL-E14");
-            eq3.setQuantidadeTotal(50);
-            eq3.setQuantidadeDisponivel(50);
+            eq3.setQuantidadeTotal(50); eq3.setQuantidadeDisponivel(50);
             eq3.setValorPorHora(40.0);
-            eq3 = equipamentoRepository.save(eq3);
+            equipamentoRepository.save(eq3);
 
             System.out.println("✔ Equipamentos criados");
         }
 
-        // ========================
-        //  SERVIÇO
-        // ========================
-        if (servicoRepository.count() == 0) {
-
+        // SERVIÇO
+        if (servicoRepository.findAll().isEmpty()) {
             List<Equipamento> equipamentos = equipamentoRepository.findAll();
-            equipamentos.removeLast();
+            if (!equipamentos.isEmpty()) equipamentos.remove(equipamentos.size() - 1);
 
             Servico serv = new Servico();
             serv.setNome("Cobertura de Evento - Foto/Vídeo");
@@ -131,104 +100,61 @@ public class SampleDataLoader implements CommandLineRunner {
             serv.setHoras(1);
             serv.setValorPorHora(200.0);
             serv.setEquipamentos(equipamentos);
-
             servicoRepository.save(serv);
-
             System.out.println("✔ Serviço criado");
         }
 
-        // ========================
-        //  PROFISSIONAL
-        // ========================
-        if (profissionalRepository.count() == 0) {
-
-            Profissional p = new Profissional(
-                    "Haidê Landim",
-                    "Disponível",
-                    "haide.landim@outlook.com"
-            );
-
+        // PROFISSIONAL
+        if (profissionalRepository.findAll().isEmpty()) {
+            Profissional p = new Profissional("Haidê Landim", "Disponível", "haide.landim@outlook.com");
             profissionalRepository.save(p);
-
             System.out.println("✔ Profissional criado");
         }
 
-        // ========================
-        //  ORÇAMENTO (novo bloco)
-        // ========================
-        if (orcamentoRepository.count() == 0) {
-            // Pega entidades já salvas
-            List<Servico> servicosExistentes = servicoRepository.findAll();
-            List<Equipamento> equipamentosExistentes = equipamentoRepository.findAll();
-            List<Profissional> profissionaisExistentes = profissionalRepository.findAll();
+        // ORÇAMENTO
+        if (orcamentoRepository.findAll().isEmpty()) {
+            List<Equipamento>  eqs   = equipamentoRepository.findAll();
+            List<Servico>      servs = servicoRepository.findAll();
+            List<Profissional> profs = profissionalRepository.findAll();
 
-            equipamentosExistentes.removeLast();
+            List<Equipamento> eqsOrc = new ArrayList<>(eqs);
+            if (!eqsOrc.isEmpty()) eqsOrc.remove(eqsOrc.size() - 1);
 
-            // Monta um orçamento simples usando os campos do model/construtor
             Orcamento orc = new Orcamento(
-                    new Date(),                    // dataInicio
-                    new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 4), // dataTermino (+4h)
-                    "São Paulo",             // localEvento
-                    "Gravação de frigorífico industrial", // descricao
-                    "Em análise",                  // status (inicial)
-                    0.0,                     // valorTotal (será calculado pelo serviço quando necessário)
-                    null // idCalendar só é usado após orçamento ser aprovado
+                    new Date(),
+                    new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 4),
+                    "São Paulo",
+                    "Gravação de frigorífico industrial",
+                    "Em análise",
+                    0.0,
+                    null
             );
-
-            // Persistir para obter ID
             Orcamento salvo = orcamentoRepository.save(orc);
 
-            // Criar alguns usos de equipamento vinculados ao orçamento
             List<UsoEquipamento> usos = new ArrayList<>();
-
-            if (!equipamentosExistentes.isEmpty()) {
-                // usa o primeiro equipamento com quantidade 1
-                Equipamento e1 = equipamentosExistentes.get(0);
-                UsoEquipamento u1 = new UsoEquipamento();
-                u1.setOrcamento(salvo);
-                u1.setEquipamento(e1);
-                u1.setQuantidadeUsada(1);
-                u1 = usoEquipamentoRepository.save(u1);
-                usos.add(u1);
+            for (int i = 0; i < Math.min(2, eqsOrc.size()); i++) {
+                UsoEquipamento uso = new UsoEquipamento();
+                uso.setOrcamento(salvo);
+                uso.setEquipamento(eqsOrc.get(i));
+                uso.setQuantidadeUsada(1);
+                usos.add(usoEquipamentoRepository.save(uso));
             }
 
-            if (equipamentosExistentes.size() > 1) {
-                Equipamento e2 = equipamentosExistentes.get(1);
-                UsoEquipamento u2 = new UsoEquipamento();
-                u2.setOrcamento(salvo);
-                u2.setEquipamento(e2);
-                u2.setQuantidadeUsada(1);
-                u2 = usoEquipamentoRepository.save(u2);
-                usos.add(u2);
-            }
-
-            // vincular listas many-to-many (se existirem)
-            if (!servicosExistentes.isEmpty()) {
-                salvo.setServicos(servicosExistentes);
-            }
-            if (!profissionaisExistentes.isEmpty()) {
-                salvo.setProfissionais(profissionaisExistentes);
-            }
-            if (!equipamentosExistentes.isEmpty()) {
-                salvo.setEquipamentos(equipamentosExistentes);
-            }
-
-            // anexar usos e recalcular valorTotal simplificado (soma valorPorHora * qtd)
             salvo.setUsosEquipamentos(usos);
-            double total = 0.0;
-            for (UsoEquipamento uso : usos) {
-                if (uso.getEquipamento() != null && uso.getEquipamento().getValorPorHora() != null) {
-                    total += uso.getQuantidadeUsada() * uso.getEquipamento().getValorPorHora();
-                }
-            }
+            salvo.setServicos(servs);
+            salvo.setProfissionais(profs);
+            salvo.setEquipamentos(eqsOrc);
+
+            double total = usos.stream()
+                    .filter(u -> u.getEquipamento() != null && u.getEquipamento().getValorPorHora() != null)
+                    .mapToDouble(u -> u.getQuantidadeUsada() * u.getEquipamento().getValorPorHora())
+                    .sum();
             salvo.setValorTotal(total);
 
-            // salvar novamente com relações completas
             orcamentoRepository.save(salvo);
-
             System.out.println("✔ Orçamento de exemplo criado (id=" + salvo.getId() + ")");
         }
 
-        System.out.println("\n🎉 SampleDataLoader finalizado — H2 populado automaticamente!\n");
+        System.out.println("\n🎉 SampleDataLoader finalizado — H2 populado!\n");
     }
 }

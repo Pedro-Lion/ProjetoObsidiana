@@ -1,139 +1,123 @@
 package com.example.crudObsidiana.interfaces.controller;
 
+import com.example.crudObsidiana.domain.entities.Usuario;
+import com.example.crudObsidiana.domain.ports.UsuarioRepositoryPort;
+import com.example.crudObsidiana.infrastructure.file.FileStorageService;
+import com.example.crudObsidiana.infrastructure.security.TokenService;
 import com.example.crudObsidiana.interfaces.dto.LoginRequestDTO;
 import com.example.crudObsidiana.interfaces.dto.RegisterRequestDTO;
 import com.example.crudObsidiana.interfaces.dto.ResponseDTO;
-import com.example.crudObsidiana.model.Usuario;
-import com.example.crudObsidiana.repository.UsuarioRepository;
-import com.example.crudObsidiana.infrastructure.file.FileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import java.nio.file.Path;
-import java.io.IOException;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 @Tag(name = "Usuários", description = "Operações relacionadas aos usuários")
 @RestController
 @RequestMapping("/api/usuario")
 public class UsuarioController {
-  private final UsuarioRepository repository;
-  private final PasswordEncoder passwordEncoder;
-  private final TokenService tokenService;
-  @Autowired
-  private FileStorageService fileStorageService;
 
-//  CONSTRUCTORS
-  public UsuarioController(
-    UsuarioRepository repository, PasswordEncoder passwordEncoder, TokenService tokenService
-  ) {
-    this.repository = repository;
-    this.passwordEncoder = passwordEncoder;
-    this.tokenService = tokenService;
+  private final UsuarioRepositoryPort usuarioRepository;
+  private final PasswordEncoder       passwordEncoder;
+  private final TokenService          tokenService;
+  private final FileStorageService    fileStorageService;
+
+  @Autowired
+  public UsuarioController(UsuarioRepositoryPort usuarioRepository,
+                           PasswordEncoder passwordEncoder,
+                           TokenService tokenService,
+                           FileStorageService fileStorageService) {
+    this.usuarioRepository  = usuarioRepository;
+    this.passwordEncoder    = passwordEncoder;
+    this.tokenService       = tokenService;
+    this.fileStorageService = fileStorageService;
   }
 
-//  METHODS
+  @GetMapping
   @Operation(summary = "Lista todos os usuários")
   @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso",
           content = @Content(mediaType = "application/json",
                   array = @ArraySchema(schema = @Schema(implementation = Usuario.class))))
-  @GetMapping
   public List<Usuario> listar() {
-    return repository.findAll();
+    return usuarioRepository.findAll();
   }
 
-  @Operation(summary = "Cadastra um novo usuário")
-  @ApiResponse(responseCode = "201", description = "Usuário cadastrado com sucesso",
-          content = @Content(mediaType = "application/json", schema = @Schema(implementation = Usuario.class)))
   @PostMapping("/cadastrar")
+  @Operation(summary = "Cadastra um novo usuário")
+  @ApiResponse(responseCode = "201", description = "Usuário cadastrado com sucesso")
   public ResponseEntity<ResponseDTO> cadastrar(@RequestBody RegisterRequestDTO body) {
-    if (repository.findByEmail(body.email()).orElse(null) != null) {
+    if (usuarioRepository.findByEmail(body.email()).isPresent()) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
-
-    Usuario novoUsuario = new Usuario();
-    novoUsuario.setNome(body.nome());
-    novoUsuario.setEmail(body.email());
-    novoUsuario.setSenha(passwordEncoder.encode(body.senha()));
-
-    repository.save(novoUsuario);
-
-    ResponseDTO response =
-      new ResponseDTO(novoUsuario.getNome(), novoUsuario.getEmail(), null);
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    Usuario novo = new Usuario();
+    novo.setNome(body.nome());
+    novo.setEmail(body.email());
+    novo.setSenha(passwordEncoder.encode(body.senha()));
+    usuarioRepository.save(novo);
+    return ResponseEntity.status(HttpStatus.CREATED)
+            .body(new ResponseDTO(novo.getNome(), novo.getEmail(), null));
   }
 
-  @Value("${auth.microservice.url:http://localhost:8081}")
-  private String authServiceUrl;
-
-  private final RestTemplate restTemplate = new RestTemplate();
   @PostMapping("/login")
+  @Operation(summary = "Login de um usuário")
+  @ApiResponse(responseCode = "200", description = "Login realizado com sucesso")
   public ResponseEntity<ResponseDTO> login(@RequestBody LoginRequestDTO body) {
-    try {
-      HttpEntity<LoginRequestDTO> entity = new HttpEntity<>(body);
-      ResponseEntity<ResponseDTO> resp = restTemplate.postForEntity(
-              authServiceUrl + "/auth/login", entity, ResponseDTO.class);
-      return ResponseEntity.status(resp.getStatusCode()).body(resp.getBody());
-    } catch (HttpClientErrorException e) {
-      return ResponseEntity.status(e.getStatusCode()).build();
+    Usuario usuario = usuarioRepository.findByEmail(body.email()).orElse(null);
+    if (usuario == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    if (!passwordEncoder.matches(body.senha(), usuario.getSenha())) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+    String token = tokenService.generateToken(usuario);
+    return ResponseEntity.ok(new ResponseDTO(usuario.getNome(), usuario.getEmail(), token));
   }
 
   @PostMapping("/{id}/imagem")
-  public ResponseEntity<?> uploadImagemUsuario(@PathVariable Long id,
-                                               @RequestParam("arquivo") MultipartFile arquivo) {
+  @Operation(summary = "Upload de imagem para usuário")
+  public ResponseEntity<?> uploadImagem(@PathVariable Long id,
+                                        @RequestParam("arquivo") MultipartFile arquivo) {
     try {
-      if (!repository.existsById(id)) {
-        return ResponseEntity.notFound().build();
-      }
-
-      Path caminho = fileStorageService.salvarArquivo(arquivo);
-
-      Usuario usuario = repository.findById(id).get();
+      if (!usuarioRepository.existsById(id)) return ResponseEntity.notFound().build();
+      Path caminho    = fileStorageService.salvarArquivo(arquivo);
+      Usuario usuario = usuarioRepository.findById(id).orElseThrow();
       usuario.setNomeArquivoImagem(caminho.getFileName().toString());
       usuario.setTipoImagem(arquivo.getContentType());
       usuario.setCaminhoImagem(caminho.toString());
-
-      repository.save(usuario);
-      return ResponseEntity.ok(usuario);
+      return ResponseEntity.ok(usuarioRepository.save(usuario));
     } catch (IOException e) {
       return ResponseEntity.internalServerError().body("Erro ao salvar arquivo: " + e.getMessage());
     }
   }
 
   @GetMapping("/{id}/imagem")
-  public ResponseEntity<byte[]> baixarImagemUsuario(@PathVariable Long id) {
-    java.util.Optional<Usuario> opt = repository.findById(id);
+  @Operation(summary = "Download/visualizar imagem do usuário")
+  public ResponseEntity<byte[]> baixarImagem(@PathVariable Long id) {
+    Optional<Usuario> opt = usuarioRepository.findById(id);
     if (opt.isEmpty()) return ResponseEntity.notFound().build();
-
-    Usuario usr = opt.get();
-    String nomeArquivo = usr.getNomeArquivoImagem();
-    if (nomeArquivo == null || nomeArquivo.isEmpty()) return ResponseEntity.notFound().build();
-
+    Usuario usr    = opt.get();
+    String nome    = usr.getNomeArquivoImagem();
+    if (nome == null || nome.isEmpty()) return ResponseEntity.notFound().build();
     try {
-      byte[] dados = fileStorageService.lerArquivo(nomeArquivo);
-      String tipo = usr.getTipoImagem();
-      if (tipo == null || tipo.isEmpty()) tipo = MediaType.APPLICATION_OCTET_STREAM_VALUE;
-
+      byte[] dados = fileStorageService.lerArquivo(nome);
+      String tipo  = (usr.getTipoImagem() == null || usr.getTipoImagem().isEmpty())
+              ? MediaType.APPLICATION_OCTET_STREAM_VALUE : usr.getTipoImagem();
       return ResponseEntity.ok()
-              .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + nomeArquivo + "\"")
+              .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + nome + "\"")
               .contentType(MediaType.parseMediaType(tipo))
               .body(dados);
     } catch (IOException e) {
       return ResponseEntity.notFound().build();
     }
   }
-
-}//FIM CLASSE
+}

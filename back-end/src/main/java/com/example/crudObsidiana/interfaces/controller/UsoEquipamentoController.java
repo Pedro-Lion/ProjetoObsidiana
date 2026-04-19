@@ -4,12 +4,10 @@ import com.example.crudObsidiana.domain.entities.UsoEquipamento;
 import com.example.crudObsidiana.domain.ports.UsoEquipamentoRepositoryPort;
 import com.example.crudObsidiana.domain.use_cases.UsoEquipamentoUseCase;
 import com.example.crudObsidiana.interfaces.dto.UsoEquipamentoDTO;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,7 +35,7 @@ public class UsoEquipamentoController {
     @PostMapping
     @Operation(summary = "Registra o uso de um equipamento em um orçamento ou serviço")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Uso de equipamento registrado com sucesso"),
+            @ApiResponse(responseCode = "201", description = "Uso registrado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos ou campos obrigatórios ausentes")
     })
     public ResponseEntity<UsoEquipamento> criarUso(@Valid @RequestBody UsoEquipamentoDTO dto) {

@@ -1,88 +1,61 @@
 package com.example.crudObsidiana.infrastructure.observer;
 
 import com.example.crudObsidiana.domain.entities.Equipamento;
-import com.example.crudObsidiana.model.Orcamento;
-import com.example.crudObsidiana.model.UsoEquipamento;
-import com.example.crudObsidiana.repository.EquipamentoRepository;
-import com.example.crudObsidiana.repository.UsoEquipamentoRepository;
+import com.example.crudObsidiana.domain.entities.Orcamento;
+import com.example.crudObsidiana.domain.entities.UsoEquipamento;
+import com.example.crudObsidiana.domain.ports.EquipamentoRepositoryPort;
+import com.example.crudObsidiana.domain.ports.UsoEquipamentoRepositoryPort;
+import com.example.crudObsidiana.domain.use_cases.OrcamentoObserver;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-// Esse Observer atualiza o estoque de equipamentos sempre que um orçamento entra ou sai do status "Confirmado".
+/**
+ * Implementação concreta do OrcamentoObserver.
+ * Atualiza estoque quando orçamento entra/sai do status "Confirmado".
+ * Usa Ports — nunca JpaRepository diretamente.
+ */
 @Component
 public class EquipamentoObserver implements OrcamentoObserver {
 
+    private final EquipamentoRepositoryPort    equipamentoRepository;
+    private final UsoEquipamentoRepositoryPort usoEquipamentoRepository;
+
     @Autowired
-    private EquipamentoRepository equipamentoRepository;
-    @Autowired
-    private UsoEquipamentoRepository usoEquipamentoRepository;
+    public EquipamentoObserver(EquipamentoRepositoryPort equipamentoRepository,
+                               UsoEquipamentoRepositoryPort usoEquipamentoRepository) {
+        this.equipamentoRepository    = equipamentoRepository;
+        this.usoEquipamentoRepository = usoEquipamentoRepository;
+    }
+
     @Override
     @Transactional
     public void onOrcamentoUpdated(Orcamento orcamento,
                                    String statusAnterior,
                                    String novoStatus) {
 
-        // Normaliza para evitar NullPointer
-        boolean eraConfirmado = "Confirmado".equalsIgnoreCase(
-                statusAnterior != null ? statusAnterior : ""
-        );
-        boolean ehConfirmado = "Confirmado".equalsIgnoreCase(
-                novoStatus != null ? novoStatus : ""
-        );
+        boolean eraConfirmado = "Confirmado".equalsIgnoreCase(statusAnterior != null ? statusAnterior : "");
+        boolean ehConfirmado  = "Confirmado".equalsIgnoreCase(novoStatus     != null ? novoStatus     : "");
 
-        // Se não houve transição relativa a "Confirmado", não mexe em estoque
-        if (eraConfirmado == ehConfirmado) {
-            System.out.printf(
-                    "\n[Observer] Orçamento %d teve status alterado ('%s' -> '%s'), " +
-                            "mas não houve transição de/para 'Confirmado'. Estoque inalterado.%n",
-                    orcamento.getId(), statusAnterior, novoStatus
-            );
-            return;
-        }
+        if (eraConfirmado == ehConfirmado) return; // sem transição relevante
 
-        System.out.println("\n[Observer] Atualização de orçamento detectada para estoque.");
-        System.out.printf("Orçamento ID: %d | Status: '%s' ➜ '%s'%n",
-                orcamento.getId(), statusAnterior, novoStatus);
+        List<UsoEquipamento> usos = usoEquipamentoRepository.findByOrcamentoId(orcamento.getId());
+        if (usos == null || usos.isEmpty()) return;
 
-        // Busca todos os usos de equipamento vinculados a esse orçamento
-        List<UsoEquipamento> usos = usoEquipamentoRepository.findByOrcamento_Id(orcamento.getId());
-
-        if (usos == null || usos.isEmpty()) {
-            System.out.println("Nenhum uso de equipamento associado a este orçamento.");
-            return;
-        }
-
-        boolean reservar = !eraConfirmado && ehConfirmado;   // entrou em Confirmado
-        boolean devolver = eraConfirmado && !ehConfirmado;   // saiu de Confirmado
+        boolean reservar = !eraConfirmado && ehConfirmado;
+        boolean devolver =  eraConfirmado && !ehConfirmado;
 
         for (UsoEquipamento uso : usos) {
-            Long idEquipamento = uso.getEquipamento().getId();
+            Long idEq = uso.getEquipamento().getId();
+            Equipamento eq = equipamentoRepository.findById(idEq)
+                    .orElseThrow(() -> new RuntimeException("Equipamento não encontrado: " + idEq));
 
-            Equipamento eq = equipamentoRepository.findById(idEquipamento)
-                    .orElseThrow(() -> new RuntimeException(
-                            "Equipamento não encontrado (ID: " + idEquipamento + ")"
-                    ));
-
-            Integer antes = eq.getQuantidadeDisponivel();
-            Integer quantidadeUsada = uso.getQuantidadeUsada();
-
-            if (reservar) {
-                eq.reduzirQuantidade(quantidadeUsada);
-                System.out.printf(" - RESERVA %s: disp. %d → %d (usou %d)%n",
-                        eq.getNome(), antes, eq.getQuantidadeDisponivel(), quantidadeUsada);
-            } else if (devolver) {
-                eq.devolverQuantidade(quantidadeUsada);
-                System.out.printf(" - DEVOLVE %s: disp. %d → %d (devolveu %d)%n",
-                        eq.getNome(), antes, eq.getQuantidadeDisponivel(), quantidadeUsada);
-            }
+            if (reservar) eq.reduzirQuantidade(uso.getQuantidadeUsada());
+            else if (devolver) eq.devolverQuantidade(uso.getQuantidadeUsada());
 
             equipamentoRepository.save(eq);
         }
-
-        System.out.println("Estoque de equipamentos atualizado com sucesso.\n");
     }
-
-} // FIM CLASSE
+}

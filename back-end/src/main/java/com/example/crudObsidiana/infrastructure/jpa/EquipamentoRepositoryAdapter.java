@@ -28,8 +28,7 @@ public class EquipamentoRepositoryAdapter implements EquipamentoRepositoryPort {
     @Override
     public List<Equipamento> findAll() {
         return jpaRepository.findAll().stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
+                .map(mapper::toDomain).collect(Collectors.toList());
     }
 
     @Override
@@ -44,19 +43,20 @@ public class EquipamentoRepositoryAdapter implements EquipamentoRepositoryPort {
 
     @Override
     public List<Equipamento> saveAll(List<Equipamento> equipamentos) {
-        List<EquipamentoJpaEntity> jpaList = equipamentos.stream()
-                .map(mapper::toJpaEntity)
-                .collect(Collectors.toList());
-        return jpaRepository.saveAll(jpaList).stream()
-                .map(mapper::toDomain)
+        return equipamentos.stream()
+                .map(e -> mapper.toDomain(jpaRepository.save(mapper.toJpaEntity(e))))
                 .collect(Collectors.toList());
     }
 
     @Override
+    public List<Equipamento> findAllById(List<Long> ids) {
+        return jpaRepository.findAllById(ids).stream()
+                .map(mapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public List<Equipamento> findEquipamentosByOrcamentoId(Long orcamentoId) {
-        return jpaRepository.findEquipamentosByOrcamentoId(orcamentoId)
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
+        return jpaRepository.findEquipamentosByOrcamentoId(orcamentoId).stream()
+                .map(mapper::toDomain).collect(Collectors.toList());
     }
 }
