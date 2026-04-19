@@ -206,6 +206,12 @@ export function Equipamentos() {
 
       {!loading && !error && (
         <>
+          {totalElementos > 0 && (
+            <p className="text-slate-400 text-[1.1rem] mb-4">
+              {totalElementos} equipamento{totalElementos !== 1 ? "s" : ""} encontrado{totalElementos !== 1 ? "s" : ""}
+            </p>
+          )}
+
           <section className="flex flex-wrap gap-5">
             {filtrado.length !== 0 ? (
               filtrado.map((e) => (

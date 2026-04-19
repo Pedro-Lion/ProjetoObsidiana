@@ -147,7 +147,7 @@ export function Profissionais() {
         <>
           {totalElementos > 0 && (
             <p className="text-slate-400 text-[1.1rem] mb-4">
-              {totalElementos} profissional{totalElementos !== 1 ? "is" : ""} cadastrado{totalElementos !== 1 ? "s" : ""}
+              {totalElementos} profissional{totalElementos !== 1 ? "is" : ""} encontrado{totalElementos !== 1 ? "s" : ""}
             </p>
           )}
 

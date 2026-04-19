@@ -147,7 +147,7 @@ export function Servicos() {
         <>
           {totalElementos > 0 && (
             <p className="text-slate-400 text-[1.1rem] mb-4">
-              {totalElementos} serviço{totalElementos !== 1 ? "s" : ""} cadastrado{totalElementos !== 1 ? "s" : ""}
+              {totalElementos} serviço{totalElementos !== 1 ? "s" : ""} encontrado{totalElementos !== 1 ? "s" : ""}
             </p>
           )}
 
