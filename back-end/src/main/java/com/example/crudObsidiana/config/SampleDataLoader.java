@@ -169,12 +169,18 @@ public class SampleDataLoader implements CommandLineRunner {
 
         if (profissionalRepository.count() == 0) {
 
+            // Categorias de profissionais de audiovisual para variar os dados de exemplo
+            String[] categorias = {"Fotógrafo", "Videógrafo", "Editor", "Diretor de Arte", "Operador de Drone"};
+
             for (int i = 1; i <= 20; i++) {
                 Profissional p = new Profissional(
                         "Profissional " + i,
                         i % 2 == 0 ? "Disponível" : "Ocupado",
                         "profissional" + i + "@email.com"
                 );
+
+                // Rotaciona entre as categorias usando o índice do loop
+                p.setCategoria(categorias[i % categorias.length]);
 
                 profissionalRepository.save(p);
             }

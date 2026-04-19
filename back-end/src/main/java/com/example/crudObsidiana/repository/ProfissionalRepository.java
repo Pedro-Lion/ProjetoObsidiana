@@ -12,19 +12,21 @@ public interface ProfissionalRepository extends JpaRepository<Profissional, Long
     Page<Profissional> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
 
     // Busca em todos os campos relevantes do profissional (case-insensitive)
-    // Permite pesquisar por nome, disponibilidade e contato
+    // Permite pesquisar por nome, disponibilidade, contato e categoria
     @Query(
             value = """
             SELECT * FROM profissional p
             WHERE LOWER(COALESCE(p.nome,            '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(p.disponibilidade, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(p.contato,         '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(p.categoria,       '')) LIKE LOWER(CONCAT('%', :busca, '%'))
             """,
             countQuery = """
             SELECT COUNT(*) FROM profissional p
             WHERE LOWER(COALESCE(p.nome,            '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(p.disponibilidade, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(p.contato,         '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(p.categoria,       '')) LIKE LOWER(CONCAT('%', :busca, '%'))
             """,
             nativeQuery = true
     )

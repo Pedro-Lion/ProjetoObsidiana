@@ -226,6 +226,12 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
             onInput={(e) => setProfissional({ ...profissional, contato: e.target.value })}
             value={profissional.contato ?? ""}
           />
+          <InputBordaLabel
+            titulo="Categoria"
+            placeholder="Ex: Fotógrafo, Videógrafo, Editor..."
+            value={profissional.categoria ?? ""}
+            onInput={(e) => setProfissional({ ...profissional, categoria: e.target.value })}
+          />
         </div>
 
         <div className="flex gap-3 mt-10">

@@ -17,6 +17,9 @@ public class ProfissionalService {
             dto.getNome(), dto.getDisponibilidade(), dto.getContato()
         );
 
+        // Define a categoria, se informada no DTO
+        novoProfissional.setCategoria(dto.getCategoria());
+
         return profissionalRepository.save(novoProfissional);
     }
 }

@@ -112,11 +112,11 @@ export function Profissionais() {
     setModalOpen(true);
   };
 
-  // Filtro local dentro da página atual
+  // Filtro local dentro da página atual (inclui categoria)
   const profissionaisFiltrados = profissionais.filter((p) => {
     if (!search.trim()) return true;
     const termo = search.toLowerCase();
-    const campos = [p.nome, p.disponibilidade, p.contato, p.funcao];
+    const campos = [p.nome, p.disponibilidade, p.contato, p.categoria, p.funcao];
     return campos.filter(Boolean).some((c) => c.toLowerCase().includes(termo));
   });
 
@@ -134,7 +134,7 @@ export function Profissionais() {
         <InputBordaLabel
           type="text"
           titulo="Buscar"
-          placeholder="Nome, disponibilidade, contato..."
+          placeholder="Nome, disponibilidade, contato, categoria..."
           value={search}
           onInput={(e) => setSearch(e.target.value)}
           className=""
