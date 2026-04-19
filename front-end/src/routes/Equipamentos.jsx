@@ -2,12 +2,14 @@ import { useEffect, useState, useRef } from "react";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
-import { InputCheckbox } from "../components/Inputs/InputCheckbox";
 import { api } from "../api.js";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../components/Modal/Modal.jsx";
 import { ModalFormulario } from "../components/Modal/ModalFormulario.jsx";
 import { CadastroEquipamentos } from "./CadastroEquipamento.jsx";
+import { Paginacao } from "../components/Paginacao.jsx";
+
+const ITENS_POR_PAGINA = 5;
 
 export function Equipamentos() {
   const navigate = useNavigate();
@@ -17,6 +19,11 @@ export function Equipamentos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
+
+  // Paginação
+  const [paginaAtual, setPaginaAtual] = useState(0);
+  const [totalPaginas, setTotalPaginas] = useState(0);
+  const [totalElementos, setTotalElementos] = useState(0);
 
   // Modal de confirmação/exclusão
   const [modalOpen, setModalOpen] = useState(false);
@@ -29,19 +36,12 @@ export function Equipamentos() {
 
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
-  /* ── Carregamento da lista ── */
-  function recarregarLista() {
-    // Remonta o useEffect relançando a busca
-    setLoading(true);
-    buscarEquipamentos();
-  }
-
+  /* ── Carrega previews de imagem ── */
   async function carregarPreviews(equipamentos) {
     if (previewsRef.current?.length) {
       previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) { } });
       previewsRef.current = [];
     }
-
     const token = sessionStorage.getItem("token");
     const promessas = equipamentos.map(async (eq) => {
       if (!eq.nomeArquivoImagem) return { ...eq, preview: null };
@@ -65,14 +65,23 @@ export function Equipamentos() {
     return Promise.all(promessas);
   }
 
-  async function buscarEquipamentos() {
+  /* ── Busca paginada ── */
+  async function buscarEquipamentos(pagina = 0, termo = search) {
+    setLoading(true);
+    setError(null);
     try {
-      const resposta = await api.get("/equipamento", {
+      const resposta = await api.get("/equipamento/paginado", {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+        params: { page: pagina, size: ITENS_POR_PAGINA, busca: termo },
       });
-      if (resposta.status === 200 && Array.isArray(resposta.data)) {
-        const withPreviews = await carregarPreviews(resposta.data);
+
+      if (resposta.status === 200) {
+        const paginaData = resposta.data;
+        const withPreviews = await carregarPreviews(paginaData.content);
         setData(withPreviews);
+        setTotalPaginas(paginaData.totalPages);
+        setTotalElementos(paginaData.totalElements);
+        setPaginaAtual(paginaData.number);
       } else {
         setData([]);
       }
@@ -85,23 +94,30 @@ export function Equipamentos() {
     }
   }
 
+  // Debounce: busca no backend 400ms após parar de digitar
   useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    setError(null);
+    const timer = setTimeout(() => {
+      buscarEquipamentos(0, search);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
-    buscarEquipamentos().then(() => {
-      if (!mounted) return;
-    });
-
+  useEffect(() => {
+    buscarEquipamentos(0, "");
     return () => {
-      mounted = false;
       if (previewsRef.current?.length) {
         previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) { } });
         previewsRef.current = [];
       }
     };
   }, []);
+
+  /* ── Troca de página ── */
+  function mudarPagina(novaPagina) {
+    if (novaPagina < 0 || novaPagina >= totalPaginas) return;
+    buscarEquipamentos(novaPagina);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   /* ── Deletar ── */
   const deletar = (equipamento) => {
@@ -116,17 +132,18 @@ export function Equipamentos() {
               await api.delete(`/equipamento/${equipamento.id}`, {
                 headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
               });
-              setData((prev) => prev.filter((e) => e.id !== equipamento.id));
+              // Volta para a página anterior se a atual ficou vazia
+              const novaPagina = data.length === 1 && paginaAtual > 0
+                ? paginaAtual - 1
+                : paginaAtual;
               setModalOpen(false);
+              buscarEquipamentos(novaPagina);
             } catch (err) {
               console.error(err);
               setModalTitulo("Erro");
               setModalDescricao("Não foi possível excluir. Tente novamente.");
               setModalActions(
-                <button
-                  className="bg-gray-300 px-4 py-2 rounded"
-                  onClick={() => setModalOpen(false)}
-                >
+                <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
                   Fechar
                 </button>
               );
@@ -135,10 +152,7 @@ export function Equipamentos() {
         >
           Excluir
         </button>
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
+        <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
           Cancelar
         </button>
       </>
@@ -146,6 +160,7 @@ export function Equipamentos() {
     setModalOpen(true);
   };
 
+  /* ── Filtro local (dentro da página atual) ── */
   const filtrado = data.filter((e) =>
     e.nome?.toLowerCase().includes(search.toLowerCase())
   );
@@ -160,33 +175,45 @@ export function Equipamentos() {
         />
       </div>
 
-      <InputBordaLabel
-        titulo="Buscar"
-        placeholder="Buscar por nome..."
-        value={search}
-        onInput={(e) => setSearch(e.target.value)}
-        className="mb-6 max-w-sm"
-      />
+      <div className="w-full pr-5">
+        <InputBordaLabel
+          type="text"
+          titulo="Buscar"
+          placeholder="Nome, categoria ou marca"
+          value={search}
+          onInput={(e) => setSearch(e.target.value)}
+          className=""
+        />
+      </div>
 
       {loading && <p className="text-xl">Carregando equipamentos...</p>}
       {error && <p className="text-red-500">{error}</p>}
 
       {!loading && !error && (
-        <section className="flex flex-wrap gap-5">
-          {filtrado.length !== 0 ? (
-            filtrado.map((e) => (
-              <ContainerListagem
-                key={e.id}
-                dados={e}
-                preview={e.preview}
-                onClickDel={() => deletar(e)}
-                onClickEdit={() => navigate(`/editar/equipamento/${e.id}`, { state: e })}
-              />
-            ))
-          ) : (
-            <p className="text-xl">Nenhum equipamento encontrado.</p>
-          )}
-        </section>
+        <>
+          <section className="flex flex-wrap gap-5">
+            {data.length !== 0 ? (
+              data.map((e) => (
+                <ContainerListagem
+                  key={e.id}
+                  dados={e}
+                  preview={e.preview}
+                  onClickDel={() => deletar(e)}
+                  onClickEdit={() => navigate(`/editar/equipamento/${e.id}`, { state: e })}
+                />
+              ))
+            ) : (
+              <p className="text-xl">Nenhum equipamento encontrado{search ? ` para "${search}"` : ""}.</p>
+            )}
+          </section>
+
+          {/* Paginação */}
+          <Paginacao
+            paginaAtual={paginaAtual}
+            totalPaginas={totalPaginas}
+            onMudarPagina={mudarPagina}
+          />
+        </>
       )}
 
       {/* Modal de confirmação/exclusão */}
@@ -205,7 +232,7 @@ export function Equipamentos() {
           <CadastroEquipamentos
             onSucesso={() => {
               setModalCadastroAberta(false);
-              recarregarLista();
+              buscarEquipamentos(paginaAtual);
             }}
             onCancelar={() => setModalCadastroAberta(false)}
           />

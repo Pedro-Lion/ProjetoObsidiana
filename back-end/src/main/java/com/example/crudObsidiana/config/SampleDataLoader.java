@@ -81,38 +81,50 @@ public class SampleDataLoader implements CommandLineRunner {
         // ========================
         if (equipamentoRepository.count() == 0) {
 
-            Equipamento eq1 = new Equipamento();
-            eq1.setNome("Câmera Canon EOS R6");
-            eq1.setCategoria("Câmeras");
-            eq1.setMarca("Canon");
-            eq1.setModelo("R6");
-            eq1.setNumeroSerie("CAN-R6-001");
-            eq1.setQuantidadeTotal(3);
-            eq1.setQuantidadeDisponivel(3);
-            eq1.setValorPorHora(150.0);
-            eq1 = equipamentoRepository.save(eq1);
+//            Equipamento eq1 = new Equipamento();
+//            eq1.setNome("Câmera Canon EOS R6");
+//            eq1.setCategoria("Câmeras");
+//            eq1.setMarca("Canon");
+//            eq1.setModelo("R6");
+//            eq1.setNumeroSerie("CAN-R6-001");
+//            eq1.setQuantidadeTotal(3);
+//            eq1.setQuantidadeDisponivel(3);
+//            eq1.setValorPorHora(150.0);
+//            eq1 = equipamentoRepository.save(eq1);
+//
+//            Equipamento eq2 = new Equipamento();
+//            eq2.setNome("Ilha de Luz LED 3x3");
+//            eq2.setCategoria("Iluminação");
+//            eq2.setMarca("Godox");
+//            eq2.setModelo("LED-3x3");
+//            eq2.setNumeroSerie("GDX-300");
+//            eq2.setQuantidadeTotal(5);
+//            eq2.setQuantidadeDisponivel(5);
+//            eq2.setValorPorHora(40.0);
+//            eq2 = equipamentoRepository.save(eq2);
+//
+//            Equipamento eq3 = new Equipamento();
+//            eq3.setNome("Tripé");
+//            eq3.setCategoria("Suporte");
+//            eq3.setMarca("Tripex");
+//            eq3.setModelo("Novo");
+//            eq3.setNumeroSerie("DEL-E14");
+//            eq3.setQuantidadeTotal(50);
+//            eq3.setQuantidadeDisponivel(50);
+//            eq3.setValorPorHora(40.0);
+//            eq3 = equipamentoRepository.save(eq3);
+            for (int i = 1; i <= 20; i++) {
+                Equipamento eq = new Equipamento();
+                eq.setNome("Equipamento " + i);
+                eq.setCategoria(i % 2 == 0 ? "Áudio" : "Vídeo");
+                eq.setMarca("Marca " + i);
+                eq.setModelo("Modelo X" + i);
+                eq.setNumeroSerie("SERIE-" + i);
+                eq.setQuantidadeTotal(5 + i);
+                eq.setValorPorHora(50.0 + (i * 10));
 
-            Equipamento eq2 = new Equipamento();
-            eq2.setNome("Ilha de Luz LED 3x3");
-            eq2.setCategoria("Iluminação");
-            eq2.setMarca("Godox");
-            eq2.setModelo("LED-3x3");
-            eq2.setNumeroSerie("GDX-300");
-            eq2.setQuantidadeTotal(5);
-            eq2.setQuantidadeDisponivel(5);
-            eq2.setValorPorHora(40.0);
-            eq2 = equipamentoRepository.save(eq2);
-
-            Equipamento eq3 = new Equipamento();
-            eq3.setNome("Tripé");
-            eq3.setCategoria("Suporte");
-            eq3.setMarca("Tripex");
-            eq3.setModelo("Novo");
-            eq3.setNumeroSerie("DEL-E14");
-            eq3.setQuantidadeTotal(50);
-            eq3.setQuantidadeDisponivel(50);
-            eq3.setValorPorHora(40.0);
-            eq3 = equipamentoRepository.save(eq3);
+                eq = equipamentoRepository.save(eq);
+            }
 
             System.out.println("✔ Equipamentos criados");
         }
@@ -125,32 +137,48 @@ public class SampleDataLoader implements CommandLineRunner {
             List<Equipamento> equipamentos = equipamentoRepository.findAll();
             equipamentos.removeLast();
 
-            Servico serv = new Servico();
-            serv.setNome("Cobertura de Evento - Foto/Vídeo");
-            serv.setDescricao("Serviço com câmera e iluminação.");
-            serv.setHoras(1);
-            serv.setValorPorHora(200.0);
-            serv.setEquipamentos(equipamentos);
+//            Servico serv = new Servico();
+//            serv.setNome("Cobertura de Evento - Foto/Vídeo");
+//            serv.setDescricao("Serviço com câmera e iluminação.");
+//            serv.setHoras(1);
+//            serv.setValorPorHora(200.0);
+//            serv.setEquipamentos(equipamentos);
+//
+//            servicoRepository.save(serv);
 
-            servicoRepository.save(serv);
+            for (int i = 1; i <= 20; i++) {
+                Servico serv = new Servico();
+                serv.setNome("Serviço " + i);
+                serv.setDescricao("Descrição do serviço " + i);
+                serv.setHoras(2 + i);
+                serv.setValorPorHora(100.0 + (i * 20));
 
-            System.out.println("✔ Serviço criado");
+                // associa 2 equipamentos por serviço
+                serv.setEquipamentos(equipamentos);
+
+                servicoRepository.save(serv);
+            }
+
+            System.out.println("✔ Serviços criados");
         }
 
         // ========================
         //  PROFISSIONAL
         // ========================
+
         if (profissionalRepository.count() == 0) {
 
-            Profissional p = new Profissional(
-                    "Haidê Landim",
-                    "Disponível",
-                    "haide.landim@outlook.com"
-            );
+            for (int i = 1; i <= 20; i++) {
+                Profissional p = new Profissional(
+                        "Profissional " + i,
+                        i % 2 == 0 ? "Disponível" : "Ocupado",
+                        "profissional" + i + "@email.com"
+                );
 
-            profissionalRepository.save(p);
+                profissionalRepository.save(p);
+            }
 
-            System.out.println("✔ Profissional criado");
+            System.out.println("✔ Profissionais criados");
         }
 
         // ========================
