@@ -87,23 +87,26 @@ export function CardServico({
         {equipamentos}
       </ul>
 
-      <div className="h-20 p-3 border-t border-indigo-100 flex justify-end items-center">
-        <BotaoSecundario
-          titulo="Editar"
-          icone="bi bi-pencil"
-          className="mt-0 mb-0"
-          onClick={() =>
-            navigate("/editar/servico/" + dados.id, {
-              state: dados,
-            })
-          }
-        />
-        <BotaoPrimario
-          titulo="Excluir"
-          icone="bi bi-trash3 text-xl"
-          className="ml-2 mt-0 mb-0"
+      {/* Footer com botões de largura total separados por borda vertical */}
+      <div className="h-14 border-t border-indigo-100 flex shrink-0">
+        <button
+          onClick={() => navigate("/editar/servico/" + dados.id, { state: dados })}
+          className="flex-1 flex items-center justify-center gap-2 text-xl text-slate-500 hover:text-indigo-500 hover:bg-indigo-50 transition duration-200 rounded-bl-xl"
+        >
+          <i className="bi bi-pencil"></i>
+          Editar
+        </button>
+
+        {/* Divisor vertical */}
+        <div className="w-px bg-indigo-100" />
+
+        <button
           onClick={onClickDel}
-        />
+          className="flex-1 flex items-center justify-center gap-2 text-xl text-slate-500 hover:text-red-400 hover:bg-red-50 transition duration-200 rounded-br-xl"
+        >
+          <i className="bi bi-trash3"></i>
+          Excluir
+        </button>
       </div>
     </div>
   );
