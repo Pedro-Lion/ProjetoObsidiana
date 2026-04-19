@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { CardServico } from "../components/Cards/CardServico";
 import { Modal } from "../components/Modal/Modal.jsx";
-import { Paginacao } from "../components/Paginacao.jsx";
+import { Paginacao } from "../components/Paginacao/Paginacao.jsx";
 
 const ITENS_POR_PAGINA = 6;
 

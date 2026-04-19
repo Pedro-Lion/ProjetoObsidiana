@@ -7,7 +7,7 @@ import { ContainerProfissional } from "../components/Containers/ContainerProfiss
 import { Modal } from "../components/Modal/Modal.jsx";
 import { ModalFormulario } from "../components/Modal/ModalFormulario.jsx";
 import { CadastroProfissionais } from "./CadastroProfissionais.jsx";
-import { Paginacao } from "../components/Paginacao.jsx";
+import { Paginacao } from "../components/Paginacao/Paginacao.jsx";
 
 const ITENS_POR_PAGINA = 5;
 
