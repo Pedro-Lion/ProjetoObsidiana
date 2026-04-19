@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Random;
 
 @Component
 public class SampleDataLoader implements CommandLineRunner {
@@ -184,77 +185,98 @@ public class SampleDataLoader implements CommandLineRunner {
         // ========================
         //  ORÇAMENTO (novo bloco)
         // ========================
+
         if (orcamentoRepository.count() == 0) {
             // Pega entidades já salvas
             List<Servico> servicosExistentes = servicoRepository.findAll();
             List<Equipamento> equipamentosExistentes = equipamentoRepository.findAll();
             List<Profissional> profissionaisExistentes = profissionalRepository.findAll();
 
-            equipamentosExistentes.removeLast();
-
-            // Monta um orçamento simples usando os campos do model/construtor
-            Orcamento orc = new Orcamento(
-                    new Date(),                    // dataInicio
-                    new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 4), // dataTermino (+4h)
-                    "São Paulo",             // localEvento
-                    "Gravação de frigorífico industrial", // descricao
-                    "Em análise",                  // status (inicial)
-                    0.0,                     // valorTotal (será calculado pelo serviço quando necessário)
-                    null // idCalendar só é usado após orçamento ser aprovado
+            List<String> statusPossiveis = List.of(
+                    "Em análise",
+                    "Confirmado",
+                    "Cancelado"
             );
 
-            // Persistir para obter ID
-            Orcamento salvo = orcamentoRepository.save(orc);
+            equipamentosExistentes.removeLast();
 
-            // Criar alguns usos de equipamento vinculados ao orçamento
-            List<UsoEquipamento> usos = new ArrayList<>();
+            for (int i = 1; i <= 20; i++) {
+                Random random = new Random();
+                // intervalo: hoje até 60 dias no futuro
+                long agora = System.currentTimeMillis();
+                long dias60 = 1000L * 60 * 60 * 24 * 60;
+                // gera data inicial aleatória
+                long inicioMillis = agora + (long) (random.nextDouble() * dias60);
+                Date dataInicio = new Date(inicioMillis);
+                // duração entre 2 e 12 horas
+                long duracaoHoras = 2 + random.nextInt(10);
+                long fimMillis = inicioMillis + (duracaoHoras * 1000L * 60 * 60);
+                Date dataTermino = new Date(fimMillis);
 
-            if (!equipamentosExistentes.isEmpty()) {
-                // usa o primeiro equipamento com quantidade 1
-                Equipamento e1 = equipamentosExistentes.get(0);
-                UsoEquipamento u1 = new UsoEquipamento();
-                u1.setOrcamento(salvo);
-                u1.setEquipamento(e1);
-                u1.setQuantidadeUsada(1);
-                u1 = usoEquipamentoRepository.save(u1);
-                usos.add(u1);
-            }
+                // Monta um orçamento simples usando os campos do model/construtor
+                Orcamento orc = new Orcamento(
+                        dataInicio,
+                        dataTermino,
+                        "Cidade " + i, // localEvento
+                        "Evento exemplo " + i, // descricao
+                        statusPossiveis.get(random.nextInt(statusPossiveis.size())), // status inicial
+                        0.0, // valorTotal (será calculado pelo serviço quando necessário)
+                        null // idCalendar só é usado após orçamento ser aprovado
+                );
 
-            if (equipamentosExistentes.size() > 1) {
-                Equipamento e2 = equipamentosExistentes.get(1);
-                UsoEquipamento u2 = new UsoEquipamento();
-                u2.setOrcamento(salvo);
-                u2.setEquipamento(e2);
-                u2.setQuantidadeUsada(1);
-                u2 = usoEquipamentoRepository.save(u2);
-                usos.add(u2);
-            }
+                // Persistir para obter ID
+                Orcamento salvo = orcamentoRepository.save(orc);
 
-            // vincular listas many-to-many (se existirem)
-            if (!servicosExistentes.isEmpty()) {
-                salvo.setServicos(servicosExistentes);
-            }
-            if (!profissionaisExistentes.isEmpty()) {
-                salvo.setProfissionais(profissionaisExistentes);
-            }
-            if (!equipamentosExistentes.isEmpty()) {
-                salvo.setEquipamentos(equipamentosExistentes);
-            }
+                // Criar alguns usos de equipamento vinculados ao orçamento
+                List<UsoEquipamento> usos = new ArrayList<>();
 
-            // anexar usos e recalcular valorTotal simplificado (soma valorPorHora * qtd)
-            salvo.setUsosEquipamentos(usos);
-            double total = 0.0;
-            for (UsoEquipamento uso : usos) {
-                if (uso.getEquipamento() != null && uso.getEquipamento().getValorPorHora() != null) {
-                    total += uso.getQuantidadeUsada() * uso.getEquipamento().getValorPorHora();
+                if (!equipamentosExistentes.isEmpty()) {
+                    // usa o primeiro equipamento com quantidade variável
+                    Equipamento e1 = equipamentosExistentes.get(i % equipamentosExistentes.size());
+                    UsoEquipamento u1 = new UsoEquipamento();
+                    u1.setOrcamento(salvo);
+                    u1.setEquipamento(e1);
+                    u1.setQuantidadeUsada((i % 3) + 1);
+                    u1 = usoEquipamentoRepository.save(u1);
+                    usos.add(u1);
                 }
+
+                if (equipamentosExistentes.size() > 1) {
+                    Equipamento e2 = equipamentosExistentes.get((i + 1) % equipamentosExistentes.size());
+                    UsoEquipamento u2 = new UsoEquipamento();
+                    u2.setOrcamento(salvo);
+                    u2.setEquipamento(e2);
+                    u2.setQuantidadeUsada((i % 2) + 1);
+                    u2 = usoEquipamentoRepository.save(u2);
+                    usos.add(u2);
+                }
+
+                // vincular listas many-to-many (se existirem)
+                if (!servicosExistentes.isEmpty()) {
+                    salvo.setServicos(servicosExistentes);
+                }
+                if (!profissionaisExistentes.isEmpty()) {
+                    salvo.setProfissionais(profissionaisExistentes);
+                }
+                if (!equipamentosExistentes.isEmpty()) {
+                    salvo.setEquipamentos(equipamentosExistentes);
+                }
+
+                // anexar usos e recalcular valorTotal simplificado (soma valorPorHora * qtd)
+                salvo.setUsosEquipamentos(usos);
+                double total = 0.0;
+                for (UsoEquipamento uso : usos) {
+                    if (uso.getEquipamento() != null && uso.getEquipamento().getValorPorHora() != null) {
+                        total += uso.getQuantidadeUsada() * uso.getEquipamento().getValorPorHora();
+                    }
+                }
+                salvo.setValorTotal(total);
+
+                // salvar novamente com relações completas
+                orcamentoRepository.save(salvo);
+
+                System.out.println("✔ Orçamento de exemplo criado (id=" + salvo.getId() + ")");
             }
-            salvo.setValorTotal(total);
-
-            // salvar novamente com relações completas
-            orcamentoRepository.save(salvo);
-
-            System.out.println("✔ Orçamento de exemplo criado (id=" + salvo.getId() + ")");
         }
 
         System.out.println("\n🎉 SampleDataLoader finalizado — H2 populado automaticamente!\n");
