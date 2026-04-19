@@ -6,18 +6,13 @@ import com.example.crudObsidiana.domain.ports.EquipamentoRepositoryPort;
 import com.example.crudObsidiana.domain.ports.ServicoRepositoryPort;
 import com.example.crudObsidiana.interfaces.dto.ServicoDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Use Case de Serviço — migração do ServicoService original.
- *
- * CORREÇÃO: o ServicoService original não chamava servicoRepository.save(),
- * então o serviço nunca persistia. Corrigido aqui.
- * O ServicoController original compensava chamando repository.save() diretamente —
- * o novo controller não precisa fazer isso.
- */
 @Service
 public class ServicoUseCase {
 
@@ -31,6 +26,9 @@ public class ServicoUseCase {
         this.equipamentoRepository = equipamentoRepository;
     }
 
+    // =========================================================================
+    // CRIAR
+    // =========================================================================
     public Servico criarServico(ServicoDTO dto) {
         Servico servico = new Servico();
         servico.setNome(dto.getNome());
@@ -39,17 +37,34 @@ public class ServicoUseCase {
         servico.setValorPorHora(dto.getValorPorHora());
 
         if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
-            List<Equipamento> equipamentos =
-                    equipamentoRepository.findAllById(dto.getEquipamentos());
-            servico.setEquipamentos(equipamentos);
+            servico.setEquipamentos(equipamentoRepository.findAllById(dto.getEquipamentos()));
         }
 
-        return servicoRepository.save(servico); // ✅ save que faltava no original
+        return servicoRepository.save(servico);
     }
 
+    // =========================================================================
+    // EDITAR — busca o existente e atualiza os campos (sem duplicar)
+    // =========================================================================
     public Servico editarServico(Long id, ServicoDTO dto) {
-        Servico servico = criarServico(dto);
-        servico.setId(id);
-        return servicoRepository.save(servico);
+
+        // Busca o serviço existente no banco
+        Servico existente = servicoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Serviço não encontrado: " + id));
+
+        // Atualiza apenas os campos enviados
+        existente.setNome(dto.getNome());
+        existente.setDescricao(dto.getDescricao());
+        existente.setHoras(dto.getHoras());
+        existente.setValorPorHora(dto.getValorPorHora());
+
+        if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
+            existente.setEquipamentos(equipamentoRepository.findAllById(dto.getEquipamentos()));
+        } else {
+            existente.setEquipamentos(new ArrayList<>());
+        }
+
+        return servicoRepository.save(existente);
     }
 }

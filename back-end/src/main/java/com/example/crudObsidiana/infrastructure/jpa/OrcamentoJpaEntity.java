@@ -46,7 +46,7 @@ public class OrcamentoJpaEntity {
     @Column(name = "id_calendario")
     private String idCalendar;
 
-    @OneToMany(mappedBy = "orcamento", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "orcamento", cascade = CascadeType.PERSIST)
     @JsonManagedReference
     private List<UsoEquipamentoJpaEntity> usosEquipamentos = new ArrayList<>();
 

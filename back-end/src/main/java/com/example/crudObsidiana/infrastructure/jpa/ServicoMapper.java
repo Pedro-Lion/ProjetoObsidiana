@@ -13,9 +13,7 @@ public class ServicoMapper {
 
     @Autowired private EquipamentoMapper equipamentoMapper;
 
-    // -------------------------------------------------------------------------
     // JpaEntity → Domain
-    // -------------------------------------------------------------------------
     public Servico toDomain(ServicoJpaEntity jpa) {
         if (jpa == null) return null;
 
@@ -23,10 +21,10 @@ public class ServicoMapper {
         domain.setId(jpa.getId());
         domain.setNome(jpa.getNome());
         domain.setDescricao(jpa.getDescricao());
-        // int → Integer (sem risco de NPE, int primitivo nunca é null)
         domain.setHoras(jpa.getHoras());
         domain.setValorPorHora(jpa.getValorPorHora());
 
+        // ✅ Carrega equipamentos — igual ao comportamento original com @ManyToMany EAGER
         if (jpa.getEquipamentos() != null) {
             domain.setEquipamentos(
                     jpa.getEquipamentos().stream()
@@ -38,9 +36,7 @@ public class ServicoMapper {
         return domain;
     }
 
-    // -------------------------------------------------------------------------
     // Domain → JpaEntity
-    // -------------------------------------------------------------------------
     public ServicoJpaEntity toJpaEntity(Servico domain) {
         if (domain == null) return null;
 
@@ -48,7 +44,6 @@ public class ServicoMapper {
         jpa.setId(domain.getId());
         jpa.setNome(domain.getNome());
         jpa.setDescricao(domain.getDescricao());
-        // Integer → int: se vier null do domain, usa 0 para evitar NPE no primitivo
         jpa.setHoras(domain.getHoras() != null ? domain.getHoras() : 0);
         jpa.setValorPorHora(domain.getValorPorHora());
         jpa.setEquipamentos(new ArrayList<>());
@@ -56,9 +51,7 @@ public class ServicoMapper {
         return jpa;
     }
 
-    // -------------------------------------------------------------------------
     // Lista
-    // -------------------------------------------------------------------------
     public List<Servico> toDomainList(List<ServicoJpaEntity> jpaList) {
         if (jpaList == null) return new ArrayList<>();
         return jpaList.stream().map(this::toDomain).collect(Collectors.toList());
