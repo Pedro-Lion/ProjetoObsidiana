@@ -268,9 +268,21 @@ public class SampleDataLoader implements CommandLineRunner {
                     salvo.setEquipamentos(equipamentosExistentes);
                 }
 
-                // anexar usos e recalcular valorTotal simplificado (soma valorPorHora * qtd)
+                // anexar usos e recalcular valorTotal completo (serviços + equipamentos)
                 salvo.setUsosEquipamentos(usos);
                 double total = 0.0;
+
+                // Serviços: valorPorHora × horas
+                if (salvo.getServicos() != null) {
+                    for (Servico s : salvo.getServicos()) {
+                        if (s == null) continue;
+                        double vHora = (s.getValorPorHora() == null) ? 0.0 : s.getValorPorHora();
+                        int horas = s.getHoras();
+                        total += vHora * horas;
+                    }
+                }
+
+                // Equipamentos: valorPorHora × quantidadeUsada
                 for (UsoEquipamento uso : usos) {
                     if (uso.getEquipamento() != null && uso.getEquipamento().getValorPorHora() != null) {
                         total += uso.getQuantidadeUsada() * uso.getEquipamento().getValorPorHora();

@@ -194,9 +194,13 @@ public class OrcamentoService implements OrcamentoSubject {
             salvo.setEquipamentos(equipamentos);
         }
 
-        // calcular e popular valorTotal antes de retornar/salvar final
-        double total = calcularValorTotal(salvo);
-        salvo.setValorTotal(total);
+        // Se o front-end enviou um valorTotal (calculado ou manual), usa esse valor.
+        // Só recalcula automaticamente se o campo não foi informado no DTO.
+        if (dto.getValorTotal() == null) {
+            double total = calcularValorTotal(salvo);
+            salvo.setValorTotal(total);
+        }
+        // (caso dto.getValorTotal() != null, o valor já foi definido no construtor do Orcamento)
 
 
         // --- Se o DTO pediu status "Confirmado", checar estoque e notificar observers ---
@@ -378,9 +382,14 @@ public class OrcamentoService implements OrcamentoSubject {
             existente.setEquipamentos(new ArrayList<>());
         }
 
-        // recalcular valor total com base nas relações atualizadas
-        double totalAtualizado = calcularValorTotal(existente);
-        existente.setValorTotal(totalAtualizado);
+        // Respeita o valorTotal enviado pelo front-end (pode ser manual ou calculado automaticamente).
+        // Só recalcula se o campo não foi informado no DTO.
+        if (dto.getValorTotal() == null) {
+            double totalAtualizado = calcularValorTotal(existente);
+            existente.setValorTotal(totalAtualizado);
+        } else {
+            existente.setValorTotal(dto.getValorTotal());
+        }
 
         // tratar mudança de status solicitada no DTO
         String novoStatusDto = dto.getStatus();

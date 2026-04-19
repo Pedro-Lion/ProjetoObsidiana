@@ -10,11 +10,13 @@ export function CardOrcamento({
     localEvento: "",
     duracaoEvento: 0,
     descricao: "",
+    valorTotal: 0,
     servicos: [
       {
         id: 1,
         nome: "",
         valorPorHora: 0,
+        horas: 0,
       },
     ],
   },
@@ -29,10 +31,9 @@ export function CardOrcamento({
     maximumFractionDigits: 2,
   }).format;
 
-  const valorServicos = dados.servicos.reduce(
-    (acumulador, atual) => acumulador + atual.valorPorHora,
-    0
-  );
+  // Usa o valorTotal salvo no orçamento (inclui serviços + equipamentos).
+  // Fallback para 0 caso ainda não tenha sido calculado.
+  const valorTotal = dados.valorTotal ?? 0;
 
   function formatarData() {
     if (!dados.dataInicio) return "N/A";
@@ -94,7 +95,8 @@ export function CardOrcamento({
   const servicos = dados.servicos.map((s) => (
     <li key={s.id} className="w-full p-3 flex justify-between bg-indigo-50 border border-indigo-100 rounded-md text-xl text-slate-600">
       <span className="font-medium">{s.nome}</span>
-      {formatarValor(s.valorPorHora)}
+      {/* Exibe o valor total do serviço: valorPorHora × horas */}
+      {formatarValor((s.valorPorHora ?? 0) * (s.horas ?? 0))}
     </li>
   ));
 
@@ -139,7 +141,8 @@ export function CardOrcamento({
           {dados.servicos.length > 1 ? "serviços" : "serviço"}
         </span>
 
-        <span>{formatarValor(valorServicos)}</span>
+        {/* Total do orçamento (serviços + equipamentos), salvo no banco */}
+        <span className="font-semibold text-violet-700">{formatarValor(valorTotal)}</span>
       </div>
 
       {/* flex-1 faz a lista ocupar todo o espaço restante, empurrando o footer de botões para o final do card */}
