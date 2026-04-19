@@ -63,7 +63,7 @@ export function Paginacao({ paginaAtual, totalPaginas, onMudarPagina }) {
             border transition ease-in-out duration-300
             ${
               p === paginaAtual
-                ? "bg-slate-950 text-white border-slate-950"
+                ? "bg-slate-900 text-white border-slate-900"
                 : "text-slate-700 border-indigo-400 hover:bg-gradient-to-r hover:from-indigo-100 hover:to-sky-50 hover:text-indigo-400 hover:border-sky-50"
             }
           `}

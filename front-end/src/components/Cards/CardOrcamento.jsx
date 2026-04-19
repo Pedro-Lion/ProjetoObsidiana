@@ -92,7 +92,7 @@ export function CardOrcamento({
   const estilosStatus = definirEstilosStatus();
 
   const servicos = dados.servicos.map((s) => (
-    <li key={s.id} className="w-full p-3 flex justify-between bg-indigo-50 border border-indigo-100 rounded-md text-xl">
+    <li key={s.id} className="w-full p-3 flex justify-between bg-indigo-50 border border-indigo-100 rounded-md text-xl text-slate-600">
       <span className="font-medium">{s.nome}</span>
       {formatarValor(s.valorPorHora)}
     </li>
@@ -125,15 +125,15 @@ export function CardOrcamento({
           </span>
         </div>
 
-        {/* Data, local e duração no mesmo nível de peso visual */}
-        <ul className="list-disc list-inside">
+        {/* Data, local e duração em tom suave — informações de apoio à descrição */}
+        <ul className="list-disc list-inside text-slate-700">
           <li className="mb-1">{dataFormatada}</li>
           <li className="mb-1">{dados.localEvento}</li>
           <li>Duração: {duracaoFormatada}</li>
         </ul>
       </div>
 
-      <div className="p-3 text-2xl flex justify-between">
+      <div className="p-3 text-2xl text-slate-700 flex justify-between">
         <span>
           <b>{dados.servicos.length} </b>
           {dados.servicos.length > 1 ? "serviços" : "serviço"}
@@ -142,12 +142,13 @@ export function CardOrcamento({
         <span>{formatarValor(valorServicos)}</span>
       </div>
 
-      <ul className="h-full px-3 flex flex-col gap-3 overflow-y-auto">
+      {/* flex-1 faz a lista ocupar todo o espaço restante, empurrando o footer de botões para o final do card */}
+      <ul className="flex-1 px-3 flex flex-col gap-3 overflow-y-auto">
         {servicos}
       </ul>
 
-      <div className="h-20 p-3 border-t border-indigo-100">
-        <BotaoPrimario
+      <div className="h-20 p-3 border-t border-indigo-100 flex justify-end items-center">
+        <BotaoSecundario
           titulo="Editar"
           icone="bi bi-pencil"
           className="mt-0 mb-0"
@@ -155,7 +156,7 @@ export function CardOrcamento({
             navigate(`/editar/orcamento/${dados.id}`, { state: dados })
           }
         />
-        <BotaoSecundario
+        <BotaoPrimario
           titulo="Excluir"
           icone="bi bi-trash3 text-xl"
           className="ml-2 mt-0 mb-0"

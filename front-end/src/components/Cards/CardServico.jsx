@@ -32,11 +32,12 @@ export function CardServico({
   const equipamentos = dados.equipamentos.map((e) => (
     <li
       key={e.id}
-      className="p-2.5 flex justify-between items-center bg-indigo-50 border border-indigo-100 rounded-md text-xl"
+      className="p-2.5 flex justify-between items-center bg-indigo-50 border border-indigo-100 rounded-md text-xl text-slate-700"
     >
       <Foto tamanho="3.5" icone="bi bi-camera text-[2rem]" />
       <span className="ml-3">{e.nome}</span>
-      <span className="m-auto">{e.categoria}</span>
+      {/* Categoria em tom mais suave por ser informação secundária */}
+      <span className="m-auto text-slate-500">{e.categoria}</span>
       <span>{formatarValor(e.valorPorHora)}</span>
     </li>
   ));
@@ -64,14 +65,15 @@ export function CardServico({
         <div className="flex justify-between">
           {/* Nome do serviço em indigo, alinhado com a cor dos headings do projeto */}
           <span className="text-4xl font-medium text-indigo-400">{dados.nome}</span>
-          <span className="text-2xl">
+          <span className="text-2xl text-slate-700">
             {formatarValor(dados.valorPorHora + valorEquipamentos)}
           </span>
         </div>
-        <p className="mt-4 text-xl">{dados.descricao}</p>
+        {/* Descrição em tom mais suave por ser informação secundária */}
+        <p className="mt-4 text-xl text-slate-700">{dados.descricao}</p>
       </div>
 
-      <div className="p-3 text-2xl flex justify-between">
+      <div className="p-3 text-2xl text-slate-700 flex justify-between">
         <span>
           <b>{dados.equipamentos.length} </b>
           {dados.equipamentos.length > 1 ? "equipamentos" : "equipamento"}
@@ -80,12 +82,13 @@ export function CardServico({
         <span>{formatarValor(valorEquipamentos)}</span>
       </div>
 
-      <ul className="h-full px-3 flex flex-col gap-3 overflow-y-auto">
+      {/* flex-1 faz a lista ocupar todo o espaço restante, empurrando o footer de botões para o final do card */}
+      <ul className="flex-1 px-3 flex flex-col gap-3 overflow-y-auto">
         {equipamentos}
       </ul>
 
-      <div className="h-20 p-3 border-t border-indigo-100">
-        <BotaoPrimario
+      <div className="h-20 p-3 border-t border-indigo-100 flex justify-end items-center">
+        <BotaoSecundario
           titulo="Editar"
           icone="bi bi-pencil"
           className="mt-0 mb-0"
@@ -95,7 +98,7 @@ export function CardServico({
             })
           }
         />
-        <BotaoSecundario
+        <BotaoPrimario
           titulo="Excluir"
           icone="bi bi-trash3 text-xl"
           className="ml-2 mt-0 mb-0"
