@@ -4,9 +4,30 @@ import com.example.crudObsidiana.model.Profissional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ProfissionalRepository extends JpaRepository<Profissional, Long> {
 
     Page<Profissional> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
+
+    // Busca em todos os campos relevantes do profissional (case-insensitive)
+    // Permite pesquisar por nome, disponibilidade e contato
+    @Query(
+            value = """
+            SELECT * FROM profissional p
+            WHERE LOWER(COALESCE(p.nome,            '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(p.disponibilidade, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(p.contato,         '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+            """,
+            countQuery = """
+            SELECT COUNT(*) FROM profissional p
+            WHERE LOWER(COALESCE(p.nome,            '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(p.disponibilidade, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(p.contato,         '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+            """,
+            nativeQuery = true
+    )
+    Page<Profissional> findByBusca(@Param("busca") String busca, Pageable pageable);
 
 }

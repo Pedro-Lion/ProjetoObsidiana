@@ -83,9 +83,10 @@ public class EquipamentoController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "") String busca) {
         Pageable pageable = PageRequest.of(page, size);
+        // Usa findByBusca para pesquisar em todos os campos (nome, categoria, marca, modelo, etc.)
         Page<Equipamento> resultado = busca.isBlank()
                 ? repository.findAll(pageable)
-                : repository.findByNomeContainingIgnoreCase(busca, pageable);
+                : repository.findByBusca(busca, pageable);
         return ResponseEntity.ok(resultado);
     }
 

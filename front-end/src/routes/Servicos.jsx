@@ -152,8 +152,8 @@ export function Servicos() {
           )}
 
           <section className="flex flex-wrap gap-5">
-            {servicos.length !== 0 ? (
-              servicos.map((s) => (
+            {servicosFiltrados.length !== 0 ? (
+              servicosFiltrados.map((s) => (
                 <CardServico key={s.id} dados={s} onClickDel={() => deletar(s.id)} />
               ))
             ) : (

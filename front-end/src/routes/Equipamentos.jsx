@@ -160,10 +160,25 @@ export function Equipamentos() {
     setModalOpen(true);
   };
 
-  /* ── Filtro local (dentro da página atual) ── */
-  const filtrado = data.filter((e) =>
-    e.nome?.toLowerCase().includes(search.toLowerCase())
-  );
+  /* ── Filtro local (dentro da página atual) ──
+   * Aplicado sobre os itens já retornados pelo backend para a página atual.
+   * Garante consistência enquanto o debounce aguarda a resposta da API.
+   * Os campos cobertos aqui espelham os campos da query findByBusca no backend. */
+  const filtrado = data.filter((e) => {
+    if (!search.trim()) return true;
+    const termo = search.toLowerCase();
+    const campos = [
+      e.nome,
+      e.categoria,
+      e.marca,
+      e.modelo,
+      e.numeroSerie,
+      e.valorPorHora?.toString(),
+      e.quantidadeTotal?.toString(),
+      e.quantidadeDisponivel?.toString(),
+    ];
+    return campos.filter(Boolean).some((c) => c.toLowerCase().includes(termo));
+  });
 
   return (
     <>
@@ -192,8 +207,8 @@ export function Equipamentos() {
       {!loading && !error && (
         <>
           <section className="flex flex-wrap gap-5">
-            {data.length !== 0 ? (
-              data.map((e) => (
+            {filtrado.length !== 0 ? (
+              filtrado.map((e) => (
                 <ContainerListagem
                   key={e.id}
                   dados={e}

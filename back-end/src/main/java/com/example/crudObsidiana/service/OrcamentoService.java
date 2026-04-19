@@ -12,6 +12,9 @@ import com.example.crudObsidiana.repository.ServicoRepository;
 import com.example.crudObsidiana.observer.OrcamentoObserver;
 import com.example.crudObsidiana.observer.OrcamentoSubject;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,6 +113,22 @@ public class OrcamentoService implements OrcamentoSubject {
         List<Orcamento> lista = orcamentoRepository.findAll();
         lista.forEach(o -> o.setDuracaoEvento(calcularDuracaoEvento(o)));
         return lista;
+    }
+
+    // ---------------------------------------------------------------------
+    // LISTAR COM PAGINAÇÃO E BUSCA
+    // ---------------------------------------------------------------------
+    public Page<Orcamento> listarPaginado(int page, int size, String busca) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Orcamento> paginaResult = busca.isBlank()
+                ? orcamentoRepository.findAll(pageable)
+                : orcamentoRepository.findByBusca(busca, pageable);
+
+        // Aplica calcularDuracaoEvento em cada item, igual ao listarTodos()
+        paginaResult.getContent().forEach(o -> o.setDuracaoEvento(calcularDuracaoEvento(o)));
+
+        return paginaResult;
     }
 
     // ---------------------------------------------------------------------

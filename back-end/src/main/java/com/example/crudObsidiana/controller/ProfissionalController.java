@@ -65,9 +65,10 @@ public class ProfissionalController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "") String busca) {
         Pageable pageable = PageRequest.of(page, size);
+        // Usa findByBusca para pesquisar em todos os campos (nome, disponibilidade, contato)
         Page<Profissional> resultado = busca.isBlank()
                 ? repository.findAll(pageable)
-                : repository.findByNomeContainingIgnoreCase(busca, pageable);
+                : repository.findByBusca(busca, pageable);
         return ResponseEntity.ok(resultado);
     }
 
