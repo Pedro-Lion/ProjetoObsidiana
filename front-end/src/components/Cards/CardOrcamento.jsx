@@ -64,45 +64,73 @@ export function CardOrcamento({
   const dataFormatada = formatarData();
   const duracaoFormatada = formatarDuracao(dados.duracaoEvento);
 
-  function definirCorStatus() {
-    const corPorStatus = {
-      "em análise": "oklch(68.1% 0.162 75.834)",
-      confirmado: "oklch(62.7% 0.194 149.214)",
-      cancelado: "oklch(50.5% 0.213 27.518)",
+  // Retorna fundo suave e texto escuro para o badge de status,
+  // mantendo a lógica de cores original mas adaptada ao formato pill
+  function definirEstilosStatus() {
+    const estilosPorStatus = {
+      "em análise": {
+        fundo: "oklch(97% 0.05 75.834)",
+        texto: "oklch(45% 0.162 75.834)",
+      },
+      confirmado: {
+        fundo: "oklch(95% 0.05 149.214)",
+        texto: "oklch(35% 0.194 149.214)",
+      },
+      cancelado: {
+        fundo: "oklch(95% 0.05 27.518)",
+        texto: "oklch(35% 0.213 27.518)",
+      },
     };
 
-    const cor = corPorStatus[dados.status?.toLowerCase()];
-    return cor ? cor : "black";
+    return (
+      estilosPorStatus[dados.status?.toLowerCase()] ?? {
+        fundo: "#e5e7eb",
+        texto: "#374151",
+      }
+    );
   }
-  const corStatus = definirCorStatus();
+  const estilosStatus = definirEstilosStatus();
 
   const servicos = dados.servicos.map((s) => (
-    <li key={s.id} className="w-full p-3 flex justify-between bg-violet-200 rounded-md text-xl">
+    <li key={s.id} className="w-full p-3 flex justify-between bg-indigo-50 border border-indigo-100 rounded-md text-xl">
       <span className="font-medium">{s.nome}</span>
       {formatarValor(s.valorPorHora)}
     </li>
   ));
 
   return (
-    <div className="w-120 h-160 flex flex-col border rounded-xl">
-      <div className="p-4 border-b text-2xl">
-        <div className="flex justify-between items-center">
-          <span className="text-4xl font-medium">{dataFormatada}</span>
-          <div className="flex items-center gap-2">
-            <span style={{ color: corStatus }}>{dados.status}</span>
-            <div
-              style={{ backgroundColor: corStatus }}
-              className={"size-3 rounded-full"}
-            ></div>
-          </div>
+    // overflow-hidden garante que a faixa superior respeite o border-radius do card
+    <div className="w-120 h-160 flex flex-col bg-white rounded-xl shadow-md border border-indigo-100 overflow-hidden hover:shadow-lg transition duration-300">
+
+      {/* Faixa de destaque superior com gradiente da identidade visual */}
+      <div className="bg-gradient-to-r from-indigo-500 to-violet-500 h-1.5 shrink-0" />
+
+      <div className="p-4 border-b border-indigo-100 text-2xl">
+
+        {/* Descrição promovida a destaque principal do card */}
+        <div className="flex justify-between items-start gap-3 mb-2.5">
+          <span className="text-3xl font-medium text-indigo-400 line-clamp-2">
+            {dados.descricao || "Sem descrição"}
+          </span>
+
+          {/* Badge de status no formato pill — mais clean que texto + bolinha */}
+          <span
+            className="px-2.5 py-1 rounded-full text-lg font-medium whitespace-nowrap shrink-0"
+            style={{
+              backgroundColor: estilosStatus.fundo,
+              color: estilosStatus.texto,
+            }}
+          >
+            {dados.status}
+          </span>
         </div>
 
-        <ul className="list-disc list-inside my-2.5">
+        {/* Data, local e duração no mesmo nível de peso visual */}
+        <ul className="list-disc list-inside">
+          <li className="mb-1">{dataFormatada}</li>
           <li className="mb-1">{dados.localEvento}</li>
           <li>Duração: {duracaoFormatada}</li>
         </ul>
-
-        <p className="text-xl">{dados.descricao}</p>
       </div>
 
       <div className="p-3 text-2xl flex justify-between">
@@ -118,7 +146,7 @@ export function CardOrcamento({
         {servicos}
       </ul>
 
-      <div className="h-20 p-3 border-t">
+      <div className="h-20 p-3 border-t border-indigo-100">
         <BotaoPrimario
           titulo="Editar"
           icone="bi bi-pencil"

@@ -32,7 +32,7 @@ export function CardServico({
   const equipamentos = dados.equipamentos.map((e) => (
     <li
       key={e.id}
-      className="p-2.5 flex justify-between items-center bg-violet-200 rounded-md text-xl"
+      className="p-2.5 flex justify-between items-center bg-indigo-50 border border-indigo-100 rounded-md text-xl"
     >
       <Foto tamanho="3.5" icone="bi bi-camera text-[2rem]" />
       <span className="ml-3">{e.nome}</span>
@@ -54,10 +54,16 @@ export function CardServico({
   const valorEquipamentos = definirValorEquipamentos();
 
   return (
-    <div className="w-120 h-160 flex flex-col border rounded-xl">
-      <div className="p-4 border-b">
+    // overflow-hidden garante que a faixa superior respeite o border-radius do card
+    <div className="w-120 h-160 flex flex-col bg-white rounded-xl shadow-md border border-indigo-100 overflow-hidden hover:shadow-lg transition duration-300">
+
+      {/* Faixa de destaque superior com gradiente da identidade visual */}
+      <div className="bg-gradient-to-r from-indigo-500 to-violet-500 h-1.5 shrink-0" />
+
+      <div className="p-4 border-b border-indigo-100">
         <div className="flex justify-between">
-          <span className="text-4xl font-medium">{dados.nome}</span>
+          {/* Nome do serviço em indigo, alinhado com a cor dos headings do projeto */}
+          <span className="text-4xl font-medium text-indigo-400">{dados.nome}</span>
           <span className="text-2xl">
             {formatarValor(dados.valorPorHora + valorEquipamentos)}
           </span>
@@ -78,7 +84,7 @@ export function CardServico({
         {equipamentos}
       </ul>
 
-      <div className="h-20 p-3 border-t">
+      <div className="h-20 p-3 border-t border-indigo-100">
         <BotaoPrimario
           titulo="Editar"
           icone="bi bi-pencil"
