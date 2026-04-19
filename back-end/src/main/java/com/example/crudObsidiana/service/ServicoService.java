@@ -1,7 +1,7 @@
 package com.example.crudObsidiana.service;
 
-import com.example.crudObsidiana.dto.ServicoDTO;
-import com.example.crudObsidiana.model.Equipamento;
+import com.example.crudObsidiana.interfaces.dto.ServicoDTO;
+import com.example.crudObsidiana.domain.entities.Equipamento;
 import com.example.crudObsidiana.model.Servico;
 import com.example.crudObsidiana.repository.EquipamentoRepository;
 import com.example.crudObsidiana.repository.ServicoRepository;

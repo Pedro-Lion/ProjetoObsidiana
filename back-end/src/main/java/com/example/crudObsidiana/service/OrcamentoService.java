@@ -1,26 +1,24 @@
 package com.example.crudObsidiana.service;
 
-import com.example.crudObsidiana.dto.KpisOrcamentoDTO;
-import com.example.crudObsidiana.dto.OrcamentoDTO;
-import com.example.crudObsidiana.dto.UsoEquipamentoDTO;
+import com.example.crudObsidiana.domain.entities.Equipamento;
+import com.example.crudObsidiana.interfaces.dto.KpisOrcamentoDTO;
+import com.example.crudObsidiana.interfaces.dto.OrcamentoDTO;
+import com.example.crudObsidiana.interfaces.dto.UsoEquipamentoDTO;
 import com.example.crudObsidiana.model.*;
 import com.example.crudObsidiana.repository.EquipamentoRepository;
 import com.example.crudObsidiana.repository.UsoEquipamentoRepository;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
 import com.example.crudObsidiana.repository.ProfissionalRepository;
 import com.example.crudObsidiana.repository.ServicoRepository;
-import com.example.crudObsidiana.observer.OrcamentoObserver;
-import com.example.crudObsidiana.observer.OrcamentoSubject;
-import com.example.crudObsidiana.repository.OrcamentoRepository;
+import com.example.crudObsidiana.infrastructure.observer.OrcamentoObserver;
+import com.example.crudObsidiana.infrastructure.observer.OrcamentoSubject;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
