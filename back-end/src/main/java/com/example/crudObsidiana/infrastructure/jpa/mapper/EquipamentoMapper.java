@@ -1,6 +1,7 @@
-package com.example.crudObsidiana.infrastructure.jpa;
+package com.example.crudObsidiana.infrastructure.jpa.mapper;
 
 import com.example.crudObsidiana.domain.entities.Equipamento;
+import com.example.crudObsidiana.infrastructure.jpa.entity.EquipamentoJpaEntity;
 import org.springframework.stereotype.Component;
 
 @Component

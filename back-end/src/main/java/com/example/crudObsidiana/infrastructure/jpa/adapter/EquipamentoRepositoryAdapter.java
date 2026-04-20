@@ -1,7 +1,9 @@
-package com.example.crudObsidiana.infrastructure.jpa;
+package com.example.crudObsidiana.infrastructure.jpa.adapter;
 
 import com.example.crudObsidiana.domain.entities.Equipamento;
 import com.example.crudObsidiana.domain.ports.EquipamentoRepositoryPort;
+import com.example.crudObsidiana.infrastructure.jpa.mapper.EquipamentoMapper;
+import com.example.crudObsidiana.infrastructure.jpa.repository.EquipamentoJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +15,7 @@ import java.util.stream.Collectors;
 public class EquipamentoRepositoryAdapter implements EquipamentoRepositoryPort {
 
     @Autowired private EquipamentoJpaRepository jpaRepository;
-    @Autowired private EquipamentoMapper        mapper;
+    @Autowired private EquipamentoMapper mapper;
 
     @Override
     public Equipamento save(Equipamento equipamento) {

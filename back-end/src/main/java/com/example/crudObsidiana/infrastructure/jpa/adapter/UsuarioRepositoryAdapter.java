@@ -1,7 +1,9 @@
-package com.example.crudObsidiana.infrastructure.jpa;
+package com.example.crudObsidiana.infrastructure.jpa.adapter;
 
 import com.example.crudObsidiana.domain.entities.Usuario;
 import com.example.crudObsidiana.domain.ports.UsuarioRepositoryPort;
+import com.example.crudObsidiana.infrastructure.jpa.mapper.UsuarioMapper;
+import com.example.crudObsidiana.infrastructure.jpa.repository.UsuarioJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +15,7 @@ import java.util.stream.Collectors;
 public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort {
 
     @Autowired private UsuarioJpaRepository jpaRepository;
-    @Autowired private UsuarioMapper        mapper;
+    @Autowired private UsuarioMapper mapper;
 
     @Override
     public Usuario save(Usuario usuario) {

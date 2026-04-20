@@ -1,5 +1,6 @@
-package com.example.crudObsidiana.infrastructure.jpa;
+package com.example.crudObsidiana.infrastructure.jpa.repository;
 
+import com.example.crudObsidiana.infrastructure.jpa.entity.OrcamentoJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

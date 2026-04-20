@@ -1,7 +1,13 @@
-package com.example.crudObsidiana.infrastructure.jpa;
+package com.example.crudObsidiana.infrastructure.jpa.adapter;
 
 import com.example.crudObsidiana.domain.entities.UsoEquipamento;
 import com.example.crudObsidiana.domain.ports.UsoEquipamentoRepositoryPort;
+import com.example.crudObsidiana.infrastructure.jpa.mapper.UsoEquipamentoMapper;
+import com.example.crudObsidiana.infrastructure.jpa.entity.UsoEquipamentoJpaEntity;
+import com.example.crudObsidiana.infrastructure.jpa.repository.EquipamentoJpaRepository;
+import com.example.crudObsidiana.infrastructure.jpa.repository.OrcamentoJpaRepository;
+import com.example.crudObsidiana.infrastructure.jpa.repository.ServicoJpaRepository;
+import com.example.crudObsidiana.infrastructure.jpa.repository.UsoEquipamentoJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,10 +20,10 @@ import java.util.stream.Collectors;
 public class UsoEquipamentoRepositoryAdapter implements UsoEquipamentoRepositoryPort {
 
     @Autowired private UsoEquipamentoJpaRepository jpaRepository;
-    @Autowired private UsoEquipamentoMapper        mapper;
-    @Autowired private EquipamentoJpaRepository    equipamentoJpaRepository;
-    @Autowired private OrcamentoJpaRepository      orcamentoJpaRepository;
-    @Autowired private ServicoJpaRepository        servicoJpaRepository;
+    @Autowired private UsoEquipamentoMapper mapper;
+    @Autowired private EquipamentoJpaRepository equipamentoJpaRepository;
+    @Autowired private OrcamentoJpaRepository orcamentoJpaRepository;
+    @Autowired private ServicoJpaRepository servicoJpaRepository;
 
     @Override
     public UsoEquipamento save(UsoEquipamento uso) {

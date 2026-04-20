@@ -1,10 +1,7 @@
-package com.example.crudObsidiana.infrastructure.jpa;
+package com.example.crudObsidiana.infrastructure.jpa.mapper;
 
-import com.example.crudObsidiana.domain.entities.Equipamento;
 import com.example.crudObsidiana.domain.entities.Orcamento;
-import com.example.crudObsidiana.domain.entities.Profissional;
-import com.example.crudObsidiana.domain.entities.Servico;
-import com.example.crudObsidiana.domain.entities.UsoEquipamento;
+import com.example.crudObsidiana.infrastructure.jpa.entity.OrcamentoJpaEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -24,9 +21,9 @@ public class OrcamentoMapper {
 
     // Mappers dos relacionamentos — injetados para evitar conversão manual repetida
     @Autowired private UsoEquipamentoMapper usoEquipamentoMapper;
-    @Autowired private ServicoMapper        servicoMapper;
-    @Autowired private EquipamentoMapper    equipamentoMapper;
-    @Autowired private ProfissionalMapper   profissionalMapper;
+    @Autowired private ServicoMapper servicoMapper;
+    @Autowired private EquipamentoMapper equipamentoMapper;
+    @Autowired private ProfissionalMapper profissionalMapper;
 
     // -------------------------------------------------------------------------
     // JpaEntity → Domain

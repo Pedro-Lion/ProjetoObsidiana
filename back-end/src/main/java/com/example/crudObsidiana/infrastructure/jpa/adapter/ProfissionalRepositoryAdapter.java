@@ -1,7 +1,9 @@
-package com.example.crudObsidiana.infrastructure.jpa;
+package com.example.crudObsidiana.infrastructure.jpa.adapter;
 
 import com.example.crudObsidiana.domain.entities.Profissional;
 import com.example.crudObsidiana.domain.ports.ProfissionalRepositoryPort;
+import com.example.crudObsidiana.infrastructure.jpa.mapper.ProfissionalMapper;
+import com.example.crudObsidiana.infrastructure.jpa.repository.ProfissionalJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +15,7 @@ import java.util.stream.Collectors;
 public class ProfissionalRepositoryAdapter implements ProfissionalRepositoryPort {
 
     @Autowired private ProfissionalJpaRepository jpaRepository;
-    @Autowired private ProfissionalMapper        mapper;
+    @Autowired private ProfissionalMapper mapper;
 
     @Override
     public Profissional save(Profissional profissional) {

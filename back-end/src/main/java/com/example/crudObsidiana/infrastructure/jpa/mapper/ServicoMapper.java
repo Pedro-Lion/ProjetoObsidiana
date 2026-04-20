@@ -1,6 +1,7 @@
-package com.example.crudObsidiana.infrastructure.jpa;
+package com.example.crudObsidiana.infrastructure.jpa.mapper;
 
 import com.example.crudObsidiana.domain.entities.Servico;
+import com.example.crudObsidiana.infrastructure.jpa.entity.ServicoJpaEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

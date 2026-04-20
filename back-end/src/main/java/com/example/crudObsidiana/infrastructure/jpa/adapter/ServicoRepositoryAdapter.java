@@ -1,7 +1,11 @@
-package com.example.crudObsidiana.infrastructure.jpa;
+package com.example.crudObsidiana.infrastructure.jpa.adapter;
 
 import com.example.crudObsidiana.domain.entities.Servico;
 import com.example.crudObsidiana.domain.ports.ServicoRepositoryPort;
+import com.example.crudObsidiana.infrastructure.jpa.mapper.ServicoMapper;
+import com.example.crudObsidiana.infrastructure.jpa.entity.ServicoJpaEntity;
+import com.example.crudObsidiana.infrastructure.jpa.repository.EquipamentoJpaRepository;
+import com.example.crudObsidiana.infrastructure.jpa.repository.ServicoJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -21,8 +25,8 @@ import java.util.stream.Collectors;
 @Component
 public class ServicoRepositoryAdapter implements ServicoRepositoryPort {
 
-    @Autowired private ServicoJpaRepository     jpaRepository;
-    @Autowired private ServicoMapper            mapper;
+    @Autowired private ServicoJpaRepository jpaRepository;
+    @Autowired private ServicoMapper mapper;
     @Autowired private EquipamentoJpaRepository equipamentoJpaRepository;
 
     @Override

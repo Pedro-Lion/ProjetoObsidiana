@@ -1,7 +1,13 @@
-package com.example.crudObsidiana.infrastructure.jpa;
+package com.example.crudObsidiana.infrastructure.jpa.adapter;
 
 import com.example.crudObsidiana.domain.entities.Orcamento;
 import com.example.crudObsidiana.domain.ports.OrcamentoRepositoryPort;
+import com.example.crudObsidiana.infrastructure.jpa.mapper.OrcamentoMapper;
+import com.example.crudObsidiana.infrastructure.jpa.entity.OrcamentoJpaEntity;
+import com.example.crudObsidiana.infrastructure.jpa.repository.EquipamentoJpaRepository;
+import com.example.crudObsidiana.infrastructure.jpa.repository.OrcamentoJpaRepository;
+import com.example.crudObsidiana.infrastructure.jpa.repository.ProfissionalJpaRepository;
+import com.example.crudObsidiana.infrastructure.jpa.repository.ServicoJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,12 +28,12 @@ import java.util.stream.Collectors;
 @Component
 public class OrcamentoRepositoryAdapter implements OrcamentoRepositoryPort {
 
-    @Autowired private OrcamentoJpaRepository    jpaRepository;
-    @Autowired private OrcamentoMapper           mapper;
+    @Autowired private OrcamentoJpaRepository jpaRepository;
+    @Autowired private OrcamentoMapper mapper;
 
     // Repositórios auxiliares para buscar JpaEntities gerenciadas
-    @Autowired private ServicoJpaRepository      servicoJpaRepository;
-    @Autowired private EquipamentoJpaRepository  equipamentoJpaRepository;
+    @Autowired private ServicoJpaRepository servicoJpaRepository;
+    @Autowired private EquipamentoJpaRepository equipamentoJpaRepository;
     @Autowired private ProfissionalJpaRepository profissionalJpaRepository;
 
     @Override
