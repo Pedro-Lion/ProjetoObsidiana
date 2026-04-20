@@ -403,7 +403,7 @@ export function CadastroOrcamento() {
             <span className="text-slate-400 text-[0.95rem]">
               Calculado automaticamente com base nos itens selecionados
             </span>
-            <span className="text-3xl font-semibold text-violet-700 mt-1">
+            <span className="text-3xl font-semibold text-slate-700 mt-1">
               {formatarMoeda(valorCalculado)}
             </span>
             {/* Detalhamento por categoria */}

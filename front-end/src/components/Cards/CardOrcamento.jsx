@@ -142,7 +142,7 @@ export function CardOrcamento({
         </span>
 
         {/* Total do orçamento (serviços + equipamentos), salvo no banco */}
-        <span className="font-semibold text-violet-700">{formatarValor(valorTotal)}</span>
+        <span className="font-semibold text-slate-700">{formatarValor(valorTotal)}</span>
       </div>
 
       {/* flex-1 faz a lista ocupar todo o espaço restante, empurrando o footer de botões para o final do card */}
