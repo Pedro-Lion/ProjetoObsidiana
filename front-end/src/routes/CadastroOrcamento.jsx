@@ -262,7 +262,7 @@ export function CadastroOrcamento() {
       <h1>{!state ? "Cadastrar" : "Editar"} orçamento</h1>
 
       <section className="flex flex-col gap-2">
-        <div className="flex justify-between gap-5">
+        <div className="flex justify-between md:gap-5 flex-wrap md:flex-nowrap">
           <SelectBordaLabel
             className="w-full"
             titulo="Status"
@@ -280,7 +280,7 @@ export function CadastroOrcamento() {
 
           <div className="flex flex-col w-full">
             <InputDataBordaLabel
-              titulo="Data de início"
+              titulo="Início"
               className="w-full"
               defaultValue={
                 orcamento.dataInicio ? new Date(orcamento.dataInicio) : undefined
@@ -292,7 +292,7 @@ export function CadastroOrcamento() {
 
           <div className="flex flex-col w-full">
             <InputDataBordaLabel
-              titulo="Data de término"
+              titulo="Fim"
               className="w-full"
               defaultValue={
                 orcamento.dataTermino
