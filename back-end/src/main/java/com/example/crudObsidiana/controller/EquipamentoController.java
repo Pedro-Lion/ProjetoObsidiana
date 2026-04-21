@@ -13,12 +13,13 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import com.example.crudObsidiana.service.FileStorageService;
 
 import java.nio.file.*;
@@ -31,10 +32,10 @@ public class EquipamentoController {
 
     private final EquipamentoRepository repository;
     private final FileStorageService fileStorageService;
+
     @Autowired
     private EquipamentoService equipamentoService;
 
-//    CONSTRUCTORS
     @Autowired
     public EquipamentoController(EquipamentoRepository repository,
                                  EquipamentoService equipamentoService,
@@ -56,8 +57,10 @@ public class EquipamentoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(equipamentoCriado);
     }
 
-
-    @Operation(summary = "Lista todos os equipamentos")
+    // ---------------------------------------------------------------
+    // GET /equipamento — listagem completa (compatibilidade legada)
+    // ---------------------------------------------------------------
+    @Operation(summary = "Lista todos os equipamentos (sem paginação)")
     @ApiResponse(responseCode = "200", description = "Lista de equipamentos retornada com sucesso",
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = Equipamento.class))))
@@ -66,6 +69,25 @@ public class EquipamentoController {
         List<Equipamento> equipamentos = repository.findAll();
         if (equipamentos.isEmpty()) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(equipamentos);
+    }
+
+    // ---------------------------------------------------------------
+    // GET /equipamento/paginado?page=0&size=10
+    // ---------------------------------------------------------------
+    @Operation(summary = "Lista equipamentos com paginação e busca",
+            description = "Retorna uma página de equipamentos. Parâmetros: 'page' (base 0), 'size' (itens por página) e 'busca' (filtra por nome, opcional).")
+    @ApiResponse(responseCode = "200", description = "Página de equipamentos retornada com sucesso")
+    @GetMapping("/paginado")
+    public ResponseEntity<Page<Equipamento>> listarPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String busca) {
+        Pageable pageable = PageRequest.of(page, size);
+        // Usa findByBusca para pesquisar em todos os campos (nome, categoria, marca, modelo, etc.)
+        Page<Equipamento> resultado = busca.isBlank()
+                ? repository.findAll(pageable)
+                : repository.findByBusca(busca, pageable);
+        return ResponseEntity.ok(resultado);
     }
 
     @Operation(summary = "Recupera um equipamento pelo ID")
@@ -108,15 +130,12 @@ public class EquipamentoController {
     @PutMapping("/{id}")
     public ResponseEntity<Equipamento> atualizar(@PathVariable("id") Long id, @RequestBody Equipamento equipamentoBody) {
         return repository.findById(id).map(existente -> {
-            // atualiza somente campos que fazem sentido atualizar via PUT (ou os que não vieram nulos)
             if (equipamentoBody.getNome() != null) existente.setNome(equipamentoBody.getNome());
             if (equipamentoBody.getCategoria() != null) existente.setCategoria(equipamentoBody.getCategoria());
             if (equipamentoBody.getMarca() != null) existente.setMarca(equipamentoBody.getMarca());
             if (equipamentoBody.getNumeroSerie() != null) existente.setNumeroSerie(equipamentoBody.getNumeroSerie());
             if (equipamentoBody.getModelo() != null) existente.setModelo(equipamentoBody.getModelo());
             if (equipamentoBody.getValorPorHora() != null) existente.setValorPorHora(equipamentoBody.getValorPorHora());
-
-            // para quantidadeTotal: usa o setter (que agora aplica delta corretamente)
             if (equipamentoBody.getQuantidadeTotal() != null) {
                 existente.setQuantidadeTotal(equipamentoBody.getQuantidadeTotal());
             }
@@ -125,10 +144,6 @@ public class EquipamentoController {
         }).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-
-    // --- ENDPOINTS DE IMAGEM ---
-
-    // Upload de imagem para equipamento
     @PostMapping("/{id}/imagem")
     public ResponseEntity<?> uploadImagemEquipamento(@PathVariable Long id,
                                                      @RequestParam("arquivo") MultipartFile arquivo) {
@@ -136,57 +151,34 @@ public class EquipamentoController {
             if (!repository.existsById(id)) {
                 return ResponseEntity.notFound().build();
             }
-
-            // chama o metodo de instância (NÃO estático)
             Path caminho = fileStorageService.salvarArquivo(arquivo);
-
             Equipamento equipamento = repository.findById(id).get();
             equipamento.setNomeArquivoImagem(caminho.getFileName().toString());
             equipamento.setTipoImagem(arquivo.getContentType());
             equipamento.setCaminhoImagem(caminho.toString());
-
             repository.save(equipamento);
-
             return ResponseEntity.ok(equipamento);
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body("Erro ao salvar arquivo: " + e.getMessage());
         }
     }
 
-    // Download/visualizar imagem do equipamento
     @GetMapping("/{id}/imagem")
     public ResponseEntity<byte[]> baixarImagemEquipamento(@PathVariable Long id) {
-        // Busca o equipamento (Optional)
         java.util.Optional<Equipamento> opt = repository.findById(id);
-
-        if (opt.isEmpty()) {
-            // equipamento não existe
-            return ResponseEntity.notFound().build();
-        }
-
+        if (opt.isEmpty()) return ResponseEntity.notFound().build();
         Equipamento eqp = opt.get();
-
         String nomeArquivo = eqp.getNomeArquivoImagem();
-        if (nomeArquivo == null || nomeArquivo.isEmpty()) {
-            // equipamento existe, mas não tem imagem associada
-            return ResponseEntity.notFound().build();
-        }
-
+        if (nomeArquivo == null || nomeArquivo.isEmpty()) return ResponseEntity.notFound().build();
         try {
-            // Lê os bytes do arquivo
             byte[] dados = fileStorageService.lerArquivo(nomeArquivo);
-
             String tipo = eqp.getTipoImagem();
-            if (tipo == null || tipo.isEmpty()) {
-                tipo = org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
-            }
-
+            if (tipo == null || tipo.isEmpty()) tipo = org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
             return ResponseEntity.ok()
                     .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
                             "inline; filename=\"" + nomeArquivo + "\"")
                     .contentType(org.springframework.http.MediaType.parseMediaType(tipo))
                     .body(dados);
-
         } catch (IOException e) {
             return ResponseEntity.notFound().build();
         }

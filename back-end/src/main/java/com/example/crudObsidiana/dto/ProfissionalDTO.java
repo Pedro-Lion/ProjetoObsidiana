@@ -4,6 +4,7 @@ public class ProfissionalDTO {
     private String nome;
     private String disponibilidade;
     private String contato;
+    private String categoria;
 
     public ProfissionalDTO() {
     }
@@ -35,4 +36,12 @@ public class ProfissionalDTO {
     }
 
     public void setContato(String contato) { this.contato = contato; }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
+    }
 }

@@ -12,6 +12,9 @@ import com.example.crudObsidiana.repository.ServicoRepository;
 import com.example.crudObsidiana.observer.OrcamentoObserver;
 import com.example.crudObsidiana.observer.OrcamentoSubject;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,6 +116,22 @@ public class OrcamentoService implements OrcamentoSubject {
     }
 
     // ---------------------------------------------------------------------
+    // LISTAR COM PAGINAÇÃO E BUSCA
+    // ---------------------------------------------------------------------
+    public Page<Orcamento> listarPaginado(int page, int size, String busca) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Orcamento> paginaResult = busca.isBlank()
+                ? orcamentoRepository.findAll(pageable)
+                : orcamentoRepository.findByBusca(busca, pageable);
+
+        // Aplica calcularDuracaoEvento em cada item, igual ao listarTodos()
+        paginaResult.getContent().forEach(o -> o.setDuracaoEvento(calcularDuracaoEvento(o)));
+
+        return paginaResult;
+    }
+
+    // ---------------------------------------------------------------------
     // METODOS PADRÃO
     // ---------------------------------------------------------------------
 
@@ -175,9 +194,13 @@ public class OrcamentoService implements OrcamentoSubject {
             salvo.setEquipamentos(equipamentos);
         }
 
-        // calcular e popular valorTotal antes de retornar/salvar final
-        double total = calcularValorTotal(salvo);
-        salvo.setValorTotal(total);
+        // Se o front-end enviou um valorTotal (calculado ou manual), usa esse valor.
+        // Só recalcula automaticamente se o campo não foi informado no DTO.
+        if (dto.getValorTotal() == null) {
+            double total = calcularValorTotal(salvo);
+            salvo.setValorTotal(total);
+        }
+        // (caso dto.getValorTotal() != null, o valor já foi definido no construtor do Orcamento)
 
 
         // --- Se o DTO pediu status "Confirmado", checar estoque e notificar observers ---
@@ -359,9 +382,14 @@ public class OrcamentoService implements OrcamentoSubject {
             existente.setEquipamentos(new ArrayList<>());
         }
 
-        // recalcular valor total com base nas relações atualizadas
-        double totalAtualizado = calcularValorTotal(existente);
-        existente.setValorTotal(totalAtualizado);
+        // Respeita o valorTotal enviado pelo front-end (pode ser manual ou calculado automaticamente).
+        // Só recalcula se o campo não foi informado no DTO.
+        if (dto.getValorTotal() == null) {
+            double totalAtualizado = calcularValorTotal(existente);
+            existente.setValorTotal(totalAtualizado);
+        } else {
+            existente.setValorTotal(dto.getValorTotal());
+        }
 
         // tratar mudança de status solicitada no DTO
         String novoStatusDto = dto.getStatus();

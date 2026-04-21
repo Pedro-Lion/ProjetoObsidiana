@@ -20,6 +20,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+ import org.springframework.data.domain.Page;
+ import org.springframework.data.domain.PageRequest;
+ import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -101,6 +105,24 @@ public class OrcamentoController {
     public ResponseEntity<List<Orcamento>> listarTodos() {
         return ResponseEntity.ok(orcamentoService.listarTodos());
     }
+
+    // ----------------------------------------------------------------------
+    // GET /orcamento/paginado?page=0&size=8&busca= → Listar com paginação
+    // ----------------------------------------------------------------------
+    @GetMapping("/paginado")
+    @Operation(
+            summary = "Listar orçamentos com paginação e busca",
+            description = "Retorna uma página de orçamentos. Parâmetros: 'page' (base 0), 'size' (itens por página) e 'busca' (filtra por local do evento ou descrição, opcional)."
+    )
+    @ApiResponse(responseCode = "200", description = "Página de orçamentos retornada com sucesso")
+    public ResponseEntity<Page<Orcamento>> listarPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "8") int size,
+            @RequestParam(defaultValue = "") String busca) {
+        Page<Orcamento> resultado = orcamentoService.listarPaginado(page, size, busca);
+        return ResponseEntity.ok(resultado);
+    }
+
 
     // ----------------------------------------------------------------------
     // GET /orcamento/{id} → Buscar por ID

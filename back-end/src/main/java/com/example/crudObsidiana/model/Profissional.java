@@ -25,6 +25,9 @@ public class Profissional {
     @Schema(description = "Contato do profissional", example = "(11)883992883 // osv.filma@email.com")
     private String contato;
 
+    @Schema(description = "Categoria do profissional", example = "Fotógrafo")
+    private String categoria;
+
     @ManyToMany(mappedBy = "profissionais")
     private List<Orcamento> orcamentos = new ArrayList<>();
 
@@ -83,6 +86,14 @@ public class Profissional {
 
     public void setContato(String contato) {
         this.contato = contato;
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
     }
 
     public String getCaminhoImagem() {

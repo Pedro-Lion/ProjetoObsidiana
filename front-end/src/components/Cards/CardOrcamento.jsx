@@ -10,11 +10,13 @@ export function CardOrcamento({
     localEvento: "",
     duracaoEvento: 0,
     descricao: "",
+    valorTotal: 0,
     servicos: [
       {
         id: 1,
         nome: "",
         valorPorHora: 0,
+        horas: 0,
       },
     ],
   },
@@ -29,10 +31,9 @@ export function CardOrcamento({
     maximumFractionDigits: 2,
   }).format;
 
-  const valorServicos = dados.servicos.reduce(
-    (acumulador, atual) => acumulador + atual.valorPorHora,
-    0
-  );
+  // Usa o valorTotal salvo no orçamento (inclui serviços + equipamentos).
+  // Fallback para 0 caso ainda não tenha sido calculado.
+  const valorTotal = dados.valorTotal ?? 0;
 
   function formatarData() {
     if (!dados.dataInicio) return "N/A";
@@ -64,75 +65,111 @@ export function CardOrcamento({
   const dataFormatada = formatarData();
   const duracaoFormatada = formatarDuracao(dados.duracaoEvento);
 
-  function definirCorStatus() {
-    const corPorStatus = {
-      "em análise": "oklch(68.1% 0.162 75.834)",
-      confirmado: "oklch(62.7% 0.194 149.214)",
-      cancelado: "oklch(50.5% 0.213 27.518)",
+  // Retorna fundo suave e texto escuro para o badge de status,
+  // mantendo a lógica de cores original mas adaptada ao formato pill
+  function definirEstilosStatus() {
+    const estilosPorStatus = {
+      "em análise": {
+        fundo: "oklch(97% 0.05 75.834)",
+        texto: "oklch(45% 0.162 75.834)",
+      },
+      confirmado: {
+        fundo: "oklch(95% 0.05 149.214)",
+        texto: "oklch(35% 0.194 149.214)",
+      },
+      cancelado: {
+        fundo: "oklch(95% 0.05 27.518)",
+        texto: "oklch(35% 0.213 27.518)",
+      },
     };
 
-    const cor = corPorStatus[dados.status?.toLowerCase()];
-    return cor ? cor : "black";
+    return (
+      estilosPorStatus[dados.status?.toLowerCase()] ?? {
+        fundo: "#e5e7eb",
+        texto: "#374151",
+      }
+    );
   }
-  const corStatus = definirCorStatus();
+  const estilosStatus = definirEstilosStatus();
 
   const servicos = dados.servicos.map((s) => (
-    <li key={s.id} className="w-full p-3 flex justify-between bg-violet-200 rounded-md text-xl">
+    <li key={s.id} className="w-full p-3 flex justify-between bg-indigo-50 border border-indigo-100 rounded-md text-xl text-slate-600">
       <span className="font-medium">{s.nome}</span>
-      {formatarValor(s.valorPorHora)}
+      {/* Exibe o valor total do serviço: valorPorHora × horas */}
+      {formatarValor((s.valorPorHora ?? 0) * (s.horas ?? 0))}
     </li>
   ));
 
   return (
-    <div className="w-120 h-160 flex flex-col border rounded-xl">
-      <div className="p-4 border-b text-2xl">
-        <div className="flex justify-between items-center">
-          <span className="text-4xl font-medium">{dataFormatada}</span>
-          <div className="flex items-center gap-2">
-            <span style={{ color: corStatus }}>{dados.status}</span>
-            <div
-              style={{ backgroundColor: corStatus }}
-              className={"size-3 rounded-full"}
-            ></div>
-          </div>
+    // overflow-hidden garante que a faixa superior respeite o border-radius do card
+    <div className="w-120 h-160 flex flex-col bg-white rounded-xl shadow-md border border-indigo-100 overflow-hidden hover:shadow-lg transition duration-300">
+
+      {/* Faixa de destaque superior com gradiente da identidade visual */}
+      <div className="bg-gradient-to-r from-indigo-500 to-violet-500 h-1.5 shrink-0" />
+
+      <div className="p-4 border-b border-indigo-100 text-2xl">
+
+        {/* Descrição promovida a destaque principal do card */}
+        <div className="flex justify-between items-start gap-3 mb-2.5">
+          <span className="text-3xl font-medium text-indigo-400 line-clamp-2">
+            {dados.descricao || "Sem descrição"}
+          </span>
+
+          {/* Badge de status no formato pill — mais clean que texto + bolinha */}
+          <span
+            className="px-2.5 py-1 rounded-full text-lg font-medium whitespace-nowrap shrink-0"
+            style={{
+              backgroundColor: estilosStatus.fundo,
+              color: estilosStatus.texto,
+            }}
+          >
+            {dados.status}
+          </span>
         </div>
 
-        <ul className="list-disc list-inside my-2.5">
+        {/* Data, local e duração em tom suave — informações de apoio à descrição */}
+        <ul className="list-disc list-inside text-slate-700">
+          <li className="mb-1">{dataFormatada}</li>
           <li className="mb-1">{dados.localEvento}</li>
           <li>Duração: {duracaoFormatada}</li>
         </ul>
-
-        <p className="text-xl">{dados.descricao}</p>
       </div>
 
-      <div className="p-3 text-2xl flex justify-between">
+      <div className="p-3 text-2xl text-slate-700 flex justify-between">
         <span>
           <b>{dados.servicos.length} </b>
           {dados.servicos.length > 1 ? "serviços" : "serviço"}
         </span>
 
-        <span>{formatarValor(valorServicos)}</span>
+        {/* Total do orçamento (serviços + equipamentos), salvo no banco */}
+        <span className="font-semibold text-slate-700">{formatarValor(valorTotal)}</span>
       </div>
 
-      <ul className="h-full px-3 flex flex-col gap-3 overflow-y-auto">
+      {/* flex-1 faz a lista ocupar todo o espaço restante, empurrando o footer de botões para o final do card */}
+      <ul className="flex-1 px-3 flex flex-col gap-3 overflow-y-auto">
         {servicos}
       </ul>
 
-      <div className="h-20 p-3 border-t">
-        <BotaoPrimario
-          titulo="Editar"
-          icone="bi bi-pencil"
-          className="mt-0 mb-0"
-          onClick={() =>
-            navigate(`/editar/orcamento/${dados.id}`, { state: dados })
-          }
-        />
-        <BotaoSecundario
-          titulo="Excluir"
-          icone="bi bi-trash3 text-xl"
-          className="ml-2 mt-0 mb-0"
+      {/* Footer com botões de largura total separados por borda vertical */}
+      <div className="h-14 border-t border-indigo-100 flex shrink-0">
+        <button
+          onClick={() => navigate(`/editar/orcamento/${dados.id}`, { state: dados })}
+          className="flex-1 flex items-center justify-center gap-2 text-xl text-slate-500 hover:text-indigo-500 hover:bg-indigo-50 transition duration-200 rounded-bl-xl"
+        >
+          <i className="bi bi-pencil"></i>
+          Editar
+        </button>
+
+        {/* Divisor vertical */}
+        <div className="w-px bg-indigo-100" />
+
+        <button
           onClick={onClickDel}
-        />
+          className="flex-1 flex items-center justify-center gap-2 text-xl text-slate-500 hover:text-red-400 hover:bg-red-50 transition duration-200 rounded-br-xl"
+        >
+          <i className="bi bi-trash3"></i>
+          Excluir
+        </button>
       </div>
     </div>
   );

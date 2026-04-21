@@ -46,10 +46,14 @@ export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onCl
     <div className="w-full mb-4 bg-[#f5f3ff] rounded-lg overflow-hidden">
 
       {/* Cabeçalho */}
-      <div className="flex flex-row justify-between items-baseline bg-violet-200 px-5 py-1.5 mb-4">
+      <div className="flex flex-row justify-between items-baseline bg-violet-200 px-5 py-1.5 mb-4 gap-2 flex-wrap">
         <label className="text-slate-700 md:text-[1.2rem] font-bold leading-snug uppercase break-words hyphens-auto">
           {dados.nome || "—"}
         </label>
+        <label className="text-slate-700 md:text-[1.2rem] leading-snug uppercase whitespace-nowrap">
+          {dados.categoria || "—"}
+        </label>
+        <label className="hidden md:flex"></label>
       </div>
 
       {/* Corpo */}

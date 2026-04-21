@@ -117,25 +117,8 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
           await uploadFoto(criado.id);
         }
 
-        setModalTitulo("Sucesso!");
-        setModalDescricao("Cadastrado com sucesso! Quer retornar à lista de profissionais?");
-        setModalActions(
-          <>
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded mr-3"
-              onClick={irParaLista}
-            >
-              Ir para lista
-            </button>
-            <button
-              className="bg-gray-300 px-4 py-2 rounded"
-              onClick={() => setModalOpen(false)}
-            >
-              Continuar
-            </button>
-          </>
-        );
-        setModalOpen(true);
+        // Redireciona direto para a lista, sem modal de sucesso
+        irParaLista();
       }
     } catch (error) {
       console.log(error);
@@ -163,17 +146,8 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
           await uploadFoto(id);
         }
 
-        setModalTitulo("Sucesso!");
-        setModalDescricao("Editado com sucesso! Retornando à lista de profissionais.");
-        setModalActions(
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-            onClick={irParaLista}
-          >
-            Ok
-          </button>
-        );
-        setModalOpen(true);
+        // Redireciona direto para a lista, sem modal de sucesso
+        irParaLista();
       }
     } catch (error) {
       console.log(error);
@@ -225,6 +199,12 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
             placeholder="Ex: (11) 91234-1234 ou fulano@email.com"
             onInput={(e) => setProfissional({ ...profissional, contato: e.target.value })}
             value={profissional.contato ?? ""}
+          />
+          <InputBordaLabel
+            titulo="Categoria"
+            placeholder="Ex: Fotógrafo, Videógrafo, Editor..."
+            value={profissional.categoria ?? ""}
+            onInput={(e) => setProfissional({ ...profissional, categoria: e.target.value })}
           />
         </div>
 

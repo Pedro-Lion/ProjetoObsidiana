@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS profissional (
     nome VARCHAR(255),
     disponibilidade VARCHAR(255),
     contato VARCHAR(255),
+    categoria VARCHAR(255),
     nome_arquivo_imagem VARCHAR(255),
     caminho_imagem VARCHAR(500),
     tipo_imagem VARCHAR(100)
@@ -162,9 +163,9 @@ INSERT INTO
 
 -- PROFISSIONAL
 INSERT INTO
-    profissional (nome, disponibilidade, contato)
+    profissional (nome, disponibilidade, contato, categoria)
     VALUE
-    ('Haidê Landim', 'Disponível', 'haide.landim@outlook.com');
+    ('Haidê Landim', 'Disponível', 'haide.landim@outlook.com', 'Fotógrafa');
 
 -- ORCAMENTO
 INSERT INTO

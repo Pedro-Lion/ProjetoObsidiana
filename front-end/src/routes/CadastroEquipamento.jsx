@@ -162,25 +162,8 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
           await uploadImagem(criado.id);
         }
 
-        setModalTitulo("Sucesso!");
-        setModalDescricao("Cadastrado com sucesso! Quer retornar à lista de equipamentos?");
-        setModalActions(
-          <>
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded mr-3"
-              onClick={irParaLista}
-            >
-              Ir para lista
-            </button>
-            <button
-              className="bg-gray-300 px-4 py-2 rounded"
-              onClick={() => setModalOpen(false)}
-            >
-              Continuar
-            </button>
-          </>
-        );
-        setModalOpen(true);
+        // Redireciona direto para a lista, sem modal de sucesso
+        irParaLista();
       }
     } catch (error) {
       console.log(error);
@@ -210,17 +193,8 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
         if (arquivoImagem && id) {
           await uploadImagem(id);
         }
-        setModalTitulo("Sucesso!");
-        setModalDescricao("Editado com sucesso! Retornando à lista de equipamentos.");
-        setModalActions(
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-            onClick={irParaLista}
-          >
-            Ok
-          </button>
-        );
-        setModalOpen(true);
+        // Redireciona direto para a lista, sem modal de sucesso
+        irParaLista();
       } else {
         setModalTitulo("Erro");
         setModalDescricao("Equipamento não pôde ser editado. Tente novamente.");
