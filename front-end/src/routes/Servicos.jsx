@@ -122,22 +122,24 @@ export function Servicos() {
 
   return (
     <>
-      <div className="flex justify-between">
-        <h1>Serviços</h1>
+      <h1>Serviços</h1>
+
+      <div className="flex flex-col-reverse justify-evenly items-start md:flex-row md:justify-between md:items-baseline-last">
+        <div className="w-full md:w-3/4">
+          <InputBordaLabel
+            type="text"
+            titulo="Buscar"
+            placeholder="Nome, descrição, equipamento..."
+            value={search}
+            onInput={(e) => setSearch(e.target.value)}
+            className=""
+          />
+        </div>
+        <div className="block md:hidden border-b border-slate-300 w-full mt-3.5 mb-2"/>
         <BotaoPrimario
           titulo="+ Novo serviço"
           onClick={() => navigate("/cadastro/servicos")}
-        />
-      </div>
-
-      <div className="w-full pr-5">
-        <InputBordaLabel
-          type="text"
-          titulo="Buscar"
-          placeholder="Nome, descrição, equipamento..."
-          value={search}
-          onInput={(e) => setSearch(e.target.value)}
-          className=""
+          className="w-full md:w-fit"
         />
       </div>
 
