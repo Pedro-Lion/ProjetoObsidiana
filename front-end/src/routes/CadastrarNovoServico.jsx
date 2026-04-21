@@ -164,7 +164,7 @@ export function CadastrarNovoServico() {
       {state ? <h1>Editar serviço</h1> : <h1>Cadastrar serviço</h1>}
 
       <section className="flex flex-col">
-        <div className="flex justify-between gap-3 items-start mb">
+        <div className="flex justify-between gap-3 items-start mb flex-wrap md:flex-nowrap">
           <div className="flex flex-col w-full">
             <InputBordaLabel
               titulo="Nome do Serviço"
