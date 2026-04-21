@@ -25,7 +25,7 @@ public interface EquipamentoRepository extends JpaRepository<Equipamento, Long> 
                OR LOWER(COALESCE(e.marca,        '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(e.modelo,       '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(e.numero_serie, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
-               OR CAST(COALESCE(e.valor_por_hora, 0) AS VARCHAR) LIKE CONCAT('%', :busca, '%')
+               OR CAST(COALESCE(e.valor_por_hora, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
             """,
             countQuery = """
             SELECT COUNT(*) FROM equipamento e
@@ -34,7 +34,7 @@ public interface EquipamentoRepository extends JpaRepository<Equipamento, Long> 
                OR LOWER(COALESCE(e.marca,        '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(e.modelo,       '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(e.numero_serie, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
-               OR CAST(COALESCE(e.valor_por_hora, 0) AS VARCHAR) LIKE CONCAT('%', :busca, '%')
+               OR CAST(COALESCE(e.valor_por_hora, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
             """,
             nativeQuery = true
     )
