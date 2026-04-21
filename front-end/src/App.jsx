@@ -76,7 +76,7 @@ export function App() {
           <img className="h-15" src="/MM_white.png" alt="Logo Obsidiana" />
         </div>
 
-        <Navbar />
+        <Navbar fecharMenu={() => setMenuAberto(false)} />
 
         <section
           onClick={() => { navigate("/perfil"); setMenuAberto(false); }}
