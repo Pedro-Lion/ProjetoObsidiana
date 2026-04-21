@@ -69,7 +69,8 @@ export function App() {
           className="mb-10 flex justify-start items-center gap-5 cursor-pointer"
           onClick={() => { navigate("/"); setMenuAberto(false); }}
         >
-          <div className="bg-[#f0f0f0] rounded-r-full w-fit py-5 pl-7 pr-6 justify-items-center">
+          {/* pr-4 em vez de pr-6 reduz o espaço interno direito da pílula, dando mais espaço para o texto "OBSIDIANA" ao lado */}
+          <div className="bg-[#f0f0f0] rounded-r-full w-fit py-5 pl-7 pr-4 justify-items-center">
             <img className="h-15" src="/logo.png" alt="Logo Obsidiana" />
           </div>
           <img className="h-15" src="/MM_white.png" alt="Logo Obsidiana" />
