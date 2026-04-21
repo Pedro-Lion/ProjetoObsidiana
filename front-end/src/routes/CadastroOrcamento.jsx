@@ -80,6 +80,20 @@ export function CadastroOrcamento() {
   // Controla se o usuário deseja editar o valor manualmente (sobrescrevendo o cálculo automático)
   const [valorManual, setValorManual] = useState(false);
 
+  // Estado de exibição formatado do valor total no modo manual (ex: "1500.00")
+  const [valorTotalDisplay, setValorTotalDisplay] = useState(
+    (orcamento.valorTotal ?? 0).toFixed(2)
+  );
+
+  // Máscara decimal: remove não-dígitos, divide por 100 e formata com 2 casas
+  // Mesmo padrão usado no input de valor por hora do cadastro de equipamento
+  function onInputValorTotal(e) {
+    const v = (e.target.value || "").replace(/\D/g, "");
+    const numero = (Number(v) / 100).toFixed(2);
+    setValorTotalDisplay(numero);
+    setOrcamento((o) => ({ ...o, valorTotal: Number(numero) }));
+  }
+
   // Indica se as opções já foram carregadas da API (evita zerar o valorTotal antes do carregamento)
   const [opcoesCarregadas, setOpcoesCarregadas] = useState(false);
 
@@ -362,81 +376,77 @@ export function CadastroOrcamento() {
       </section>
 
       {/* Seção de valor do orçamento */}
-      <div style={{
-        width: "100%",
-        marginBlock: "1rem",
-        backgroundColor: "#f5f3ff",
-        padding: "1rem 2rem",
-        borderRadius: "0.5rem",
-      }}>
-        {/* Cabeçalho da seção */}
-        <div className="flex flex-row justify-between items-center mb-3">
-          <label className="text-slate-700 text-xl w-fit px-7 py-1 rounded-full border-2 border-violet-200 bg-white">
-            Valor do Orçamento
-          </label>
+      <div className="justify-start border-t border-slate-300 pt-5">
 
-          {/* Botão para alternar entre modo calculado e manual */}
-          <button
-            type="button"
-            onClick={() => {
-              setValorManual((prev) => {
-                // Ao desativar o modo manual, volta ao valor calculado automaticamente
-                if (prev) {
-                  setOrcamento((o) => ({ ...o, valorTotal: valorCalculado }));
-                }
-                return !prev;
-              });
-            }}
-            className={`text-[1rem] px-4 py-1 rounded-full border-2 cursor-pointer transition-colors ${
-              valorManual
-                ? "border-violet-400 bg-violet-400 text-white"
-                : "border-violet-300 bg-white text-violet-500 hover:border-violet-400"
-            }`}
-          >
-            {valorManual ? "✎ Editando manualmente" : "✎ Editar manualmente"}
-          </button>
-        </div>
+          <h3 className="mb-2">Valor do Orçamento</h3>
 
         {!valorManual ? (
           /* Modo calculado: exibe o total e o detalhamento por categoria */
           <div className="flex flex-col gap-1">
-            <span className="text-slate-400 text-[0.95rem]">
-              Calculado automaticamente com base nos itens selecionados
-            </span>
-            <span className="text-3xl font-semibold text-slate-700 mt-1">
-              {formatarMoeda(valorCalculado)}
-            </span>
+            <div className="flex flex-col md:flex-row md:items-center justify-start gap-x-4">
+              <span className="text-3xl font-semibold text-slate-700 mt-1">
+                {formatarMoeda(valorCalculado)}
+              </span>
+              {/* Botão para alternar entre modo calculado e manual */}
+              <button
+                type="button"
+                onClick={() => {
+                  setValorManual((prev) => {
+                    // Ao desativar o modo manual, volta ao valor calculado automaticamente
+                    if (prev) {
+                      setOrcamento((o) => ({ ...o, valorTotal: valorCalculado }));
+                    } else {
+                      // Ao ativar o modo manual, inicializa o display com o valor calculado atual
+                      setValorTotalDisplay(valorCalculado.toFixed(2));
+                    }
+                    return !prev;
+                  });
+                }}
+                className={`w-fit h-fit mt-2 md:mt-0 text-[1rem] px-4 py-0.5 cursor-pointer transition-color rounded-full border ${valorManual
+                  ? "border-rose-500 bg-white text-rose-500 hover:border-red-400 hover:text-red-400 hover:bg-red-50 transition duration-200"
+                  : "border-indigo-400 bg-white text-slate-700 hover:border-indigo-50 hover:transition hover:ease-in-out hover:duration-400 hover:bg-gradient-to-r hover:from-indigo-100 hover:to-sky-50 hover:text-indigo-400 hover:border-sky-50"
+                  }`}
+              >
+                {valorManual ? "🗙 Cancelar edição" : "✎ Editar valor"}
+              </button>
+            </div>
             {/* Detalhamento por categoria */}
             <div className="flex gap-6 flex-wrap mt-1 text-slate-500 text-[0.95rem]">
               <span>Serviços: <strong>{formatarMoeda(totalServicos)}</strong></span>
               <span>Equipamentos: <strong>{formatarMoeda(totalEquipamentos)}</strong></span>
             </div>
+            <span className="text-slate-400 text-[0.95rem]">
+              Calculado automaticamente com base nos itens selecionados
+            </span>
           </div>
         ) : (
           /* Modo manual: exibe o valor sugerido e permite ao usuário definir o valor livremente */
           <div className="flex flex-col gap-3">
             <span className="text-slate-400 text-[0.95rem]">
               Valor sugerido (calculado automaticamente):{" "}
-              <strong className="text-violet-600">{formatarMoeda(valorCalculado)}</strong>
+              <strong className="text-slate-700">{formatarMoeda(valorCalculado)}</strong>
             </span>
-            <div className="flex flex-col w-full max-w-xs">
-              <label className="relative top-3 ml-[0.7rem] px-[0.3rem] text-indigo-500 font-medium text-[1.1rem] bg-white w-fit">
-                Valor total (R$)
-              </label>
-              <input
-                type="number"
-                min={0}
-                step={0.01}
+            <div className="flex flex-col items-start gap-3">
+              <InputBordaLabel
+                titulo="Valor total (R$)"
+                type="text"
                 placeholder="0,00"
-                value={orcamento.valorTotal ?? valorCalculado}
-                onChange={(e) =>
-                  setOrcamento((o) => ({
-                    ...o,
-                    valorTotal: parseFloat(e.target.value) || 0,
-                  }))
-                }
-                className="border-indigo-500 text-slate-700 px-3 py-3 text-[1.1rem] bg-transparent border rounded-lg focus:outline-none placeholder:text-black/25"
+                value={valorTotalDisplay}
+                onInput={onInputValorTotal}
+                className="w-fit max-w-xs"
               />
+              {/* Botão para cancelar edição manual e voltar ao valor calculado automaticamente */}
+              <button
+                type="button"
+                onClick={() => {
+                  setValorManual(false);
+                  setValorTotalDisplay(valorCalculado.toFixed(2));
+                  setOrcamento((o) => ({ ...o, valorTotal: valorCalculado }));
+                }}
+                className="w-fit h-fit mb-[0.15rem] text-[1rem] px-4 py-0.5 cursor-pointer transition-color rounded-full border border-rose-500 bg-white text-rose-500 hover:border-red-400 hover:text-red-400 hover:bg-red-50 transition duration-200"
+              >
+                🗙 Cancelar edição
+              </button>
             </div>
           </div>
         )}
