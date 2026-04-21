@@ -116,8 +116,11 @@ export function CadastroOrcamento() {
   // Função para bloquear datas inválidas no picker de término
   function isValidDataTermino(currentDate) {
     if (!momentoInicio) return true;
-    // Permite apenas datas/horas estritamente depois de dataInicio
-    return currentDate.isAfter(momentoInicio);
+    // Compara apenas o dia (ignora hora/minuto), pois o picker passa cada célula do calendário
+    // como meia-noite do respectivo dia. Assim, o mesmo dia do início fica disponível para
+    // seleção — o usuário pode escolher um horário mais tarde. A validação de hora é feita
+    // pela função validar() ao tentar salvar.
+    return currentDate.isSameOrAfter(momentoInicio, "day");
   }
 
   function validar() {
