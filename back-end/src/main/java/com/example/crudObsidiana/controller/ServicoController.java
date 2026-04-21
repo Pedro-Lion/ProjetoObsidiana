@@ -12,6 +12,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,14 +47,35 @@ public class ServicoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(repository.save(servicoCriado));
     }
 
-
-    @Operation(summary = "Lista todos os serviços")
+    // ---------------------------------------------------------------
+    // GET /servico — listagem completa (compatibilidade legada)
+    // ---------------------------------------------------------------
+    @Operation(summary = "Lista todos os serviços (sem paginação)")
     @ApiResponse(responseCode = "200", description = "Lista de serviços retornada com sucesso",
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = Servico.class))))
     @GetMapping
     public List<Servico> listarTodos() {
         return repository.findAll();
+    }
+
+    // ---------------------------------------------------------------
+    // GET /servico/paginado?page=0&size=10
+    // ---------------------------------------------------------------
+    @Operation(summary = "Lista serviços com paginação e busca",
+            description = "Retorna uma página de serviços. Parâmetros: 'page' (base 0), 'size' (itens por página) e 'busca' (filtra por nome, opcional).")
+    @ApiResponse(responseCode = "200", description = "Página de serviços retornada com sucesso")
+    @GetMapping("/paginado")
+    public ResponseEntity<Page<Servico>> listarPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String busca) {
+        Pageable pageable = PageRequest.of(page, size);
+        // Usa findByBusca para pesquisar em todos os campos (nome, descrição, horas, valor)
+        Page<Servico> resultado = busca.isBlank()
+                ? repository.findAll(pageable)
+                : repository.findByBusca(busca, pageable);
+        return ResponseEntity.ok(resultado);
     }
 
     @Operation(summary = "Recupera um serviço pelo ID")
@@ -93,6 +117,4 @@ public class ServicoController {
         servico.setId(id);
         return ResponseEntity.ok(repository.save(servico));
     }
-
-
 }

@@ -32,7 +32,7 @@ public class Orcamento {
     private String status;
 
     @Schema(description = "Valor total estimado")
-    @Column(name = "valorTotal")
+    @Column(name = "valor_total")
     private Double valorTotal;
 
     @Schema(description = "Valor recebido da API Outlook ", example = "AybcaefSYc75....")

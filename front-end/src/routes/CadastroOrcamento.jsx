@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useMsal } from "@azure/msal-react";
 
@@ -77,6 +77,26 @@ export function CadastroOrcamento() {
     orcamento.dataInicio ? moment(orcamento.dataInicio) : null
   );
 
+  // Controla se o usuário deseja editar o valor manualmente (sobrescrevendo o cálculo automático)
+  const [valorManual, setValorManual] = useState(false);
+
+  // Estado de exibição formatado do valor total no modo manual (ex: "1500.00")
+  const [valorTotalDisplay, setValorTotalDisplay] = useState(
+    (orcamento.valorTotal ?? 0).toFixed(2)
+  );
+
+  // Máscara decimal: remove não-dígitos, divide por 100 e formata com 2 casas
+  // Mesmo padrão usado no input de valor por hora do cadastro de equipamento
+  function onInputValorTotal(e) {
+    const v = (e.target.value || "").replace(/\D/g, "");
+    const numero = (Number(v) / 100).toFixed(2);
+    setValorTotalDisplay(numero);
+    setOrcamento((o) => ({ ...o, valorTotal: Number(numero) }));
+  }
+
+  // Indica se as opções já foram carregadas da API (evita zerar o valorTotal antes do carregamento)
+  const [opcoesCarregadas, setOpcoesCarregadas] = useState(false);
+
   function registrarData(dt, atributo) {
     if (moment.isMoment(dt)) {
       const orcamentoCopia = { ...orcamento };
@@ -96,8 +116,11 @@ export function CadastroOrcamento() {
   // Função para bloquear datas inválidas no picker de término
   function isValidDataTermino(currentDate) {
     if (!momentoInicio) return true;
-    // Permite apenas datas/horas estritamente depois de dataInicio
-    return currentDate.isAfter(momentoInicio);
+    // Compara apenas o dia (ignora hora/minuto), pois o picker passa cada célula do calendário
+    // como meia-noite do respectivo dia. Assim, o mesmo dia do início fica disponível para
+    // seleção — o usuário pode escolher um horário mais tarde. A validação de hora é feita
+    // pela função validar() ao tentar salvar.
+    return currentDate.isSameOrAfter(momentoInicio, "day");
   }
 
   function validar() {
@@ -127,6 +150,33 @@ export function CadastroOrcamento() {
     });
   }
 
+  // Formata serviços incluindo dados de preço para o cálculo automático
+  function formatarOpcoesServico(lista = []) {
+    return lista.map((item) => ({
+      value: item.id,
+      label: item.nome,
+      valorPorHora: item.valorPorHora ?? 0,
+      horas: item.horas ?? 0,
+    }));
+  }
+
+  // Formata equipamentos incluindo dados de preço para o cálculo automático
+  function formatarOpcoesEquipamento(lista = []) {
+    return lista.map((item) => ({
+      value: item.id,
+      label: item.nome,
+      valorPorHora: item.valorPorHora ?? 0,
+    }));
+  }
+
+  // Formata número como moeda BRL
+  function formatarMoeda(valor = 0) {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(valor ?? 0);
+  }
+
   useEffect(() => {
     async function getOpcoes() {
       try {
@@ -141,19 +191,66 @@ export function CadastroOrcamento() {
           )
         );
 
+        // Mapa de formatadores específicos por tipo:
+        // serviço e equipamento incluem dados de preço para o cálculo automático
+        const formatadores = {
+          servico: formatarOpcoesServico,
+          equipamento: formatarOpcoesEquipamento,
+          profissional: formatarOpcoes,
+        };
+
         const novasOpcoes = { ...opcoes };
         respostaKeys.forEach((key, index) => {
           const dados = respostas[index].data;
-          if (dados.length != 0) novasOpcoes[key] = formatarOpcoes(dados);
+          if (dados.length != 0) novasOpcoes[key] = formatadores[key](dados);
         });
 
         setOpcoes(novasOpcoes);
+        setOpcoesCarregadas(true); // sinaliza que as opções foram carregadas da API
       } catch (error) {
         console.log(error);
       }
     }
     getOpcoes();
   }, []);
+
+  // Cálculo automático do valor total com base nos itens selecionados
+  const { totalServicos, totalEquipamentos, valorCalculado } = useMemo(() => {
+    // Normaliza IDs de serviços (podem chegar como número ou como objeto {id, nome})
+    const servicoIds = (orcamento.servicos || []).map((s) =>
+      typeof s === "number" ? s : s?.id
+    );
+
+    // Soma o preço de cada serviço selecionado: valorPorHora × horas
+    const totalServicos = servicoIds.reduce((soma, id) => {
+      const opcao = opcoes.servico.find((o) => o.value === id);
+      if (!opcao) return soma;
+      return soma + (opcao.valorPorHora ?? 0) * (opcao.horas ?? 0);
+    }, 0);
+
+    // Soma o preço de cada equipamento selecionado: valorPorHora × quantidadeUsada
+    const totalEquipamentos = (orcamento.usosEquipamentos || []).reduce((soma, uso) => {
+      // Normaliza o ID (pode vir como idEquipamento, equipamento.id ou id diretamente)
+      const idEq = uso.idEquipamento ?? uso.equipamento?.id ?? uso.id;
+      const opcao = opcoes.equipamento.find((o) => o.value === idEq);
+      if (!opcao) return soma;
+      return soma + (opcao.valorPorHora ?? 0) * (uso.quantidadeUsada ?? 1);
+    }, 0);
+
+    return {
+      totalServicos,
+      totalEquipamentos,
+      valorCalculado: totalServicos + totalEquipamentos,
+    };
+  }, [orcamento.servicos, orcamento.usosEquipamentos, opcoes.servico, opcoes.equipamento]);
+
+  // Sincroniza o valorTotal do orçamento com o valor calculado automaticamente,
+  // mas apenas depois que as opções foram carregadas e o usuário não editou manualmente
+  useEffect(() => {
+    if (!valorManual && opcoesCarregadas) {
+      setOrcamento((prev) => ({ ...prev, valorTotal: valorCalculado }));
+    }
+  }, [valorCalculado, valorManual, opcoesCarregadas]);
 
   const ErroMsg = ({ campo }) =>
     erros[campo] ? (
@@ -165,7 +262,7 @@ export function CadastroOrcamento() {
       <h1>{!state ? "Cadastrar" : "Editar"} orçamento</h1>
 
       <section className="flex flex-col gap-2">
-        <div className="flex justify-between gap-5">
+        <div className="flex justify-between md:gap-5 flex-wrap md:flex-nowrap">
           <SelectBordaLabel
             className="w-full"
             titulo="Status"
@@ -183,7 +280,7 @@ export function CadastroOrcamento() {
 
           <div className="flex flex-col w-full">
             <InputDataBordaLabel
-              titulo="Data de início"
+              titulo="Início"
               className="w-full"
               defaultValue={
                 orcamento.dataInicio ? new Date(orcamento.dataInicio) : undefined
@@ -195,7 +292,7 @@ export function CadastroOrcamento() {
 
           <div className="flex flex-col w-full">
             <InputDataBordaLabel
-              titulo="Data de término"
+              titulo="Fim"
               className="w-full"
               defaultValue={
                 orcamento.dataTermino
@@ -280,6 +377,83 @@ export function CadastroOrcamento() {
           }
         />
       </section>
+
+      {/* Seção de valor do orçamento */}
+      <div className="justify-start border-t border-slate-300 pt-5">
+
+          <h3 className="mb-2">Valor do Orçamento</h3>
+
+        {!valorManual ? (
+          /* Modo calculado: exibe o total e o detalhamento por categoria */
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-col md:flex-row md:items-center justify-start gap-x-4">
+              <span className="text-3xl font-semibold text-slate-700 mt-1">
+                {formatarMoeda(valorCalculado)}
+              </span>
+              {/* Botão para alternar entre modo calculado e manual */}
+              <button
+                type="button"
+                onClick={() => {
+                  setValorManual((prev) => {
+                    // Ao desativar o modo manual, volta ao valor calculado automaticamente
+                    if (prev) {
+                      setOrcamento((o) => ({ ...o, valorTotal: valorCalculado }));
+                    } else {
+                      // Ao ativar o modo manual, inicializa o display com o valor calculado atual
+                      setValorTotalDisplay(valorCalculado.toFixed(2));
+                    }
+                    return !prev;
+                  });
+                }}
+                className={`w-fit h-fit mt-2 md:mt-0 text-[1rem] px-4 py-0.5 cursor-pointer transition-color rounded-full border ${valorManual
+                  ? "border-rose-500 bg-white text-rose-500 hover:border-red-400 hover:text-red-400 hover:bg-red-50 transition duration-200"
+                  : "border-indigo-400 bg-white text-slate-700 hover:border-indigo-50 hover:transition hover:ease-in-out hover:duration-400 hover:bg-gradient-to-r hover:from-indigo-100 hover:to-sky-50 hover:text-indigo-400 hover:border-sky-50"
+                  }`}
+              >
+                {valorManual ? "🗙 Cancelar edição" : "✎ Editar valor"}
+              </button>
+            </div>
+            {/* Detalhamento por categoria */}
+            <div className="flex gap-6 flex-wrap mt-1 text-slate-500 text-[0.95rem]">
+              <span>Serviços: <strong>{formatarMoeda(totalServicos)}</strong></span>
+              <span>Equipamentos: <strong>{formatarMoeda(totalEquipamentos)}</strong></span>
+            </div>
+            <span className="text-slate-400 text-[0.95rem]">
+              Calculado automaticamente com base nos itens selecionados
+            </span>
+          </div>
+        ) : (
+          /* Modo manual: exibe o valor sugerido e permite ao usuário definir o valor livremente */
+          <div className="flex flex-col gap-3">
+            <span className="text-slate-400 text-[0.95rem]">
+              Valor sugerido (calculado automaticamente):{" "}
+              <strong className="text-slate-700">{formatarMoeda(valorCalculado)}</strong>
+            </span>
+            <div className="flex flex-col items-start gap-3">
+              <InputBordaLabel
+                titulo="Valor total (R$)"
+                type="text"
+                placeholder="0,00"
+                value={valorTotalDisplay}
+                onInput={onInputValorTotal}
+                className="w-fit max-w-xs"
+              />
+              {/* Botão para cancelar edição manual e voltar ao valor calculado automaticamente */}
+              <button
+                type="button"
+                onClick={() => {
+                  setValorManual(false);
+                  setValorTotalDisplay(valorCalculado.toFixed(2));
+                  setOrcamento((o) => ({ ...o, valorTotal: valorCalculado }));
+                }}
+                className="w-fit h-fit mb-[0.15rem] text-[1rem] px-4 py-0.5 cursor-pointer transition-color rounded-full border border-rose-500 bg-white text-rose-500 hover:border-red-400 hover:text-red-400 hover:bg-red-50 transition duration-200"
+              >
+                🗙 Cancelar edição
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Botões de ação */}
       <div className="flex gap-3 self-end">

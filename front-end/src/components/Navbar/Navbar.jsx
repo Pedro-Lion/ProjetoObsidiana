@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { NavbarBotao } from "./NavbarBotao.jsx";
 import { NavbarGrupo } from "./NavbarGrupo.jsx";
 
-export function Navbar() {
+export function Navbar({ fecharMenu }) {
+  const navigate = useNavigate();
   const [abertos, setAbertos] = useState([false, false, false, false]);
   function alterarAbertos(indexAlterar = 0) {
     const novoAbertos = abertos.map((a) => (a = false));
@@ -15,7 +17,7 @@ export function Navbar() {
   const estiloIcone = "text-[2rem] text-gray-50";
 
   const navGrupos = [
-    <NavbarBotao key="nav_home">
+    <NavbarBotao key="nav_home" onClick={() => { navigate("/"); fecharMenu?.(); }}>
       <i className={"bi bi-house " + estiloIcone}></i>
       <span>Página principal</span>
     </NavbarBotao>,
@@ -71,6 +73,7 @@ export function Navbar() {
         icones={g.icones}
         aberto={abertos[i]}
         onClick={() => alterarAbertos(i)}
+        fecharMenu={fecharMenu}
       />
     ))
   );

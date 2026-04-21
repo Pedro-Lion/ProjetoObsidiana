@@ -3,7 +3,7 @@ export function BotaoPrimario({ titulo = "Clique aqui", icone = "", className = 
         <button type="button" className={`
         ${className}
         min-h-12 min-w-30 my-3.5 rounded-lg
-        bg-slate-950 p-2.5
+        bg-slate-900 p-2.5
         text-white text-[1.1rem] text-center
         transition ease-in-out duration-400
         hover:transition hover:ease-in-out hover:duration-400

@@ -5,11 +5,20 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { CardServico } from "../components/Cards/CardServico";
 import { Modal } from "../components/Modal/Modal.jsx";
+import { Paginacao } from "../components/Paginacao/Paginacao.jsx";
+
+const ITENS_POR_PAGINA = 6;
 
 export function Servicos() {
   const navigate = useNavigate();
   const [servicos, setServicos] = useState([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // Paginação
+  const [paginaAtual, setPaginaAtual] = useState(0);
+  const [totalPaginas, setTotalPaginas] = useState(0);
+  const [totalElementos, setTotalElementos] = useState(0);
 
   // Estados do modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -17,23 +26,44 @@ export function Servicos() {
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalActions, setModalActions] = useState(null);
 
-  useEffect(() => {
-    async function getServicos() {
-      try {
-        const request = await api.get("/servico", {
-          headers: {
-            Authorization: "Bearer " + sessionStorage.getItem("token"),
-          },
-        });
-        if (request.status === 200) {
-          setServicos(request.data);
-        }
-      } catch (err) {
-        console.error(err);
+  async function buscarServicos(pagina = 0, termo = search) {
+    setLoading(true);
+    try {
+      const request = await api.get("/servico/paginado", {
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+        params: { page: pagina, size: ITENS_POR_PAGINA, busca: termo },
+      });
+      if (request.status === 200) {
+        const paginaData = request.data;
+        setServicos(paginaData.content);
+        setTotalPaginas(paginaData.totalPages);
+        setTotalElementos(paginaData.totalElements);
+        setPaginaAtual(paginaData.number);
       }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    getServicos();
+  }
+
+  // Debounce: busca no backend 400ms após parar de digitar
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      buscarServicos(0, search);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    buscarServicos(0, "");
   }, []);
+
+  function mudarPagina(novaPagina) {
+    if (novaPagina < 0 || novaPagina >= totalPaginas) return;
+    buscarServicos(novaPagina);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   const deletar = (id) => {
     setModalTitulo("Confirmar exclusão");
@@ -45,23 +75,21 @@ export function Servicos() {
           onClick={async () => {
             try {
               const resposta = await api.delete(`/servico/${id}`, {
-                headers: {
-                  Authorization: "Bearer " + sessionStorage.getItem("token"),
-                },
+                headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
               });
               if (resposta.status === 200 || resposta.status === 204) {
-                setServicos((prev) => prev.filter((s) => s.id !== id));
+                const novaPagina = servicos.length === 1 && paginaAtual > 0
+                  ? paginaAtual - 1
+                  : paginaAtual;
+                setModalOpen(false);
+                buscarServicos(novaPagina);
               }
-              setModalOpen(false);
             } catch (err) {
               console.error(err);
               setModalTitulo("Erro");
               setModalDescricao("Não foi possível excluir. Tente novamente.");
               setModalActions(
-                <button
-                  className="bg-gray-300 px-4 py-2 rounded"
-                  onClick={() => setModalOpen(false)}
-                >
+                <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
                   Fechar
                 </button>
               );
@@ -71,10 +99,7 @@ export function Servicos() {
         >
           Excluir
         </button>
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
+        <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
           Cancelar
         </button>
       </>
@@ -82,24 +107,14 @@ export function Servicos() {
     setModalOpen(true);
   };
 
-  // Pesquisa em qualquer campo string/number do serviço e seus equipamentos
+  // Filtro local dentro da página atual
   const servicosFiltrados = servicos.filter((s) => {
     if (!search.trim()) return true;
     const termo = search.toLowerCase();
-
-    const camposServico = [
-      s.nome,
-      s.descricao,
-      s.valorPorHora?.toString(),
-      s.horas?.toString(),
-    ];
-
+    const camposServico = [s.nome, s.descricao, s.valorPorHora?.toString(), s.horas?.toString()];
     const camposEquipamentos = (s.equipamentos || []).flatMap((e) => [
-      e.nome,
-      e.categoria,
-      e.valorPorHora?.toString(),
+      e.nome, e.categoria, e.valorPorHora?.toString(),
     ]);
-
     return [...camposServico, ...camposEquipamentos]
       .filter(Boolean)
       .some((campo) => campo.toLowerCase().includes(termo));
@@ -107,35 +122,54 @@ export function Servicos() {
 
   return (
     <>
-      <div className="flex justify-between">
-        <h1>Serviços</h1>
+      <h1>Serviços</h1>
+
+      <div className="flex flex-col-reverse justify-evenly items-start md:flex-row md:justify-between md:items-baseline-last">
+        <div className="w-full md:w-3/4">
+          <InputBordaLabel
+            type="text"
+            titulo="Buscar"
+            placeholder="Nome, descrição, equipamento..."
+            value={search}
+            onInput={(e) => setSearch(e.target.value)}
+            className=""
+          />
+        </div>
+        <div className="block md:hidden border-b border-slate-300 w-full mt-3.5 mb-2"/>
         <BotaoPrimario
           titulo="+ Novo serviço"
           onClick={() => navigate("/cadastro/servicos")}
+          className="w-full md:w-fit"
         />
       </div>
 
-      <InputBordaLabel
-        titulo="Buscar"
-        placeholder="Buscar por nome, descrição, equipamento..."
-        value={search}
-        onInput={(e) => setSearch(e.target.value)}
-        className="mb-6 max-w-sm"
-      />
+      {loading && <p className="text-xl">Carregando serviços...</p>}
 
-      <section className="flex flex-wrap gap-5">
-        {servicosFiltrados.length !== 0 ? (
-          servicosFiltrados.map((s) => (
-            <CardServico
-              key={s.id}
-              dados={s}
-              onClickDel={() => deletar(s.id)}
-            />
-          ))
-        ) : (
-          <p className="text-xl">Nenhum serviço encontrado.</p>
-        )}
-      </section>
+      {!loading && (
+        <>
+          {totalElementos > 0 && (
+            <p className="text-slate-400 text-[1.1rem] mb-4">
+              {totalElementos} serviço{totalElementos !== 1 ? "s" : ""} encontrado{totalElementos !== 1 ? "s" : ""}
+            </p>
+          )}
+
+          <section className="flex flex-wrap gap-5">
+            {servicosFiltrados.length !== 0 ? (
+              servicosFiltrados.map((s) => (
+                <CardServico key={s.id} dados={s} onClickDel={() => deletar(s.id)} />
+              ))
+            ) : (
+              <p className="text-xl">Nenhum serviço encontrado{search ? ` para "${search}"` : ""}.</p>
+            )}
+          </section>
+
+          <Paginacao
+            paginaAtual={paginaAtual}
+            totalPaginas={totalPaginas}
+            onMudarPagina={mudarPagina}
+          />
+        </>
+      )}
 
       {modalOpen && (
         <Modal titulo={modalTitulo} descricao={modalDescricao}>
