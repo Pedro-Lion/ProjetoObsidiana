@@ -9,7 +9,7 @@ export function InputDataBordaLabel({
       <label
         className="relative top-3 ml-[0.7rem] px-[0.3rem]
         text-indigo-500 font-medium text-[1.1rem]
-        bg-white w-fit z-99"
+        bg-white w-fit z-10"
       >
         {titulo}
       </label>
