@@ -116,7 +116,7 @@ export function Perfil() {
           </p>
         )}
 
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-8
                         bg-violet-50 rounded-2xl p-8 border border-violet-100">
           <div className="flex-none">
             <InputFoto
@@ -164,7 +164,7 @@ export function Perfil() {
 
   // ── MODO EDIÇÃO ──────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-8 w-full max-w-2xl">
+    <div className="flex flex-col gap-8 w-full max-w-4xl">
       <div className="flex items-center gap-3">
         <button
           onClick={cancelarEdicao}
@@ -181,12 +181,12 @@ export function Perfil() {
         </p>
       )}
 
-      <div className="bg-violet-50 rounded-2xl p-8 border border-violet-100 flex flex-col gap-8">
+      <div className="bg-violet-50 rounded-2xl p-6 border border-violet-100 flex flex-col gap-8">
 
         {/* Foto */}
         <section>
           <h2 className="text-lg text-slate-700 font-semibold mb-5">Foto de Perfil</h2>
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          <div className="flex flex-col md:flex-row items-center gap-6">
             <InputFoto
               tamanho="16"
               initialPreview={fotoUrl}
@@ -213,7 +213,7 @@ export function Perfil() {
         <hr className="border-violet-200" />
 
         {/* Dados */}
-        <section>
+        <section className="bg-white rounded-2xl p-5 border-b border-r border-violet-200">
           <h2 className="text-lg text-slate-700 font-semibold mb-5">Dados do Usuário</h2>
           <div className="flex flex-col gap-5">
 
@@ -255,21 +255,21 @@ export function Perfil() {
               className="w-full"
             />
           </div>
-        </section>
 
-        {/* Ações */}
-        <div className="flex flex-col sm:flex-row gap-1 sm:justify-end">
-          <BotaoSecundario
-            titulo="Cancelar"
-            className="w-full sm:w-auto"
-            onClick={cancelarEdicao}
-          />
-          <BotaoPrimario
-            titulo="Salvar alterações"
-            className="w-full sm:w-auto mt-0"
-            onClick={salvar}
-          />
-        </div>
+          {/* Ações */}
+          <div className="flex flex-col md:flex-row gap-0 md:gap-2 md:justify-end md:align-baseline mt-8">
+            <BotaoSecundario
+              titulo="Cancelar"
+              className="w-full md:w-auto h-fit mb-0"
+              onClick={cancelarEdicao}
+            />
+            <BotaoPrimario
+              titulo="Salvar alterações"
+              className="w-full md:w-auto h-fit"
+              onClick={salvar}
+            />
+          </div>
+        </section>
       </div>
     </div>
   );
