@@ -88,7 +88,7 @@ export function App() {
       </header>
 
       {/* Conteúdo principal */}
-      <main className="relative w-full min-w-0 pt-20 px-10 pb-10 md:p-20 overflow-y-auto overflow-x-hidden flex flex-col gap-5 shadow-md bg-white/90">
+      <main className="relative w-full min-w-0 pt-25 px-10 pb-10 md:p-20 overflow-y-auto overflow-x-hidden flex flex-col gap-5 shadow-md bg-white/90">
         <Outlet />
       </main>
     </>
