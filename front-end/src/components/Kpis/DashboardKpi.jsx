@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 export default function DashboardKpi({ kpis }) {
+    // Permite navegar para a listagem de orçamentos com filtro pré-aplicado
+    const navigate = useNavigate();
     const total = (kpis.pendentes || 0) + (kpis.confirmados || 0) + (kpis.cancelados || 0);
     const calcPct = (value) => total > 0 ? Math.round((value / total) * 100) : 0;
 
@@ -8,6 +12,8 @@ export default function DashboardKpi({ kpis }) {
             label: "Pendentes",
             value: kpis.pendentes || 0,
             sub: "Aguardando aprovação",
+            // Valor exato do campo status no backend
+            statusFilter: "em análise",
             accentClass: "kpi-accent-amber",
             iconBg: "#FAEEDA",
             barClass: "kpi-bar-amber",
@@ -24,6 +30,7 @@ export default function DashboardKpi({ kpis }) {
             label: "Confirmados",
             value: kpis.confirmados || 0,
             sub: "Prontos para execução",
+            statusFilter: "confirmado",
             accentClass: "kpi-accent-purple",
             iconBg: "#EEEDFE",
             barClass: "kpi-bar-purple",
@@ -39,6 +46,7 @@ export default function DashboardKpi({ kpis }) {
             label: "Cancelados",
             value: kpis.cancelados || 0,
             sub: "Não realizados",
+            statusFilter: "cancelado",
             accentClass: "kpi-accent-red",
             iconBg: "#FCEBEB",
             barClass: "kpi-bar-red",
@@ -85,6 +93,8 @@ export default function DashboardKpi({ kpis }) {
                     overflow: hidden;
                     box-sizing: border-box;
                     transition: border-color 0.15s ease, box-shadow 0.15s ease;
+                    /* Indica que o card é clicável */
+                    cursor: pointer;
                 }
                 .kpi-card:hover {
                     border-color: #c9c9c9;
@@ -196,7 +206,12 @@ export default function DashboardKpi({ kpis }) {
                 {cards.map((card) => {
                     const pct = calcPct(card.value);
                     return (
-                        <div key={card.key} className={`kpi-card ${card.accentClass}`}>
+                        <div
+                            key={card.key}
+                            className={`kpi-card ${card.accentClass}`}
+                            // Navega para orçamentos passando o filtro de status via location.state
+                            onClick={() => navigate("/orcamentos", { state: { statusFilter: card.statusFilter } })}
+                        >
                             <div className="kpi-top">
                                 <span className="kpi-label">{card.label}</span>
                                 <div className="kpi-icon" style={{ background: card.iconBg }}>

@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
@@ -13,11 +13,16 @@ const ITENS_POR_PAGINA = 6;
 
 export function Orcamentos() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { instance } = useMsal();
   const account = instance.getActiveAccount();
 
+  // Lê o filtro de status enviado pela KPI do dashboard (ex: "em análise", "confirmado", "cancelado").
+  // Se o usuário acessar a página diretamente (sem vir de uma KPI), o valor é vazio.
+  const statusInicial = location.state?.statusFilter || "";
+
   const [orcamentos, setOrcamentos] = useState([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(statusInicial);
   const [loading, setLoading] = useState(true);
 
   // Paginação
@@ -61,7 +66,8 @@ export function Orcamentos() {
   }, [search]);
 
   useEffect(() => {
-    buscarOrcamentos(0, "");
+    // Usa o filtro inicial (vindo da KPI) ou vazio caso acesso direto
+    buscarOrcamentos(0, statusInicial);
   }, []);
 
   function mudarPagina(novaPagina) {
