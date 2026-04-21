@@ -77,10 +77,11 @@ export default function DashboardKpi({ kpis }) {
                 }
 
                 @media (max-width: 480px) {
+                    /* Grid: mantém 3 colunas lado a lado, bem compacto */
                     .kpi-grid {
-                        grid-template-columns: 1fr;
-                        gap: 8px;
-                        padding: 0.5rem 0;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 6px;
+                        padding: 0.25rem 0;
                     }
                 }
 
@@ -112,10 +113,11 @@ export default function DashboardKpi({ kpis }) {
                 .kpi-accent-red::before    { background: #E24B4A; }
 
                 @media (max-width: 480px) {
+                    /* Mantém a linha de topo colorida (não vira borda lateral) */
                     .kpi-card::before {
-                        top: 0; bottom: 0; right: auto;
-                        width: 3px; height: 100%;
-                        border-radius: 10px 0 0 10px;
+                        top: 0; left: 0; right: 0; bottom: auto;
+                        width: 100%; height: 3px;
+                        border-radius: 0;
                     }
                 }
 
@@ -180,25 +182,29 @@ export default function DashboardKpi({ kpis }) {
                 .kpi-bar-red    { background: #E24B4A; }
 
                 @media (max-width: 480px) {
+                    /* Card: padding mínimo, conteúdo centralizado */
                     .kpi-card {
-                        padding: 0.55rem 0.85rem 0.6rem 1rem;
+                        padding: 0.6rem 0.4rem 0.5rem;
                         border-radius: 10px;
+                        text-align: center;
                     }
+                    /* Label centralizado (sem ícone ao lado) */
                     .kpi-top {
-                        margin-bottom: 0;
+                        justify-content: center;
+                        margin-bottom: 4px;
                     }
-                    .kpi-body {
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                    }
-                    .kpi-body-text { flex: 1; }
+                    .kpi-label { font-size: 9px; }
+                    /* Ícone oculto — economiza espaço horizontal */
+                    .kpi-icon { display: none; }
+                    /* Número centralizado */
+                    .kpi-body { display: block; }
                     .kpi-number {
-                        font-size: 20px;
+                        font-size: 22px;
                         margin-bottom: 0;
                     }
+                    /* Oculta elementos secundários */
                     .kpi-sub { display: none; }
-                    .kpi-bar-section { margin-top: 6px; }
+                    .kpi-bar-section { display: none; }
                 }
             `}</style>
 
