@@ -128,9 +128,11 @@ export function Login(props) {
         estilo.main
       }
     >
-      <section className="w-full md:w-120 md:h-full relative flex-none flex flex-col justify-center">
+      {/* h-full em vez de md:h-full: a seção ocupa toda a altura disponível no mobile também,
+          garantindo que o logo absolute top-4 fique no topo sem sobrepor o form */}
+      <section className="w-full h-full md:w-120 relative flex-none flex flex-col justify-center">
         <img
-          className={"h-15 top-4 absolute " + estilo.logo}
+          className={"h-15 absolute top-4 " + estilo.logo}
           src="/logo.png"
           alt="Logo Obsidiana"
         />
