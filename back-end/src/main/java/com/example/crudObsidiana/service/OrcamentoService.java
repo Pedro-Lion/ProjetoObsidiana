@@ -11,6 +11,7 @@ import com.example.crudObsidiana.repository.ProfissionalRepository;
 import com.example.crudObsidiana.repository.ServicoRepository;
 import com.example.crudObsidiana.observer.OrcamentoObserver;
 import com.example.crudObsidiana.observer.OrcamentoSubject;
+import com.example.crudObsidiana.rabbitmq.OrcamentoEventPublisher;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,13 +33,18 @@ public class OrcamentoService implements OrcamentoSubject {
     private final List<OrcamentoObserver> observers = new ArrayList<>();
     private final OrcamentoRepository orcamentoRepository;
 
+    // Publisher RabbitMQ — publica eventos de status nas filas de mensageria
+    private final OrcamentoEventPublisher eventPublisher;
+
     //    CONSTRUCTORS
     // Injeção via construtor
     // o Spring vai colocar aqui todos os beans que implementam OrcamentoObserver
     @Autowired
     public OrcamentoService(OrcamentoRepository orcamentoRepository,
-                            List<OrcamentoObserver> observers) {
+                            List<OrcamentoObserver> observers,
+                            OrcamentoEventPublisher eventPublisher) {
         this.orcamentoRepository = orcamentoRepository;
+        this.eventPublisher      = eventPublisher;
 
         if (observers != null) {
             this.observers.addAll(observers);
@@ -231,6 +237,8 @@ public class OrcamentoService implements OrcamentoSubject {
             salvo.setStatus("Confirmado");
             Orcamento salvoComStatus = orcamentoRepository.save(salvo);
             notifyObservers(salvoComStatus, statusAnterior, "Confirmado");
+            // Publicar evento de confirmação no RabbitMQ (fila.orcamento.confirmado)
+            eventPublisher.publicarConfirmado(salvoComStatus, statusAnterior);
             salvoComStatus.setDuracaoEvento(calcularDuracaoEvento(salvoComStatus));
             return salvoComStatus;
         }
@@ -400,6 +408,11 @@ public class OrcamentoService implements OrcamentoSubject {
         if ( ("Confirmado".equalsIgnoreCase(statusAnterior)) == seraConfirmado ) {
             existente.setStatus(novoStatus);
             Orcamento salvo = orcamentoRepository.save(existente);
+            // Publicar evento de cancelamento mesmo quando não vem de Confirmado
+            // (ex: "Em análise" → "Cancelado" não passa pelo Observer, mas deve publicar na fila)
+            if ("Cancelado".equalsIgnoreCase(novoStatus)) {
+                eventPublisher.publicarCancelado(salvo, statusAnterior);
+            }
             salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
             return salvo;
         }
@@ -423,6 +436,8 @@ public class OrcamentoService implements OrcamentoSubject {
             existente.setStatus("Confirmado");
             Orcamento salvo = orcamentoRepository.save(existente);
             notifyObservers(salvo, statusAnterior, "Confirmado");
+            // Publicar evento de confirmação no RabbitMQ (fila.orcamento.confirmado)
+            eventPublisher.publicarConfirmado(salvo, statusAnterior);
             salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
             return salvo;
         }
@@ -432,6 +447,10 @@ public class OrcamentoService implements OrcamentoSubject {
             existente.setStatus(novoStatus);
             Orcamento salvo = orcamentoRepository.save(existente);
             notifyObservers(salvo, statusAnterior, novoStatus);
+            // Publicar evento de cancelamento no RabbitMQ (apenas se o destino for Cancelado)
+            if ("Cancelado".equalsIgnoreCase(novoStatus)) {
+                eventPublisher.publicarCancelado(salvo, statusAnterior);
+            }
             salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
             return salvo;
         }
@@ -460,6 +479,11 @@ public class OrcamentoService implements OrcamentoSubject {
         if (eraConfirmado == seraConfirmado) {
             orcamento.setStatus(novoStatus);
             Orcamento salvo = orcamentoRepository.save(orcamento);
+            // Publicar evento de cancelamento mesmo quando não vem de Confirmado
+            // (ex: "Em análise" → "Cancelado" não passa pelo Observer, mas deve publicar na fila)
+            if ("Cancelado".equalsIgnoreCase(novoStatus)) {
+                eventPublisher.publicarCancelado(salvo, statusAnterior);
+            }
             salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
             return salvo;
         }
@@ -492,6 +516,15 @@ public class OrcamentoService implements OrcamentoSubject {
         // Notifica observers se houve transição de/para Confirmado
         if (eraConfirmado != seraConfirmado) {
             notifyObservers(salvo, statusAnterior, novoStatus);
+        }
+
+        // Publicar evento no RabbitMQ conforme novo status
+        if (seraConfirmado && !eraConfirmado) {
+            // "Em análise" → "Confirmado": publica na fila de confirmados
+            eventPublisher.publicarConfirmado(salvo, statusAnterior);
+        } else if ("Cancelado".equalsIgnoreCase(novoStatus) && eraConfirmado) {
+            // "Confirmado" → "Cancelado": publica na fila de cancelados
+            eventPublisher.publicarCancelado(salvo, statusAnterior);
         }
 
         salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));

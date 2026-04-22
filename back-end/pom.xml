@@ -76,6 +76,12 @@
 			<version>2.2.0</version>
 		</dependency>
 
+		<!-- RabbitMQ / AMQP - Mensageria para eventos de status do Orçamento -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-amqp</artifactId>
+		</dependency>
+
 		<!-- Testes -->
 		<dependency>
 			<groupId>org.springframework.security</groupId>

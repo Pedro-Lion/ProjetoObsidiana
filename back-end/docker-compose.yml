@@ -11,5 +11,19 @@ services:
     ports:
       - 3306:3306
 
+  # RabbitMQ com Management UI habilitada
+  # Acesse o painel em: http://localhost:15672
+  # Usuário: admin | Senha: admin
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - 5672:5672    # Porta AMQP (conexão da aplicação Spring Boot)
+      - 15672:15672  # Porta da Management UI (visualizar filas no browser)
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+
 volumes:
   mysql_data:
