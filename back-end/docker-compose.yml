@@ -4,6 +4,9 @@ services:
     image: mysql:8
     restart: always
     env_file: ".env"
+    entrypoint: >
+      bash -c "chmod 644 /etc/mysql/conf.d/custom.cnf && 
+               docker-entrypoint.sh mysqld"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./configs-mysql/obsidiana.sql:/docker-entrypoint-initdb.d/init.sql
@@ -11,5 +14,20 @@ services:
     ports:
       - 3306:3306
 
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq-obsidiana
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file: ".env"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+
 volumes:
   mysql_data:
+  rabbitmq_data:

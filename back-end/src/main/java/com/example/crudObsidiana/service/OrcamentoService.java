@@ -3,6 +3,8 @@ package com.example.crudObsidiana.service;
 import com.example.crudObsidiana.dto.KpisOrcamentoDTO;
 import com.example.crudObsidiana.dto.OrcamentoDTO;
 import com.example.crudObsidiana.dto.UsoEquipamentoDTO;
+import com.example.crudObsidiana.events.OrcamentoConfirmadoEvent;
+import com.example.crudObsidiana.messaging.RabbitMQPublisher;
 import com.example.crudObsidiana.model.*;
 import com.example.crudObsidiana.repository.EquipamentoRepository;
 import com.example.crudObsidiana.repository.UsoEquipamentoRepository;
@@ -56,6 +58,9 @@ public class OrcamentoService implements OrcamentoSubject {
 
     @Autowired
     private UsoEquipamentoRepository usoEquipamentoRepository;
+
+    @Autowired
+    private RabbitMQPublisher rabbitMQPublisher;
 
 
     // ---------------------------------------------------------------------
@@ -231,6 +236,9 @@ public class OrcamentoService implements OrcamentoSubject {
             salvo.setStatus("Confirmado");
             Orcamento salvoComStatus = orcamentoRepository.save(salvo);
             notifyObservers(salvoComStatus, statusAnterior, "Confirmado");
+            rabbitMQPublisher.publicarEvento(
+                    new OrcamentoConfirmadoEvent(salvoComStatus.getId())
+            );
             salvoComStatus.setDuracaoEvento(calcularDuracaoEvento(salvoComStatus));
             return salvoComStatus;
         }
@@ -423,6 +431,9 @@ public class OrcamentoService implements OrcamentoSubject {
             existente.setStatus("Confirmado");
             Orcamento salvo = orcamentoRepository.save(existente);
             notifyObservers(salvo, statusAnterior, "Confirmado");
+            rabbitMQPublisher.publicarEvento(
+                    new OrcamentoConfirmadoEvent(salvo.getId())
+            );
             salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
             return salvo;
         }
@@ -492,6 +503,11 @@ public class OrcamentoService implements OrcamentoSubject {
         // Notifica observers se houve transição de/para Confirmado
         if (eraConfirmado != seraConfirmado) {
             notifyObservers(salvo, statusAnterior, novoStatus);
+            if ("Confirmado".equalsIgnoreCase(novoStatus)) {
+                rabbitMQPublisher.publicarEvento(
+                        new OrcamentoConfirmadoEvent(salvo.getId())
+                );
+            }
         }
 
         salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));

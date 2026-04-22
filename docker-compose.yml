@@ -1,0 +1,16 @@
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq-orcamento
+    ports:
+      - "5672:5672"    # porta AMQP (sua aplicação Java conecta aqui)
+      - "15672:15672"  # painel de administração web
+    environment:
+      
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+
+volumes:
+  rabbitmq_data:
