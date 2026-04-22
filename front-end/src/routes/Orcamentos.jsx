@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
+import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { api } from "../api";
 import { CardOrcamento } from "../components/Cards/CardOrcamento";
@@ -8,6 +9,7 @@ import { useMsal } from "@azure/msal-react";
 import { loginRequest } from "../authConfig";
 import { Modal } from "../components/Modal/Modal.jsx";
 import { Paginacao } from "../components/Paginacao/Paginacao.jsx";
+import { gerarRelatorioExcel } from "../features/orcamento/utils/gerarRelatorioExcel.js";
 
 const ITENS_POR_PAGINA = 6;
 
@@ -35,6 +37,27 @@ export function Orcamentos() {
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalActions, setModalActions] = useState(null);
+
+  // ── Exportar relatório anual em Excel ─────────────────────────────────────
+  // Busca TODOS os orçamentos (sem paginação) e gera o .xlsx para o ano atual.
+  const [exportando, setExportando] = useState(false);
+
+  async function exportarRelatorio() {
+    setExportando(true);
+    try {
+      const resposta = await api.get("/orcamento", {
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+      });
+      if (resposta.status === 200) {
+        const anoAtual = new Date().getFullYear();
+        gerarRelatorioExcel(resposta.data, anoAtual);
+      }
+    } catch (err) {
+      console.error("Erro ao exportar relatório:", err);
+    } finally {
+      setExportando(false);
+    }
+  }
 
   async function buscarOrcamentos(pagina = 0, termo = search) {
     setLoading(true);
@@ -190,11 +213,20 @@ export function Orcamentos() {
           />
         </div>
         <div className="block md:hidden border-b border-slate-300 w-full mt-3.5 mb-2"/>
-        <BotaoPrimario
-          titulo="+ Novo orçamento"
-          onClick={() => navigate("/cadastro/orcamentos")}
-          className="w-full md:w-fit"
-        />
+        <div className="flex gap-2 w-full md:w-fit">
+          {/* Exporta todos os orçamentos do ano atual para um arquivo .xlsx */}
+          <BotaoSecundario
+            titulo={exportando ? "Exportando..." : "Exportar anual"}
+            icone="bi bi-download"
+            onClick={exportarRelatorio}
+            className="w-full md:w-fit"
+          />
+          <BotaoPrimario
+            titulo="+ Novo orçamento"
+            onClick={() => navigate("/cadastro/orcamentos")}
+            className="w-full md:w-fit"
+          />
+        </div>
       </div>
 
       {loading && <p className="text-xl">Carregando orçamentos...</p>}
