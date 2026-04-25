@@ -1,0 +1,15 @@
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:8
+    restart: always
+    env_file: ".env"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./configs-mysql/obsidiana.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./configs-mysql/custom.cnf:/etc/mysql/conf.d/custom.cnf
+    ports:
+      - 3306:3306
+
+volumes:
+  mysql_data:

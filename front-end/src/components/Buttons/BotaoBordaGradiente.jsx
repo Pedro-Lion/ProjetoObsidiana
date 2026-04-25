@@ -1,6 +1,6 @@
-export function BotaoBordaGradiente({ titulo = "Clique aqui", className = "w-30" }) {
+export function BotaoBordaGradiente({ titulo = "Clique aqui", className = "w-30", onClick }) {
     return (
-        <button type="button" className={`
+        <button onClick={onClick} type="button" className={`
             ${className}
             h-12 min-w-36 my-3.5 group
             flex items-center justify-center rounded-full

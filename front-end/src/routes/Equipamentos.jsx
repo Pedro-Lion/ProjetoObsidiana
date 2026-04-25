@@ -1,64 +1,266 @@
+import { useEffect, useState, useRef } from "react";
+import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
-import { InputCheckbox } from "../components/Inputs/InputCheckbox";
-import { ContainerListagem } from "../components/Containers/ContainerListagem";
-import { useEffect, useState } from "react";
+import { api } from "../api.js";
+import { useNavigate } from "react-router-dom";
+import { Modal } from "../components/Modal/Modal.jsx";
+import { ModalFormulario } from "../components/Modal/ModalFormulario.jsx";
+import { CadastroEquipamentos } from "./CadastroEquipamento.jsx";
+import { Paginacao } from "../components/Paginacao/Paginacao.jsx";
+
+const ITENS_POR_PAGINA = 5;
 
 export function Equipamentos() {
-  const [equipamentos, setEquipamentos] = useState("Buscando equipamentos...");
+  const navigate = useNavigate();
+  const previewsRef = useRef([]);
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+
+  // Paginação
+  const [paginaAtual, setPaginaAtual] = useState(0);
+  const [totalPaginas, setTotalPaginas] = useState(0);
+  const [totalElementos, setTotalElementos] = useState(0);
+
+  // Modal de confirmação/exclusão
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitulo, setModalTitulo] = useState("");
+  const [modalDescricao, setModalDescricao] = useState("");
+  const [modalActions, setModalActions] = useState(null);
+
+  // Modal de cadastro
+  const [modalCadastroAberta, setModalCadastroAberta] = useState(false);
+
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
+  /* ── Carrega previews de imagem ── */
+  async function carregarPreviews(equipamentos) {
+    if (previewsRef.current?.length) {
+      previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) { } });
+      previewsRef.current = [];
+    }
+    const token = sessionStorage.getItem("token");
+    const promessas = equipamentos.map(async (eq) => {
+      if (!eq.nomeArquivoImagem) return { ...eq, preview: null };
+      try {
+        const url = `${API_BASE}/equipamento/${eq.id}/imagem`;
+        const resp = await fetch(url, {
+          method: "GET",
+          headers: { Authorization: token ? "Bearer " + token : "" },
+        });
+        if (!resp.ok) return { ...eq, preview: null };
+        const ctype = resp.headers.get("content-type") || "";
+        if (!ctype.startsWith("image/")) return { ...eq, preview: null };
+        const blob = await resp.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        previewsRef.current.push(objectUrl);
+        return { ...eq, preview: objectUrl };
+      } catch {
+        return { ...eq, preview: null };
+      }
+    });
+    return Promise.all(promessas);
+  }
+
+  /* ── Busca paginada ── */
+  async function buscarEquipamentos(pagina = 0, termo = search) {
+    setLoading(true);
+    setError(null);
+    try {
+      const resposta = await api.get("/equipamento/paginado", {
+        headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+        params: { page: pagina, size: ITENS_POR_PAGINA, busca: termo },
+      });
+
+      if (resposta.status === 200) {
+        const paginaData = resposta.data;
+        const withPreviews = await carregarPreviews(paginaData.content);
+        setData(withPreviews);
+        setTotalPaginas(paginaData.totalPages);
+        setTotalElementos(paginaData.totalElements);
+        setPaginaAtual(paginaData.number);
+      } else {
+        setData([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Erro ao carregar equipamentos.");
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Debounce: busca no backend 400ms após parar de digitar
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      buscarEquipamentos(0, search);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
-    async function buscarEquipamentos(params) {
-      try {
-        const resposta = await fetch("http://localhost:8080/equipamento", {
-          headers: {
-            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-          },
-        });
-
-        if (resposta.ok) {
-          const dados = await resposta.json();
-          
-          setEquipamentos(
-            dados.map((equip) => (
-              <div className="pr-5 flex items-center" key={equip.id}>
-                <InputCheckbox className="mr-3" />
-                <ContainerListagem titulo={equip.nome} />
-              </div>
-            ))
-          );
-        }
-      } catch (erro) {
-        console.log(erro);
+    buscarEquipamentos(0, "");
+    return () => {
+      if (previewsRef.current?.length) {
+        previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) { } });
+        previewsRef.current = [];
       }
-    }
-
-    buscarEquipamentos();
+    };
   }, []);
+
+  /* ── Troca de página ── */
+  function mudarPagina(novaPagina) {
+    if (novaPagina < 0 || novaPagina >= totalPaginas) return;
+    buscarEquipamentos(novaPagina);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  /* ── Deletar ── */
+  const deletar = (equipamento) => {
+    setModalTitulo("Confirmar exclusão");
+    setModalDescricao(`Tem certeza que deseja excluir "${equipamento.nome}"?`);
+    setModalActions(
+      <>
+        <button
+          className="bg-red-500 text-white px-4 py-2 rounded mr-3"
+          onClick={async () => {
+            try {
+              await api.delete(`/equipamento/${equipamento.id}`, {
+                headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+              });
+              // Volta para a página anterior se a atual ficou vazia
+              const novaPagina = data.length === 1 && paginaAtual > 0
+                ? paginaAtual - 1
+                : paginaAtual;
+              setModalOpen(false);
+              buscarEquipamentos(novaPagina);
+            } catch (err) {
+              console.error(err);
+              setModalTitulo("Erro");
+              setModalDescricao("Não foi possível excluir. Tente novamente.");
+              setModalActions(
+                <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
+                  Fechar
+                </button>
+              );
+            }
+          }}
+        >
+          Excluir
+        </button>
+        <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
+          Cancelar
+        </button>
+      </>
+    );
+    setModalOpen(true);
+  };
+
+  /* ── Filtro local (dentro da página atual) ──
+   * Aplicado sobre os itens já retornados pelo backend para a página atual.
+   * Garante consistência enquanto o debounce aguarda a resposta da API.
+   * Os campos cobertos aqui espelham os campos da query findByBusca no backend. */
+  const filtrado = data.filter((e) => {
+    if (!search.trim()) return true;
+    const termo = search.toLowerCase();
+    const campos = [
+      e.nome,
+      e.categoria,
+      e.marca,
+      e.modelo,
+      e.numeroSerie,
+      e.valorPorHora?.toString(),
+      e.quantidadeTotal?.toString(),
+      e.quantidadeDisponivel?.toString(),
+    ];
+    return campos.filter(Boolean).some((c) => c.toLowerCase().includes(termo));
+  });
 
   return (
     <>
-      <h1 className="text-4xl font-medium">Equipamentos</h1>
+      <h1>Equipamentos</h1>
 
-      <div className="mt-3 flex justify-between">
-        <form className="w-330 flex gap-3.5">
+      <div className="flex flex-col-reverse justify-evenly items-start md:flex-row md:justify-between md:items-baseline-last">
+        <div className="w-full md:w-3/4">
           <InputBordaLabel
-            className="w-full"
-            placeholder="Digite o que deseja pesquisar"
+            type="text"
+            titulo="Buscar"
+            placeholder="Nome, categoria ou marca"
+            value={search}
+            onInput={(e) => setSearch(e.target.value)}
+            className=""
           />
-
-          <BotaoPrimario titulo="Pesquisar" className="mb-0 mt-0" />
-        </form>
-
+        </div>
+        <div className="block md:hidden border-b border-slate-300 w-full mt-3.5 mb-2"/>
         <BotaoPrimario
           titulo="+ Novo equipamento"
-          className="mt-0 mb-0 mr-5 flex-none"
+          onClick={() => setModalCadastroAberta(true)}
+          className="w-full md:w-fit"
         />
       </div>
 
-      <section className="h-full mt-5 -ml-10 overflow-y-scroll">
-        {equipamentos}
-      </section>
+      {loading && <p className="text-xl">Carregando equipamentos...</p>}
+      {error && <p className="text-red-500">{error}</p>}
+
+      {!loading && !error && (
+        <>
+          {totalElementos > 0 && (
+            <p className="text-slate-400 text-[1.1rem] mb-4">
+              {totalElementos} equipamento{totalElementos !== 1 ? "s" : ""} encontrado{totalElementos !== 1 ? "s" : ""}
+            </p>
+          )}
+
+          <section className="flex flex-wrap gap-5">
+            {filtrado.length !== 0 ? (
+              filtrado.map((e) => (
+                <ContainerListagem
+                  key={e.id}
+                  dados={e}
+                  preview={e.preview}
+                  onClickDel={() => deletar(e)}
+                  onClickEdit={() => navigate(`/editar/equipamento/${e.id}`, { state: e })}
+                />
+              ))
+            ) : (
+              <p className="text-xl">Nenhum equipamento encontrado{search ? ` para "${search}"` : ""}.</p>
+            )}
+          </section>
+
+          {/* Paginação */}
+          <Paginacao
+            paginaAtual={paginaAtual}
+            totalPaginas={totalPaginas}
+            onMudarPagina={mudarPagina}
+          />
+        </>
+      )}
+
+      {/* Modal de confirmação/exclusão */}
+      {modalOpen && (
+        <Modal titulo={modalTitulo} descricao={modalDescricao}>
+          {modalActions}
+        </Modal>
+      )}
+
+      {/* Modal de cadastro de equipamento */}
+      {modalCadastroAberta && (
+        <ModalFormulario
+          titulo="Novo Equipamento"
+          onFechar={() => setModalCadastroAberta(false)}
+        >
+          <CadastroEquipamentos
+            onSucesso={() => {
+              setModalCadastroAberta(false);
+              buscarEquipamentos(paginaAtual);
+            }}
+            onCancelar={() => setModalCadastroAberta(false)}
+          />
+        </ModalFormulario>
+      )}
     </>
   );
 }

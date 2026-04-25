@@ -1,0 +1,32 @@
+meta {
+  name: PutOrcamento
+  type: http
+  seq: 5
+}
+
+put {
+  url: http://localhost:8080/api/orcamento/1
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "dataInicio":"2026-03-23T14:32:17.000Z",
+    "dataTermino":"2026-03-23T18:32:17.000Z",
+    "localEvento":"São Paulo",
+    "descricao":"Testand",
+    "status":"Em análise",
+    "valorTotal":200,
+    "idCalendar":null,
+    "usosEquipamentos":[],
+    "servicos":[],
+    "equipamentos":[],
+    "profissionais":[]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

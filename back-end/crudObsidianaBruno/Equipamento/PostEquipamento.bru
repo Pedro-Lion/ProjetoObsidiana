@@ -1,0 +1,26 @@
+meta {
+  name: PostEquipamento
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/api/equipamento
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "nome": "Câmera Sony A7SIII",
+    "quantidadeTotal": 10,
+    "quantidadeDisponivel": 10,
+    "valorPorHora": 250
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

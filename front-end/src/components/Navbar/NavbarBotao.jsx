@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Dropdown } from "../Icons/Dropdown.jsx";
+import { Dropdown } from "./Dropdown.jsx";
 
 export function NavbarBotao(props) {
   const navigate = useNavigate();
@@ -9,9 +9,10 @@ export function NavbarBotao(props) {
   return (
     <button
       onClick={onClick}
-      className="w-full pt-2 pb-2 pl-3 pr-3 rounded-xl flex justify-between items-center"
+      className="w-full pt-2 pb-2 pl-3 pr-3 rounded-xl flex text-start items-center"
     >
-      <div className="flex gap-4 items-center text-2xl">
+      {/* min-w-0 e flex-1 evitam que o texto empurre o ícone de dropdown para fora */}
+      <div className="flex gap-4 items-center text-2xl min-w-0 flex-1">
         {props.children[0]}
         {props.children[1]}
       </div>

@@ -1,0 +1,27 @@
+meta {
+  name: PostServico
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/api/servico
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "nome": "Fotografia de Casamento",
+    "descricao": "Cobertura completa do evento",
+    "horas": 3,
+    "valorPorHora": 200,
+    "equipamentos": [1]
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

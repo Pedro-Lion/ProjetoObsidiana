@@ -12,16 +12,22 @@ public class EquipamentoService {
     @Autowired
     private EquipamentoRepository equipamentoRepository;
 
+    public EquipamentoService(EquipamentoRepository equipamentoRepository) {
+        this.equipamentoRepository = equipamentoRepository;
+    }
+
     public Equipamento criarEquipamento(EquipamentoDTO dto) {
         Equipamento equipamento = new Equipamento();
         equipamento.setNome(dto.getNome());
-        equipamento.setQuantidade(dto.getQuantidade());
+        equipamento.setQuantidadeTotal(dto.getQuantidadeTotal());
         equipamento.setCategoria(dto.getCategoria());
         equipamento.setMarca(dto.getMarca());
         equipamento.setNumeroSerie(dto.getNumeroSerie());
         equipamento.setModelo(dto.getModelo());
         equipamento.setValorPorHora(dto.getValorPorHora());
-        equipamento.setQuantidadeDisponivel(dto.getQuantidade());
+        equipamento.setQuantidadeDisponivel(
+                equipamento.getQuantidadeTotal() == null ? 0 : equipamento.getQuantidadeTotal()
+        );
 
         return equipamentoRepository.save(equipamento);
     }

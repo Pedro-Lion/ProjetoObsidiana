@@ -9,7 +9,7 @@ public class EquipamentoDTO {
     private String nome;
 
     @Schema(description = "Quantidade disponível", example = "5")
-    private int quantidade;
+    private Integer quantidadeTotal;
 
     @Schema(description = "Categoria do equipamento", example = "Câmeras")
     private String categoria;
@@ -24,7 +24,7 @@ public class EquipamentoDTO {
     private String modelo;
 
     @Schema(description = "Valor unitário por hora", example = "1200")
-    private int valorPorHora;
+    private Double valorPorHora;
 
     public String getNome() {
         return nome;
@@ -34,12 +34,12 @@ public class EquipamentoDTO {
         this.nome = nome;
     }
 
-    public int getQuantidade() {
-        return quantidade;
+    public Integer getQuantidadeTotal() {
+        return quantidadeTotal;
     }
 
-    public void setQuantidade(int quantidade) {
-        this.quantidade = quantidade;
+    public void setQuantidadeTotal(Integer quantidadeTotal) {
+        this.quantidadeTotal = quantidadeTotal;
     }
 
     public String getCategoria() {
@@ -74,11 +74,11 @@ public class EquipamentoDTO {
         this.modelo = modelo;
     }
 
-    public int getValorPorHora() {
+    public Double getValorPorHora() {
         return valorPorHora;
     }
 
-    public void setValorPorHora(int valorPorHora) {
+    public void setValorPorHora(Double valorPorHora) {
         this.valorPorHora = valorPorHora;
     }
 }

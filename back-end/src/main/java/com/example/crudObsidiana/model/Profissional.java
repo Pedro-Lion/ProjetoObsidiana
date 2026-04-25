@@ -1,10 +1,10 @@
 package com.example.crudObsidiana.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Schema(description = "Modelo do Profissional ")
@@ -25,15 +25,36 @@ public class Profissional {
     @Schema(description = "Contato do profissional", example = "(11)883992883 // osv.filma@email.com")
     private String contato;
 
+    @Schema(description = "Categoria do profissional", example = "Fotógrafo")
+    private String categoria;
+
+    @ManyToMany(mappedBy = "profissionais")
+    private List<Orcamento> orcamentos = new ArrayList<>();
+
+    //    Metadados da imagem
+    @Schema(description = "Nome do arquivo de imagem salvo", example = "1632938123456_camera.jpg")
+    private String nomeArquivoImagem;
+
+    @Schema(description = "Tipo MIME da imagem", example = "image/jpeg")
+    private String tipoImagem;
+
+    @Schema(description = "Caminho absoluto ou relativo da imagem no servidor", example = "upload/1632938123456_camera.jpg")
+    private String caminhoImagem;
+
+
+//    CONSTRUCTORS
+
     public Profissional() {
     }
 
-    public Profissional(Long id, String nome, String disponibilidade, String contato) {
-        this.id = id;
+    public Profissional(String nome, String disponibilidade, String contato) {
         this.nome = nome;
         this.disponibilidade = disponibilidade;
         this.contato = contato;
     }
+
+
+//    GETTERS & SETTERS
 
     public Long getId() {
         return id;
@@ -65,5 +86,37 @@ public class Profissional {
 
     public void setContato(String contato) {
         this.contato = contato;
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
+    }
+
+    public String getCaminhoImagem() {
+        return caminhoImagem;
+    }
+
+    public void setCaminhoImagem(String caminhoImagem) {
+        this.caminhoImagem = caminhoImagem;
+    }
+
+    public String getTipoImagem() {
+        return tipoImagem;
+    }
+
+    public void setTipoImagem(String tipoImagem) {
+        this.tipoImagem = tipoImagem;
+    }
+
+    public String getNomeArquivoImagem() {
+        return nomeArquivoImagem;
+    }
+
+    public void setNomeArquivoImagem(String nomeArquivoImagem) {
+        this.nomeArquivoImagem = nomeArquivoImagem;
     }
 }

@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: spring-rabbitmq
+broker:
+  exchange:
+    name: example.fanout.exchange
+  queue:
+    name: example.queue

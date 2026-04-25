@@ -1,11 +1,11 @@
 meta {
   name: CadastroUsuario
   type: http
-  seq: 5
+  seq: 2
 }
 
 post {
-  url: http://localhost:8080/usuario/cadastrar
+  url: http://localhost:8080/api/usuario/cadastrar
   body: json
   auth: none
 }
@@ -20,4 +20,5 @@ body:json {
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

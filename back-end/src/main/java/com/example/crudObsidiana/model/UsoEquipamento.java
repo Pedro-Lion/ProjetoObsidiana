@@ -12,28 +12,26 @@ public class UsoEquipamento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_usoEquipamento")
-    @Schema(description = "Identificador único do registro de uso", example = "1")
     private Long id;
 
     @Schema(description = "Quantidade de unidades do equipamento utilizadas", example = "3", required = true)
     @Column(name = "quantidade_usada", nullable = false)
-    private int quantidadeUsada;
+    private Integer quantidadeUsada;
 
     @Schema(description = "Equipamento utilizado", required = true)
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumn(name = "fkEquipamento", referencedColumnName = "idEquipamento")
+    @JoinColumn(name = "fk_equipamento")
     private Equipamento equipamento;
 
     @Schema(description = "Orçamento ao qual este uso pertence (opcional)")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fkOrcamento", referencedColumnName = "idOrcamento")
+    @JoinColumn(name = "fk_orcamento")
     @JsonBackReference
     private Orcamento orcamento;
 
     @Schema(description = "Serviço ao qual este uso pertence (opcional)")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fkServico", referencedColumnName = "idServico")
+    @JoinColumn(name = "fk_servico")
     @JsonBackReference
     private Servico servico;
 
@@ -41,8 +39,8 @@ public class UsoEquipamento {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public int getQuantidadeUsada() { return quantidadeUsada; }
-    public void setQuantidadeUsada(int quantidadeUsada) { this.quantidadeUsada = quantidadeUsada; }
+    public Integer getQuantidadeUsada() { return quantidadeUsada; }
+    public void setQuantidadeUsada(Integer quantidadeUsada) { this.quantidadeUsada = quantidadeUsada; }
 
     public Equipamento getEquipamento() { return equipamento; }
     public void setEquipamento(Equipamento equipamento) { this.equipamento = equipamento; }

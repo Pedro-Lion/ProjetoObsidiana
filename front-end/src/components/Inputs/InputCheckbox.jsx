@@ -1,25 +1,25 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
-export function InputCheckbox(props) {
-  const [isChecked, setIsChecked] = useState(false);
-  const handleCheckboxChange = (event) => {
-    setIsChecked(event.target.checked);
-  };
+export function InputCheckbox({ texto, className, onChange }) {
+  const [isChecked, setIsChecked] = useState(false)
+  
+  function handleCheck(e) {
+    setIsChecked(e.target.checked)
+    if (onChange) onChange(e)
+  }
 
   return (
-    <div className={"flex flex-row items-center " + props.className}>
+    <label className={"flex flex-row items-center cursor-pointer " + className}>
       <input
         type="checkbox"
         checked={isChecked}
-        onChange={handleCheckboxChange}
+        onChange={handleCheck}
         className="accent-violet-200 hover:accent-violet-400 hover:cursor-pointer"
       />
-      <label
-        className="w-fit h-auto pl-2
-        text-slate-700 font-normal text-[1.2rem]"
-      >
-        {props.texto}
-      </label>
-    </div>
+      <span className="w-fit h-auto pl-2
+        text-slate-700 font-normal text-[1.2rem]">
+        {texto}
+      </span>
+    </label>
   );
 }

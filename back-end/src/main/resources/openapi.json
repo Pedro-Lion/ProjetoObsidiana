@@ -1027,7 +1027,7 @@
             "description": "Nome do equipamento",
             "example": "Câmera Canon"
           },
-          "quantidade": {
+          "quantidadeTotal": {
             "type": "integer",
             "description": "Quantidade total",
             "format": "int32",
@@ -1144,16 +1144,15 @@
             "format": "int64",
             "example": 1
           },
-          "dataEvento": {
+          "dataInicio": {
             "type": "string",
-            "description": "Data do evento",
+            "description": "Data início do evento",
             "format": "date-time"
           },
-          "duracaoEvento": {
-            "type": "integer",
-            "description": "Duração do evento em horas",
-            "format": "int32",
-            "example": 8
+          "dataTermino": {
+            "type": "string",
+            "description": "Data fim do evento em horas",
+            "format": "date-time"
           },
           "localEvento": {
             "type": "string",
@@ -1373,7 +1372,7 @@
             "type": "number",
             "description": "Valor total calculado do orçamento",
             "format": "double",
-            "example": 2500
+            "example": 2500.0
           }
         },
         "description": "Dados para criação de um novo orçamento"
@@ -1386,7 +1385,7 @@
             "description": "Nome do equipamento",
             "example": "Câmera Canon"
           },
-          "quantidade": {
+          "quantidadeTotal": {
             "type": "integer",
             "description": "Quantidade disponível",
             "format": "int32",

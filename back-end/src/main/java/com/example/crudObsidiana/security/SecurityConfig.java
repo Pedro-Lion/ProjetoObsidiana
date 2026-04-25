@@ -1,6 +1,7 @@
 package com.example.crudObsidiana.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -34,11 +35,14 @@ public class SecurityConfig {
     @Autowired
     SecurityFilter securityFilter;
 
+    // URL do Front-end para incluir no CORS
+    @Value("${frontend.url}")
+    private String frontEndUrl;
+
     @Bean
-    // Esse mét0do permite que nossa aplicação front-end (mais precisamente o localhost:5173) possa mandar requisições para nossa API
     UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of(frontEndUrl));
         configuration.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -54,8 +58,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/usuario/login").permitAll() // Esse endpoint não precisa de autenticação
-                        .requestMatchers(HttpMethod.POST, "/usuario/cadastrar").permitAll() // Esse endpoint não precisa de autenticação
+                        .requestMatchers(HttpMethod.POST, "/api/usuario/login").permitAll() // Esse endpoint não precisa de autenticação
+                        .requestMatchers(HttpMethod.POST, "/api/usuario/cadastrar").permitAll() // Esse endpoint não precisa de autenticação
                         .requestMatchers(
                                 "/v3/api-docs/**",  // documentação Swagger
                                 "/swagger-ui/**",           // interface Swagger
