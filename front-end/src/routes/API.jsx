@@ -14,6 +14,7 @@ import { CalendarCreate } from '../components/APIOutlook/CalendarCreate';
 import { CalendarDelete } from '../components/APIOutlook/CalendarDelete';
 import { CalendarUpdate } from '../components/APIOutlook/CalendarUpdate';
 import  Calendar from '../components/CalendarAPI/Calendar';
+import { getAccessToken } from "../../utils/getAccessToken";
 
 
 
@@ -23,10 +24,11 @@ export function API() {
 
     const handleRedirect = () => {
         instance
-            .loginRedirect({
-                ...loginRequest,
-                prompt: 'create',
-            })
+            // .loginRedirect({
+            //     ...loginRequest,
+            //     prompt: 'create',
+            // })
+            .loginRedirect(loginRequest)
             .catch((error) => console.log(error));
     };
 
