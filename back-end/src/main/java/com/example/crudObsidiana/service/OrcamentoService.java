@@ -3,6 +3,7 @@ package com.example.crudObsidiana.service;
 import com.example.crudObsidiana.dto.KpisOrcamentoDTO;
 import com.example.crudObsidiana.dto.OrcamentoDTO;
 import com.example.crudObsidiana.dto.UsoEquipamentoDTO;
+import com.example.crudObsidiana.messaging.OrcamentoEventPublisher;
 import com.example.crudObsidiana.model.*;
 import com.example.crudObsidiana.repository.EquipamentoRepository;
 import com.example.crudObsidiana.repository.UsoEquipamentoRepository;
@@ -56,6 +57,9 @@ public class OrcamentoService implements OrcamentoSubject {
 
     @Autowired
     private UsoEquipamentoRepository usoEquipamentoRepository;
+
+    @Autowired
+    private OrcamentoEventPublisher eventPublisher;
 
 
     // ---------------------------------------------------------------------
@@ -514,14 +518,22 @@ public class OrcamentoService implements OrcamentoSubject {
         observers.remove(observer);
     }
 
-    @Override
+   @Override
     public void notifyObservers(Orcamento orcamento,
-                                String statusAnterior,
+                               String statusAnterior,
                                 String novoStatus) {
-        for (OrcamentoObserver observer : observers) {
-            observer.onOrcamentoUpdated(orcamento, statusAnterior, novoStatus);
-        }
-    }
+       for (OrcamentoObserver observer : observers) {
+          observer.onOrcamentoUpdated(orcamento, statusAnterior, novoStatus);
+       }
+    eventPublisher.publicarMudancaStatus(orcamento, statusAnterior, novoStatus);
+   }
+
+//    @Override
+//    public void notifyObservers(Orcamento orcamento,
+//                                String statusAnterior,
+//                                String novoStatus) {
+//        eventPublisher.publicarMudancaStatus(orcamento, statusAnterior, novoStatus);
+//    }
 
     // ---------------------------------------------------------------------
     // KPIs

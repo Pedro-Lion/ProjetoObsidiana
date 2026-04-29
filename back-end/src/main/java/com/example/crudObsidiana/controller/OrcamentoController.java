@@ -24,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
  import org.springframework.data.domain.PageRequest;
  import org.springframework.data.domain.Pageable;
 
+import java.sql.SQLOutput;
 import java.util.List;
 import java.util.Optional;
 
@@ -197,8 +198,10 @@ public class OrcamentoController {
             }
             return ResponseEntity.status(ex.getStatusCode()).build();
         } catch (RuntimeException ex) {
+            System.out.println(ex);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(null);
+
         }
     }
 
