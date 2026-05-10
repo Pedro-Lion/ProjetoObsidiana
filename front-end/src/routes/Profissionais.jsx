@@ -60,10 +60,6 @@ export function Profissionais() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    getProfissionais(0, "");
-  }, []);
-
   function mudarPagina(novaPagina) {
     if (novaPagina < 0 || novaPagina >= totalPaginas) return;
     getProfissionais(novaPagina);

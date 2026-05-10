@@ -90,11 +90,6 @@ export function Orcamentos() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    // Usa o filtro inicial (vindo da KPI) ou vazio caso acesso direto
-    buscarOrcamentos(0, statusInicial);
-  }, []);
-
   function mudarPagina(novaPagina) {
     if (novaPagina < 0 || novaPagina >= totalPaginas) return;
     buscarOrcamentos(novaPagina);
