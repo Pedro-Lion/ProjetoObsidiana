@@ -1,0 +1,9 @@
+services:
+  rabbitmq:
+    image: 'rabbitmq:4.2.4-management'
+    environment:
+      - 'RABBITMQ_DEFAULT_PASS=secret'
+      - 'RABBITMQ_DEFAULT_USER=myuser'
+    ports:
+      - "5672:5672"    # Porta do RabbitMQ
+      - "15672:15672"  # Porta da interface de gerenciamento
