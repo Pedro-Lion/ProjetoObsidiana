@@ -3,6 +3,10 @@ import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { InputFoto } from "../components/Inputs/InputFoto";
+import { useMsal } from "@azure/msal-react";
+
+
+
 
 function decodeToken(token) {
   try {
@@ -104,6 +108,27 @@ export function Perfil() {
     }));
   }
 
+  const { instance } = useMsal();
+
+//   const handleLogout = () => {
+//   instance.logoutRedirect(); // ou logoutPopup()
+//  };
+
+   function LogOut() {
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("perfil_nome");
+    sessionStorage.removeItem("perfil_email");
+    sessionStorage.removeItem("perfil_foto");
+    instance.clearCache();
+    
+    // setFotoUrl(null);
+    // setArquivoFoto(null);
+    window.location.href = "/login";
+    // window.dispatchEvent(new CustomEvent("perfil-atualizado", {
+    //   detail: { nome, foto: null },
+    // }));
+  }
+
   // ── MODO EXIBIÇÃO ────────────────────────────────────────────────
   if (modo === "view") {
     return (
@@ -151,11 +176,17 @@ export function Perfil() {
               <p className="text-lg text-slate-500 mt-1 tracking-widest">••••••••••</p>
             </div>
 
+            <div className="flex gap-2">
             <BotaoPrimario
               titulo="Editar perfil"
               className="w-fit mt-0"
               onClick={abrirEdicao}
             />
+            <BotaoSecundario
+              titulo="Logout"
+              className="w-fit mt-0"
+              onClick={LogOut}
+            /></div>
           </div>
         </div>
       </div>

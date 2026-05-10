@@ -29,6 +29,8 @@ export function CadastroOrcamento() {
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalActions, setModalActions] = useState(null);
 
+  const [equipamentosDoServico, setEquipamentosDoServico] = useState([]);
+
   // Erros de validação
   const [erros, setErros] = useState({});
 
@@ -214,6 +216,78 @@ export function CadastroOrcamento() {
     getOpcoes();
   }, []);
 
+  useEffect(() => {
+    async function buscarEquipamentosDoServico() {
+      const servicoIds = (orcamento.servicos || []).map((s) =>
+        typeof s === "number" ? s : s?.id
+      );
+
+      try {
+        // Se não há serviços, remove apenas os equipamentos que vieram de serviço
+        // (mantém os adicionados manualmente)
+        if (servicoIds.length === 0) {
+          setEquipamentosDoServico([]);
+          setOrcamento((prev) => ({
+            ...prev,
+            usosEquipamentos: (prev.usosEquipamentos || []).filter(
+              (u) => !u.veioDeServico
+            ),
+            equipamentos: (prev.usosEquipamentos || [])
+              .filter((u) => !u.veioDeServico)
+              .map((u) => u.idEquipamento),
+          }));
+          return;
+        }
+
+        const respostas = await Promise.all(
+          servicoIds.map((id) =>
+            api.get(`/servico/${id}`, {
+              headers: {
+                Authorization: "Bearer " + sessionStorage.getItem("token"),
+              },
+            })
+          )
+        );
+
+        const todosEquipamentos = respostas
+          .flatMap((r) => r.data.equipamentos ?? [])
+          .filter(
+            (eq, index, self) => self.findIndex((e) => e.id === eq.id) === index
+          );
+
+        setEquipamentosDoServico(todosEquipamentos);
+
+        setOrcamento((prev) => {
+          // Mantém apenas os usos adicionados manualmente
+          const usosManuais = (prev.usosEquipamentos || []).filter(
+            (u) => !u.veioDeServico
+          );
+
+          // Cria usos para equipamentos do serviço que ainda não estão nos manuais
+          const usosDoServico = todosEquipamentos
+            .filter((eq) => !usosManuais.some((u) => u.idEquipamento === eq.id))
+            .map((eq) => ({
+              idEquipamento: eq.id,
+              quantidadeUsada: 1,
+              veioDeServico: true, // flag para identificar origem
+            }));
+
+          const todosUsos = [...usosManuais, ...usosDoServico];
+
+          return {
+            ...prev,
+            usosEquipamentos: todosUsos,
+            equipamentos: todosUsos.map((u) => u.idEquipamento),
+          };
+        });
+      } catch (error) {
+        console.error("Erro ao buscar equipamentos do serviço:", error);
+      }
+    }
+
+    buscarEquipamentosDoServico();
+  }, [orcamento.servicos]);
+
   // Cálculo automático do valor total com base nos itens selecionados
   const { totalServicos, totalEquipamentos, valorCalculado } = useMemo(() => {
     // Normaliza IDs de serviços (podem chegar como número ou como objeto {id, nome})
@@ -244,6 +318,12 @@ export function CadastroOrcamento() {
     };
   }, [orcamento.servicos, orcamento.usosEquipamentos, opcoes.servico, opcoes.equipamento]);
 
+  // Adicione esse memo para ter os IDs dos equipamentos dos serviços sempre atualizados
+  const idsEquipamentosDoServico = useMemo(
+    () => equipamentosDoServico.map((e) => e.id),
+    [equipamentosDoServico]
+  );
+
   // Sincroniza o valorTotal do orçamento com o valor calculado automaticamente,
   // mas apenas depois que as opções foram carregadas e o usuário não editou manualmente
   useEffect(() => {
@@ -251,6 +331,23 @@ export function CadastroOrcamento() {
       setOrcamento((prev) => ({ ...prev, valorTotal: valorCalculado }));
     }
   }, [valorCalculado, valorManual, opcoesCarregadas]);
+
+  // Converte usosEquipamentos em formato que o ContainerSelectTags entende,
+  // incluindo nome (label) e quantidade já selecionada
+  function formatarOpcoesComQuantidade(usos = [], opcoesEquipamento = []) {
+    return usos
+      .map((uso) => {
+        const idEq = uso.idEquipamento ?? uso.equipamento?.id;
+        const opcao = opcoesEquipamento.find((o) => o.value === idEq);
+        if (!opcao) return null;
+        return {
+          value: opcao.value,
+          label: opcao.label,
+          quantidade: uso.quantidadeUsada ?? 1,
+        };
+      })
+      .filter(Boolean);
+  }
 
   const ErroMsg = ({ campo }) =>
     erros[campo] ? (
@@ -339,24 +436,49 @@ export function CadastroOrcamento() {
         />
 
         <ContainerSelectTags
+          key={idsEquipamentosDoServico.join(",")}
           titulo="Equipamentos"
           itens={opcoes.equipamento}
-          preSelecao={
-            orcamento.equipamentos
-              ? formatarOpcoes(orcamento.equipamentos)
-              : []
-          }
+          preSelecao={formatarOpcoesComQuantidade(
+            (orcamento.usosEquipamentos || []),
+            opcoes.equipamento
+          )}
           temQuantidade={true}
           onChange={(itensComQtd) => {
             const equipamentoIds = (itensComQtd || []).map((i) => i.value);
-            const usos = (itensComQtd || []).map((i) => ({
-              idEquipamento: i.value,
-              quantidadeUsada: i.quantidade ?? 1,
-            }));
-            setOrcamento({
-              ...orcamento,
-              equipamentos: equipamentoIds,
-              usosEquipamentos: usos,
+
+            setOrcamento((prev) => {
+              // Usos do serviço que continuam presentes na seleção atual
+              const usosServicoRestantes = (prev.usosEquipamentos || [])
+                .filter((u) => u.veioDeServico && equipamentoIds.includes(u.idEquipamento))
+                .map((u) => ({
+                  ...u,
+                  // Atualiza quantidade se o usuário editou
+                  quantidadeUsada:
+                    itensComQtd.find((i) => i.value === u.idEquipamento)?.quantidade ??
+                    u.quantidadeUsada,
+                }));
+
+              // Usos manuais: itens selecionados que não são do serviço
+              const idsDoServico = (prev.usosEquipamentos || [])
+                .filter((u) => u.veioDeServico)
+                .map((u) => u.idEquipamento);
+
+              const usosManuais = itensComQtd
+                .filter((i) => !idsDoServico.includes(i.value))
+                .map((i) => ({
+                  idEquipamento: i.value,
+                  quantidadeUsada: i.quantidade ?? 1,
+                  veioDeServico: false,
+                }));
+
+              const todosUsos = [...usosServicoRestantes, ...usosManuais];
+
+              return {
+                ...prev,
+                usosEquipamentos: todosUsos,
+                equipamentos: todosUsos.map((u) => u.idEquipamento),
+              };
             });
           }}
         />
@@ -381,7 +503,7 @@ export function CadastroOrcamento() {
       {/* Seção de valor do orçamento */}
       <div className="justify-start border-t border-slate-300 pt-5">
 
-          <h3 className="mb-2">Valor do Orçamento</h3>
+        <h3 className="mb-2">Valor do Orçamento</h3>
 
         {!valorManual ? (
           /* Modo calculado: exibe o total e o detalhamento por categoria */
