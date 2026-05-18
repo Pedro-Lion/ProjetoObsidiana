@@ -86,6 +86,10 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
     if (!profissional.nome || profissional.nome.trim() === "") {
       novosErros.nome = "Nome é obrigatório.";
     }
+    // Contato é obrigatório para garantir comunicação com o profissional
+    if (!profissional.contato || profissional.contato.trim() === "") {
+      novosErros.contato = "Contato é obrigatório.";
+    }
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
   }
@@ -194,12 +198,16 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
             value={profissional.disponibilidade ?? ""}
             onInput={(e) => setProfissional({ ...profissional, disponibilidade: e.target.value })}
           />
-          <InputBordaLabel
-            titulo="Contato"
-            placeholder="Ex: (11) 91234-1234 ou fulano@email.com"
-            onInput={(e) => setProfissional({ ...profissional, contato: e.target.value })}
-            value={profissional.contato ?? ""}
-          />
+          {/* Contato agora é obrigatório — envolvido em div para exibir a mensagem de erro */}
+          <div className="flex flex-col">
+            <InputBordaLabel
+              titulo="Contato"
+              placeholder="Ex: (11) 91234-1234 ou fulano@email.com"
+              onInput={(e) => setProfissional({ ...profissional, contato: e.target.value })}
+              value={profissional.contato ?? ""}
+            />
+            <ErroMsg campo="contato" />
+          </div>
           <InputBordaLabel
             titulo="Categoria"
             placeholder="Ex: Fotógrafo, Videógrafo, Editor..."

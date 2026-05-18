@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
+import { SelectBordaLabel } from "../components/Inputs/SelectBordaLabel";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { CardServico } from "../components/Cards/CardServico";
@@ -14,6 +15,10 @@ export function Servicos() {
   const [servicos, setServicos] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Ordenação local: campo e direção
+  const [ordenarPor, setOrdenarPor] = useState("");
+  const [direcaoOrdem, setDirecaoOrdem] = useState("asc");
 
   // Paginação
   const [paginaAtual, setPaginaAtual] = useState(0);
@@ -108,17 +113,37 @@ export function Servicos() {
   };
 
   // Filtro local dentro da página atual
-  const servicosFiltrados = servicos.filter((s) => {
-    if (!search.trim()) return true;
-    const termo = search.toLowerCase();
-    const camposServico = [s.nome, s.descricao, s.valorPorHora?.toString(), s.horas?.toString()];
-    const camposEquipamentos = (s.equipamentos || []).flatMap((e) => [
-      e.nome, e.categoria, e.valorPorHora?.toString(),
-    ]);
-    return [...camposServico, ...camposEquipamentos]
-      .filter(Boolean)
-      .some((campo) => campo.toLowerCase().includes(termo));
-  });
+  const servicosFiltrados = servicos
+    .filter((s) => {
+      if (!search.trim()) return true;
+      const termo = search.toLowerCase();
+      const camposServico = [s.nome, s.descricao, s.valorPorHora?.toString(), s.horas?.toString()];
+      const camposEquipamentos = (s.equipamentos || []).flatMap((e) => [
+        e.nome, e.categoria, e.valorPorHora?.toString(),
+      ]);
+      return [...camposServico, ...camposEquipamentos]
+        .filter(Boolean)
+        .some((campo) => campo.toLowerCase().includes(termo));
+    })
+    // Ordenação local aplicada sobre os resultados filtrados
+    .sort((a, b) => {
+      if (!ordenarPor) return 0;
+      let va, vb;
+      if (ordenarPor === "nome") {
+        va = a.nome?.toLowerCase() ?? "";
+        vb = b.nome?.toLowerCase() ?? "";
+      } else if (ordenarPor === "valorPorHora") {
+        va = a.valorPorHora ?? 0;
+        vb = b.valorPorHora ?? 0;
+      } else if (ordenarPor === "horas") {
+        va = a.horas ?? 0;
+        vb = b.horas ?? 0;
+      } else {
+        return 0;
+      }
+      if (direcaoOrdem === "asc") return va > vb ? 1 : va < vb ? -1 : 0;
+      return va < vb ? 1 : va > vb ? -1 : 0;
+    });
 
   return (
     <>
@@ -140,6 +165,32 @@ export function Servicos() {
           titulo="+ Novo serviço"
           onClick={() => navigate("/cadastro/servicos")}
           className="w-full md:w-fit"
+        />
+      </div>
+
+      {/* Controles de ordenação */}
+      <div className="flex flex-wrap gap-3 mt-2 items-end">
+        <SelectBordaLabel
+          titulo="Ordenar por"
+          className="w-48"
+          value={ordenarPor}
+          onChange={(e) => setOrdenarPor(e.target.value)}
+          placeholder="Padrão"
+          options={[
+            { value: "nome", label: "Nome" },
+            { value: "valorPorHora", label: "Valor por hora" },
+            { value: "horas", label: "Duração" },
+          ]}
+        />
+        <SelectBordaLabel
+          titulo="Direção"
+          className="w-40"
+          value={direcaoOrdem}
+          onChange={(e) => setDirecaoOrdem(e.target.value)}
+          options={[
+            { value: "asc", label: "Crescente (A→Z)" },
+            { value: "desc", label: "Decrescente (Z→A)" },
+          ]}
         />
       </div>
 
