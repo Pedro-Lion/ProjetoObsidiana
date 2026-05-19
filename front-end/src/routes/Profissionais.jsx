@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
+import { SelectBordaLabel } from "../components/Inputs/SelectBordaLabel";
 import { api } from "../api";
 import { ContainerProfissional } from "../components/Containers/ContainerProfissional";
 import { Modal } from "../components/Modal/Modal.jsx";
@@ -16,6 +17,10 @@ export function Profissionais() {
   const [profissionais, setProfissionais] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Ordenação local: campo e direção
+  const [ordenarPor, setOrdenarPor] = useState("");
+  const [direcaoOrdem, setDirecaoOrdem] = useState("asc");
 
   // Paginação
   const [paginaAtual, setPaginaAtual] = useState(0);
@@ -109,12 +114,29 @@ export function Profissionais() {
   };
 
   // Filtro local dentro da página atual (inclui categoria)
-  const profissionaisFiltrados = profissionais.filter((p) => {
-    if (!search.trim()) return true;
-    const termo = search.toLowerCase();
-    const campos = [p.nome, p.disponibilidade, p.contato, p.categoria, p.funcao];
-    return campos.filter(Boolean).some((c) => c.toLowerCase().includes(termo));
-  });
+  const profissionaisFiltrados = profissionais
+    .filter((p) => {
+      if (!search.trim()) return true;
+      const termo = search.toLowerCase();
+      const campos = [p.nome, p.disponibilidade, p.contato, p.categoria, p.funcao];
+      return campos.filter(Boolean).some((c) => c.toLowerCase().includes(termo));
+    })
+    // Ordenação local aplicada sobre os resultados filtrados
+    .sort((a, b) => {
+      if (!ordenarPor) return 0;
+      let va, vb;
+      if (ordenarPor === "nome") {
+        va = a.nome?.toLowerCase() ?? "";
+        vb = b.nome?.toLowerCase() ?? "";
+      } else if (ordenarPor === "categoria") {
+        va = a.categoria?.toLowerCase() ?? "";
+        vb = b.categoria?.toLowerCase() ?? "";
+      } else {
+        return 0;
+      }
+      if (direcaoOrdem === "asc") return va > vb ? 1 : va < vb ? -1 : 0;
+      return va < vb ? 1 : va > vb ? -1 : 0;
+    });
 
   return (
     <>
@@ -139,6 +161,31 @@ export function Profissionais() {
         />
       </div>
 
+      {/* Controles de ordenação */}
+      <div className="flex flex-wrap gap-3 mt-2 items-end">
+        <SelectBordaLabel
+          titulo="Ordenar por"
+          className="w-48"
+          value={ordenarPor}
+          onChange={(e) => setOrdenarPor(e.target.value)}
+          placeholder="Padrão"
+          options={[
+            { value: "nome", label: "Nome" },
+            { value: "categoria", label: "Categoria" },
+          ]}
+        />
+        <SelectBordaLabel
+          titulo="Direção"
+          className="w-40"
+          value={direcaoOrdem}
+          onChange={(e) => setDirecaoOrdem(e.target.value)}
+          options={[
+            { value: "asc", label: "Crescente (A→Z)" },
+            { value: "desc", label: "Decrescente (Z→A)" },
+          ]}
+        />
+      </div>
+
       {loading && <p className="text-xl">Carregando profissionais...</p>}
 
       {!loading && (
@@ -150,8 +197,8 @@ export function Profissionais() {
           )}
 
           <section>
-            {profissionais.length !== 0 ? (
-              profissionais.map((p) => (
+            {profissionaisFiltrados.length !== 0 ? (
+              profissionaisFiltrados.map((p) => (
                 <ContainerProfissional
                   key={p.id}
                   dados={p}

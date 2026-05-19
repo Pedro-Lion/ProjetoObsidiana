@@ -59,9 +59,7 @@ export function CadastrarNovoServico() {
     if (!servico.nome || servico.nome.trim() === "") {
       novosErros.nome = "Nome do serviço é obrigatório.";
     }
-    if (!horas || Number(horas) <= 0) {
-      novosErros.horas = "Duração não pode ser 0.";
-    }
+    // Duração não é mais obrigatória — campo pode ser 0 ou deixado em branco
     if (!servico.valorPorHora || Number(servico.valorPorHora) <= 0) {
       novosErros.valorPorHora = "Valor por hora não pode ser 0.";
     }
@@ -149,9 +147,10 @@ export function CadastrarNovoServico() {
           </div>
 
           <div className="flex flex-col w-full">
+            {/* Duração não é obrigatória — o campo permanece disponível mas sem validação */}
             <InputBordaLabel
               type="number"
-              titulo="Duração em Horas"
+              titulo="Duração em Horas (opcional)"
               className="w-full"
               value={horas}
               onInput={(e) => {
@@ -162,7 +161,6 @@ export function CadastrarNovoServico() {
                 setServico({ ...servico, horas: v });
               }}
             />
-            <ErroMsg campo="horas" />
           </div>
 
           <div className="flex flex-col w-full">

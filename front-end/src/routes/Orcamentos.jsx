@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
+import { SelectBordaLabel } from "../components/Inputs/SelectBordaLabel";
 import { api } from "../api";
 import { CardOrcamento } from "../components/Cards/CardOrcamento";
 import { useMsal } from "@azure/msal-react";
@@ -28,6 +29,14 @@ export function Orcamentos() {
   const [orcamentos, setOrcamentos] = useState([]);
   const [search, setSearch] = useState(statusInicial);
   const [loading, setLoading] = useState(true);
+
+  // Ordenação local: campo e direção
+  const [ordenarPor, setOrdenarPor] = useState("");
+  const [direcaoOrdem, setDirecaoOrdem] = useState("asc");
+
+  // Filtro por intervalo de datas (formato YYYY-MM-DD, nativo do input type="date")
+  const [filtroDataDe, setFiltroDataDe] = useState("");
+  const [filtroDataAte, setFiltroDataAte] = useState("");
 
   // Paginação
   const [paginaAtual, setPaginaAtual] = useState(0);
@@ -100,25 +109,69 @@ export function Orcamentos() {
   // Aplicado sobre os itens já retornados pelo backend, para consistência
   // enquanto o debounce aguarda a resposta da API.
   // Os campos cobertos espelham os campos da query findByBusca no backend.
-  const orcamentosFiltrados = orcamentos.filter((o) => {
-    if (!search.trim()) return true;
-    const termo = search.toLowerCase();
-    const camposOrcamento = [
-      o.localEvento,
-      o.descricao,
-      o.status,
-      o.valorTotal?.toString(),
-    ];
-    const camposServicos = (o.servicos || []).flatMap((s) => [
-      s.nome, s.descricao,
-    ]);
-    const camposEquipamentos = (o.equipamentos || []).flatMap((e) => [
-      e.nome, e.categoria, e.marca,
-    ]);
-    return [...camposOrcamento, ...camposServicos, ...camposEquipamentos]
-      .filter(Boolean)
-      .some((c) => c.toLowerCase().includes(termo));
-  });
+  const orcamentosFiltrados = orcamentos
+    .filter((o) => {
+      // Filtro por texto (busca livre)
+      if (search.trim()) {
+        const termo = search.toLowerCase();
+        const camposOrcamento = [
+          o.localEvento,
+          o.descricao,
+          o.status,
+          o.valorTotal?.toString(),
+        ];
+        const camposServicos = (o.servicos || []).flatMap((s) => [
+          s.nome, s.descricao,
+        ]);
+        const camposEquipamentos = (o.equipamentos || []).flatMap((e) => [
+          e.nome, e.categoria, e.marca,
+        ]);
+        const bateu = [...camposOrcamento, ...camposServicos, ...camposEquipamentos]
+          .filter(Boolean)
+          .some((c) => c.toLowerCase().includes(termo));
+        if (!bateu) return false;
+      }
+
+      // Filtro por intervalo de datas — usa o campo dataInicio do orçamento
+      if (filtroDataDe || filtroDataAte) {
+        if (!o.dataInicio) return false;
+        const dataOrcamento = new Date(o.dataInicio);
+        if (filtroDataDe) {
+          // Inclui orçamentos a partir do início do dia selecionado
+          const de = new Date(filtroDataDe + "T00:00:00");
+          if (dataOrcamento < de) return false;
+        }
+        if (filtroDataAte) {
+          // Inclui orçamentos até o final do dia selecionado
+          const ate = new Date(filtroDataAte + "T23:59:59");
+          if (dataOrcamento > ate) return false;
+        }
+      }
+
+      return true;
+    })
+    // Ordenação local aplicada sobre os resultados filtrados
+    .sort((a, b) => {
+      if (!ordenarPor) return 0;
+      let va, vb;
+      if (ordenarPor === "localEvento") {
+        va = a.localEvento?.toLowerCase() ?? "";
+        vb = b.localEvento?.toLowerCase() ?? "";
+      } else if (ordenarPor === "dataInicio") {
+        va = a.dataInicio ? new Date(a.dataInicio).getTime() : 0;
+        vb = b.dataInicio ? new Date(b.dataInicio).getTime() : 0;
+      } else if (ordenarPor === "valorTotal") {
+        va = a.valorTotal ?? 0;
+        vb = b.valorTotal ?? 0;
+      } else if (ordenarPor === "status") {
+        va = a.status?.toLowerCase() ?? "";
+        vb = b.status?.toLowerCase() ?? "";
+      } else {
+        return 0;
+      }
+      if (direcaoOrdem === "asc") return va > vb ? 1 : va < vb ? -1 : 0;
+      return va < vb ? 1 : va > vb ? -1 : 0;
+    });
 
   async function deletar(orcamento) {
     setModalTitulo("Confirmar exclusão");
@@ -224,6 +277,57 @@ export function Orcamentos() {
             className="w-full md:w-fit"
           />
         </div>
+      </div>
+
+      {/* Controles de ordenação e filtro por período */}
+      <div className="flex flex-wrap gap-3 mt-2 items-end">
+        <SelectBordaLabel
+          titulo="Ordenar por"
+          className="w-48"
+          value={ordenarPor}
+          onChange={(e) => setOrdenarPor(e.target.value)}
+          placeholder="Padrão"
+          options={[
+            { value: "localEvento", label: "Local / Nome" },
+            { value: "dataInicio", label: "Data" },
+            { value: "valorTotal", label: "Valor total" },
+            { value: "status", label: "Status" },
+          ]}
+        />
+        <SelectBordaLabel
+          titulo="Direção"
+          className="w-40"
+          value={direcaoOrdem}
+          onChange={(e) => setDirecaoOrdem(e.target.value)}
+          options={[
+            { value: "asc", label: "Crescente (A→Z)" },
+            { value: "desc", label: "Decrescente (Z→A)" },
+          ]}
+        />
+        {/* Filtro de período: exibe somente orçamentos entre as duas datas */}
+        <InputBordaLabel
+          type="date"
+          titulo="De"
+          className="w-40"
+          value={filtroDataDe}
+          onInput={(e) => setFiltroDataDe(e.target.value)}
+        />
+        <InputBordaLabel
+          type="date"
+          titulo="Até"
+          className="w-40"
+          value={filtroDataAte}
+          onInput={(e) => setFiltroDataAte(e.target.value)}
+        />
+        {/* Botão para limpar o filtro de datas quando ambos estiverem preenchidos */}
+        {(filtroDataDe || filtroDataAte) && (
+          <button
+            className="text-indigo-500 text-[1rem] underline self-center mt-1"
+            onClick={() => { setFiltroDataDe(""); setFiltroDataAte(""); }}
+          >
+            Limpar datas
+          </button>
+        )}
       </div>
 
       {loading && <p className="text-xl">Carregando orçamentos...</p>}

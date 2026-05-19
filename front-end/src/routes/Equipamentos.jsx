@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { ContainerListagem } from "../components/Containers/ContainerListagem";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
+import { SelectBordaLabel } from "../components/Inputs/SelectBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { api } from "../api.js";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +20,10 @@ export function Equipamentos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
+
+  // Ordenação local: campo e direção
+  const [ordenarPor, setOrdenarPor] = useState("");
+  const [direcaoOrdem, setDirecaoOrdem] = useState("asc");
 
   // Paginação
   const [paginaAtual, setPaginaAtual] = useState(0);
@@ -165,21 +170,41 @@ export function Equipamentos() {
    * Aplicado sobre os itens já retornados pelo backend para a página atual.
    * Garante consistência enquanto o debounce aguarda a resposta da API.
    * Os campos cobertos aqui espelham os campos da query findByBusca no backend. */
-  const filtrado = data.filter((e) => {
-    if (!search.trim()) return true;
-    const termo = search.toLowerCase();
-    const campos = [
-      e.nome,
-      e.categoria,
-      e.marca,
-      e.modelo,
-      e.numeroSerie,
-      e.valorPorHora?.toString(),
-      e.quantidadeTotal?.toString(),
-      e.quantidadeDisponivel?.toString(),
-    ];
-    return campos.filter(Boolean).some((c) => c.toLowerCase().includes(termo));
-  });
+  const filtrado = data
+    .filter((e) => {
+      if (!search.trim()) return true;
+      const termo = search.toLowerCase();
+      const campos = [
+        e.nome,
+        e.categoria,
+        e.marca,
+        e.modelo,
+        e.numeroSerie,
+        e.valorPorHora?.toString(),
+        e.quantidadeTotal?.toString(),
+        e.quantidadeDisponivel?.toString(),
+      ];
+      return campos.filter(Boolean).some((c) => c.toLowerCase().includes(termo));
+    })
+    // Ordenação local aplicada sobre os resultados filtrados
+    .sort((a, b) => {
+      if (!ordenarPor) return 0;
+      let va, vb;
+      if (ordenarPor === "nome") {
+        va = a.nome?.toLowerCase() ?? "";
+        vb = b.nome?.toLowerCase() ?? "";
+      } else if (ordenarPor === "valorPorHora") {
+        va = a.valorPorHora ?? 0;
+        vb = b.valorPorHora ?? 0;
+      } else if (ordenarPor === "categoria") {
+        va = a.categoria?.toLowerCase() ?? "";
+        vb = b.categoria?.toLowerCase() ?? "";
+      } else {
+        return 0;
+      }
+      if (direcaoOrdem === "asc") return va > vb ? 1 : va < vb ? -1 : 0;
+      return va < vb ? 1 : va > vb ? -1 : 0;
+    });
 
   return (
     <>
@@ -201,6 +226,32 @@ export function Equipamentos() {
           titulo="+ Novo equipamento"
           onClick={() => setModalCadastroAberta(true)}
           className="w-full md:w-fit"
+        />
+      </div>
+
+      {/* Controles de ordenação */}
+      <div className="flex flex-wrap gap-3 mt-2 items-end">
+        <SelectBordaLabel
+          titulo="Ordenar por"
+          className="w-48"
+          value={ordenarPor}
+          onChange={(e) => setOrdenarPor(e.target.value)}
+          placeholder="Padrão"
+          options={[
+            { value: "nome", label: "Nome" },
+            { value: "valorPorHora", label: "Valor por hora" },
+            { value: "categoria", label: "Categoria" },
+          ]}
+        />
+        <SelectBordaLabel
+          titulo="Direção"
+          className="w-40"
+          value={direcaoOrdem}
+          onChange={(e) => setDirecaoOrdem(e.target.value)}
+          options={[
+            { value: "asc", label: "Crescente (A→Z)" },
+            { value: "desc", label: "Decrescente (Z→A)" },
+          ]}
         />
       </div>
 
