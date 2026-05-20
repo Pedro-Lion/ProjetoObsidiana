@@ -3,7 +3,7 @@ name: CI #NOME DA AÇÃO
 on:
   push: #EVENTO QUE IRÁ DISPARAR A AÇÃO
     branches:
-      - main #BRANCH QUE IRÁ DISPARAR A AÇÃO
+      - clean-arch #BRANCH QUE IRÁ DISPARAR A AÇÃO
 
   pull_request: #Executa quando alguém abre PR para a branch principal
     branches:
