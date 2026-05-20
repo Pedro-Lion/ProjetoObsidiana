@@ -1,7 +1,9 @@
 package com.example.crudObsidiana.repository;
 
+import com.example.crudObsidiana.model.Equipamento;
 import com.example.crudObsidiana.model.UsoEquipamento;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 import org.springframework.data.jpa.repository.Modifying;
@@ -15,6 +17,14 @@ public interface UsoEquipamentoRepository extends JpaRepository<UsoEquipamento, 
     List<UsoEquipamento> findByOrcamento_Id(Long idOrcamento);
     List<UsoEquipamento> findByServico_Id(Long idServico);
     List<UsoEquipamento> findByEquipamento_Id(Long idEquipamento);
+
+    List<Equipamento> find
+
+    @NativeQuery("""
+        SELECT SUM(quantidade_usada) FROM uso_equipamento
+        WHERE fk_equipamento = ?1 AND fk_orcamento IN (?2);
+    """)
+    Integer sumEquipUsesWhereOrcamentoId(Long idEquipamento, Long[] orcamentoIds);
 
 //    METODO EM CASO DE ALTERACAO DE ORCAMENTO JÁ CRIADO
     @Modifying

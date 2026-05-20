@@ -5,9 +5,12 @@ import org.hibernate.annotations.processing.SQL;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
@@ -15,6 +18,10 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
 
     @SQL("SELECT COUNT(status) FROM orcamento where status = ?;")
     Integer countByStatus(String status);
+
+    // Encontrar orçamento que acontecem dentro de um intervalo
+    @NativeQuery("SELECT * FROM orcamento WHERE data_termino > ?1 AND data_inicio < ?2;")
+    List<Orcamento> findSobreposicoes(Date dataInicio, Date dataTermino);
 
     // Busca em todos os campos relevantes do orçamento, seus serviços e equipamentos (case-insensitive).
     // LEFT JOIN garante que orçamentos sem serviços/equipamentos também aparecem quando o termo

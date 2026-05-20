@@ -12,6 +12,7 @@ import com.example.crudObsidiana.repository.ServicoRepository;
 import com.example.crudObsidiana.observer.OrcamentoObserver;
 import com.example.crudObsidiana.observer.OrcamentoSubject;
 import com.example.crudObsidiana.repository.OrcamentoRepository;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -147,9 +148,6 @@ public class OrcamentoService implements OrcamentoSubject {
                 dto.getIdCalendar()
         );
 
-        // Persistir para obter ID
-        Orcamento salvo = orcamentoRepository.save(novoOrcamento);
-
         List<UsoEquipamento> usos = new ArrayList<>();
 
         if (dto.getUsosEquipamentos() != null && !dto.getUsosEquipamentos().isEmpty()) {
@@ -159,7 +157,7 @@ public class OrcamentoService implements OrcamentoSubject {
                 Equipamento eq = equipamentoRepository.findById(idEq)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
                 UsoEquipamento uso = new UsoEquipamento();
-                uso.setOrcamento(salvo);
+                uso.setOrcamento(novoOrcamento);
                 uso.setEquipamento(eq);
                 uso.setQuantidadeUsada(qtd);
                 uso = usoEquipamentoRepository.save(uso);
@@ -170,45 +168,76 @@ public class OrcamentoService implements OrcamentoSubject {
                 Equipamento eq = equipamentoRepository.findById(idEq)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
                 UsoEquipamento uso = new UsoEquipamento();
-                uso.setOrcamento(salvo);
+                uso.setOrcamento(novoOrcamento);
                 uso.setEquipamento(eq);
                 uso.setQuantidadeUsada(1);
                 uso = usoEquipamentoRepository.save(uso);
                 usos.add(uso);
             }
         }
-        salvo.setUsosEquipamentos(usos);
+        novoOrcamento.setUsosEquipamentos(usos);
 
         // popular relações many-to-many (servicos/profissionais/equipamentos)
         if (dto.getServicos() != null) {
             List<Servico> servicos = servicoRepository.findAllById(dto.getServicos());
-            salvo.setServicos(servicos);
+            novoOrcamento.setServicos(servicos);
         }
         if (dto.getProfissionais() != null) {
             List<Profissional> profs = profissionalRepository.findAllById(dto.getProfissionais());
-            salvo.setProfissionais(profs);
+            novoOrcamento.setProfissionais(profs);
         }
         if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
             List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
-            salvo.setEquipamentos(equipamentos);
+            novoOrcamento.setEquipamentos(equipamentos);
         }
 
         // Se o front-end enviou um valorTotal (calculado ou manual), usa esse valor.
         // Só recalcula automaticamente se o campo não foi informado no DTO.
         if (dto.getValorTotal() == null) {
-            double total = calcularValorTotal(salvo);
-            salvo.setValorTotal(total);
+            double total = calcularValorTotal(novoOrcamento);
+            novoOrcamento.setValorTotal(total);
         }
         // (caso dto.getValorTotal() != null, o valor já foi definido no construtor do Orcamento)
 
 
         // --- Se o DTO pediu status "Confirmado", checar estoque e notificar observers ---
         String statusDto = dto.getStatus();
-        if (statusDto != null && "Confirmado".equalsIgnoreCase(statusDto)) {
+        if ("Confirmado".equalsIgnoreCase(statusDto)) {
 
-            // buscar usos persistidos (garante leitura correta)
-            List<UsoEquipamento> usosPersistidos = usoEquipamentoRepository.findByOrcamento_Id(salvo.getId());
-            if (usosPersistidos == null) usosPersistidos = new ArrayList<>();
+            List<Orcamento> orcamentosSorepostos =
+              orcamentoRepository.findSobreposicoes(novoOrcamento.getDataInicio(), novoOrcamento.getDataTermino());
+            List<Equipamento> equipsEmComum = new ArrayList<>();
+            Map<Long, Integer> usosOrcNovo = new HashMap<>();
+
+            if (!orcamentosSorepostos.isEmpty()) {
+                for (Orcamento orcSob : orcamentosSorepostos) {
+                    for (UsoEquipamento uso : novoOrcamento.getUsosEquipamentos()) {
+                        if (uso.getEquipamento() == eqSob)
+                    }
+                }
+            }
+
+//                    for (Equipamento eqOrcNovo : novoOrcamento.getEquipamentos()) {
+//                        if (orcSob.getEquipamentos().contains(eqOrcNovo)) {
+//                            equipsEmComum.add(eqOrcNovo);
+//                            for (UsoEquipamento uso : novoOrcamento.getUsosEquipamentos()) {
+//                                if (uso.getEquipamento() == eqOrcNovo)
+//                            }
+//                        }
+//                    }
+            if (!equipsEmComum.isEmpty()) {
+                Long[] idsOrcsSobrepostos = (Long[]) orcamentosSorepostos.stream()
+                  .map(Orcamento::getId).toArray();
+                for (Equipamento eq : equipsEmComum) {
+                    Integer somaUsos = usoEquipamentoRepository.
+                      sumEquipUsesWhereOrcamentoId(eq.getId(), idsOrcsSobrepostos);
+
+                    if (
+                      (somaUsos != null)
+                        & ((somaUsos + novoOrcamento.getUsosEquipamentos().get()) - ))
+                }
+            }
+
 
             List<String> faltantes = new ArrayList<>();
             for (UsoEquipamento uso : usosPersistidos) {
@@ -226,17 +255,17 @@ public class OrcamentoService implements OrcamentoSubject {
             }
 
             // OK: persistir status e notificar observers para reduzir estoque
-            String statusAnterior = salvo.getStatus();
-            salvo.setStatus("Confirmado");
-            Orcamento salvoComStatus = orcamentoRepository.save(salvo);
+            String statusAnterior = novoOrcamento.getStatus();
+            novoOrcamento.setStatus("Confirmado");
+            Orcamento salvoComStatus = orcamentoRepository.save(novoOrcamento);
             notifyObservers(salvoComStatus, statusAnterior, "Confirmado");
             salvoComStatus.setDuracaoEvento(calcularDuracaoEvento(salvoComStatus));
             return salvoComStatus;
         }
 
         // não pediu confirmação imediata: retornar orcamento salvo (status como veio/por default)
-        salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
-        return salvo;
+        novoOrcamento.setDuracaoEvento(calcularDuracaoEvento(novoOrcamento));
+        return novoOrcamento;
     }
 
 
@@ -312,7 +341,7 @@ public class OrcamentoService implements OrcamentoSubject {
             for (Long idEq : allIds) {
                 int novoQtd = novoMapa.getOrDefault(idEq, 0);
                 int antigoQtd = antigoMapa.getOrDefault(idEq, 0);
-                int delta = novoQtd - antigoQtd;
+                int delta = novoQtd - antigoQtd;6
                 if (delta != 0) deltas.put(idEq, delta);
             }
 
