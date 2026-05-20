@@ -1,0 +1,44 @@
+name: CI #NOME DA AÇÃO
+
+on:
+  push: #EVENTO QUE IRÁ DISPARAR A AÇÃO
+    branches:
+      - main #BRANCH QUE IRÁ DISPARAR A AÇÃO
+
+  pull_request: #Executa quando alguém abre PR para a branch principal
+    branches:
+      - main
+
+jobs: #TRABALHOS A SEREM EXECUTADOS
+
+  build: #NOME DO TRABALHO, PODE SER QUALQUER UM
+
+    runs-on: ubuntu-latest #OS A SER UTILIZADO
+
+    steps: #PASSOS A SEREM EXECUTADOS
+
+      - name: Baixar código #NOME DO PASSO, NESSE CASO, CLONAR O REPOSITORIO
+        uses: actions/checkout@v4 #ACTION ESCOLHIDA PARA CLONAR O REPOSITORIO
+
+      - name: Instalar Node
+        uses: actions/setup-node@v4
+        with: #CONFIGURAÇÕES DA ACTION
+          node-version: 20 #VERSÃO DO NODE
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' #DISTRIBUIÇÃO DO JDK
+          java-version: '17'
+        
+      # - name: Build with Maven #BUILDAR COM MAVEN
+      #   run: mvn -B package -DskipTests
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Rodar testes
+        run: npm test
+
+      - name: Build
+        run: npm run build
