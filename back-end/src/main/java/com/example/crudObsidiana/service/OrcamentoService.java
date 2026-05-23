@@ -1,8 +1,7 @@
 package com.example.crudObsidiana.service;
 
-import com.example.crudObsidiana.dto.KpisOrcamentoDTO;
-import com.example.crudObsidiana.dto.OrcamentoDTO;
-import com.example.crudObsidiana.dto.UsoEquipamentoDTO;
+import com.example.crudObsidiana.dto.*;
+import com.example.crudObsidiana.exception.EstoqueInsuficienteException;
 import com.example.crudObsidiana.model.*;
 import com.example.crudObsidiana.repository.EquipamentoRepository;
 import com.example.crudObsidiana.repository.UsoEquipamentoRepository;
@@ -11,8 +10,6 @@ import com.example.crudObsidiana.repository.ProfissionalRepository;
 import com.example.crudObsidiana.repository.ServicoRepository;
 import com.example.crudObsidiana.observer.OrcamentoObserver;
 import com.example.crudObsidiana.observer.OrcamentoSubject;
-import com.example.crudObsidiana.repository.OrcamentoRepository;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,11 +17,10 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.temporal.ChronoUnit;
+import java.math.BigDecimal;
 import java.util.*;
 
 @Service
@@ -160,7 +156,6 @@ public class OrcamentoService implements OrcamentoSubject {
                 uso.setOrcamento(novoOrcamento);
                 uso.setEquipamento(eq);
                 uso.setQuantidadeUsada(qtd);
-                uso = usoEquipamentoRepository.save(uso);
                 usos.add(uso);
             }
         } else if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
@@ -171,7 +166,6 @@ public class OrcamentoService implements OrcamentoSubject {
                 uso.setOrcamento(novoOrcamento);
                 uso.setEquipamento(eq);
                 uso.setQuantidadeUsada(1);
-                uso = usoEquipamentoRepository.save(uso);
                 usos.add(uso);
             }
         }
@@ -200,277 +194,276 @@ public class OrcamentoService implements OrcamentoSubject {
         // (caso dto.getValorTotal() != null, o valor já foi definido no construtor do Orcamento)
 
 
-        // --- Se o DTO pediu status "Confirmado", checar estoque e notificar observers ---
         String statusDto = dto.getStatus();
-        if ("Confirmado".equalsIgnoreCase(statusDto)) {
+        // --- Se o DTO pediu status "Confirmado", checar estoque e notificar observers ---
+        if (statusDto.equalsIgnoreCase("Confirmado")) {
+            // Verificar e se há sobreposições para o período passado
+            tratarSobreposicoes(novoOrcamento);
 
-            List<Orcamento> orcamentosSorepostos =
-              orcamentoRepository.findSobreposicoes(novoOrcamento.getDataInicio(), novoOrcamento.getDataTermino());
-            List<Equipamento> equipsEmComum = new ArrayList<>();
-            Map<Long, Integer> usosOrcNovo = new HashMap<>();
-
-            if (!orcamentosSorepostos.isEmpty()) {
-                for (Orcamento orcSob : orcamentosSorepostos) {
-                    for (UsoEquipamento uso : novoOrcamento.getUsosEquipamentos()) {
-                        if (uso.getEquipamento() == eqSob)
-                    }
-                }
-            }
-
-//                    for (Equipamento eqOrcNovo : novoOrcamento.getEquipamentos()) {
-//                        if (orcSob.getEquipamentos().contains(eqOrcNovo)) {
-//                            equipsEmComum.add(eqOrcNovo);
-//                            for (UsoEquipamento uso : novoOrcamento.getUsosEquipamentos()) {
-//                                if (uso.getEquipamento() == eqOrcNovo)
-//                            }
-//                        }
-//                    }
-            if (!equipsEmComum.isEmpty()) {
-                Long[] idsOrcsSobrepostos = (Long[]) orcamentosSorepostos.stream()
-                  .map(Orcamento::getId).toArray();
-                for (Equipamento eq : equipsEmComum) {
-                    Integer somaUsos = usoEquipamentoRepository.
-                      sumEquipUsesWhereOrcamentoId(eq.getId(), idsOrcsSobrepostos);
-
-                    if (
-                      (somaUsos != null)
-                        & ((somaUsos + novoOrcamento.getUsosEquipamentos().get()) - ))
-                }
-            }
-
-
-            List<String> faltantes = new ArrayList<>();
-            for (UsoEquipamento uso : usosPersistidos) {
-                Equipamento eq = uso.getEquipamento();
-                if (eq == null) continue;
-                Integer disponivel = (eq.getQuantidadeDisponivel() == null) ? 0 : eq.getQuantidadeDisponivel();
-                Integer requisitado = (uso.getQuantidadeUsada() == null) ? 0 : uso.getQuantidadeUsada();
-                if (disponivel < requisitado) {
-                    faltantes.add("Equipamento '" + eq.getNome() + "' (id=" + eq.getId() + "): disponível " + disponivel + ", requisitado " + requisitado);
-                }
-            }
-
-            if (!faltantes.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Estoque insuficiente: " + String.join("; ", faltantes));
-            }
-
-            // OK: persistir status e notificar observers para reduzir estoque
+            // OK: persistir status e notificar observers
             String statusAnterior = novoOrcamento.getStatus();
             novoOrcamento.setStatus("Confirmado");
             Orcamento salvoComStatus = orcamentoRepository.save(novoOrcamento);
+
+            // Após salvar o orçamento, tem que popular o usoEquipamento
+            usoEquipamentoRepository.saveAll(usos);
+
             notifyObservers(salvoComStatus, statusAnterior, "Confirmado");
+
+            // Enviar com campo de duração para usar no front
             salvoComStatus.setDuracaoEvento(calcularDuracaoEvento(salvoComStatus));
             return salvoComStatus;
         }
 
         // não pediu confirmação imediata: retornar orcamento salvo (status como veio/por default)
-        novoOrcamento.setDuracaoEvento(calcularDuracaoEvento(novoOrcamento));
-        return novoOrcamento;
-    }
+        Orcamento salvo = orcamentoRepository.save(novoOrcamento);
 
+        // Após salvar o orçamento, tem que popular o usoEquipamento
+        usoEquipamentoRepository.saveAll(usos);
+
+        // Enviar com campo de duração para usar no front
+        salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
+        return salvo;
+    }
 
     // ---------------------------------------------------------------------
     // Editar orçamento
     // ---------------------------------------------------------------------
     @Transactional
     public Orcamento editarOrcamento(Long id, OrcamentoDTO dto) {
-        Orcamento existente = orcamentoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orçamento não encontrado: " + id));
+        String statusAnterior = orcamentoRepository.findById(id)
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orçamento não encontrado: " + id))
+          .getStatus();
 
         // salvar status anterior para decisões posteriores
-        String statusAnterior = existente.getStatus();
-
-        // Atualiza campos simples
-        // não puxar getStatus() aqui ainda! há uma lógica abaixo
-        existente.setDescricao(dto.getDescricao());
-        existente.setDataInicio(dto.getDataInicio());
-        existente.setDataTermino(dto.getDataTermino());
-        existente.setLocalEvento(dto.getLocalEvento());
-        existente.setIdCalendar(dto.getIdCalendar());
+        Orcamento atualizar = new Orcamento(
+          dto.getDataInicio(),
+          dto.getDataTermino(),
+          dto.getLocalEvento(),
+          dto.getDescricao(),
+          dto.getStatus(),
+          dto.getValorTotal(),
+          dto.getIdCalendar()
+        );
+        atualizar.setId(id);
 
         // atualização das listas
         if (dto.getServicos() != null && !dto.getServicos().isEmpty()) {
             List<Servico> servicos = servicoRepository.findAllById(dto.getServicos());
-            existente.setServicos(servicos);
-        } else {
-            existente.setServicos(new ArrayList<>());
+            atualizar.setServicos(servicos);
         }
 
         if (dto.getProfissionais() != null && !dto.getProfissionais().isEmpty()) {
             List<Profissional> profissionais = profissionalRepository.findAllById(dto.getProfissionais());
-            existente.setProfissionais(profissionais);
-        } else {
-            existente.setProfissionais(new ArrayList<>());
+            atualizar.setProfissionais(profissionais);
         }
 
-        // Buscar usos antigos vinculados
-        List<UsoEquipamento> usosAntigos = usoEquipamentoRepository.findByOrcamento_Id(existente.getId());
-        if (usosAntigos == null) usosAntigos = new ArrayList<>();
-
-        // Construir mapa novo: equipamentoId -> quantidade
-        Map<Long, Integer> novoMapa = new HashMap<>();
-        if (dto.getUsosEquipamentos() != null && !dto.getUsosEquipamentos().isEmpty()) {
-            for (UsoEquipamentoDTO uDto : dto.getUsosEquipamentos()) {
-                Long idEq = uDto.getIdEquipamento();
-                Integer qtd = (uDto.getQuantidadeUsada() == null) ? 1 : uDto.getQuantidadeUsada();
-                novoMapa.put(idEq, novoMapa.getOrDefault(idEq, 0) + qtd);
-            }
-        } else if (dto.getEquipamentos() != null) {
-            for (Long idEq : dto.getEquipamentos()) {
-                novoMapa.put(idEq, novoMapa.getOrDefault(idEq, 0) + 1);
-            }
-        }
-
-        // Mapear usos antigos para mapa
-        Map<Long, Integer> antigoMapa = new HashMap<>();
-        for (UsoEquipamento u : usosAntigos) {
-            if (u.getEquipamento() == null) continue;
-            Long idEq = u.getEquipamento().getId();
-            Integer q = (u.getQuantidadeUsada() == null) ? 0 : u.getQuantidadeUsada();
-            antigoMapa.put(idEq, antigoMapa.getOrDefault(idEq, 0) + q);
-        }
-
-        boolean estavaConfirmado = "Confirmado".equalsIgnoreCase(statusAnterior);
-
-        // Se estava confirmado, aplicar deltas (checagem de disponibilidade para deltas positivos)
-        if (estavaConfirmado) {
-            Map<Long, Integer> deltas = new HashMap<>();
-            Set<Long> allIds = new HashSet<>();
-            allIds.addAll(antigoMapa.keySet());
-            allIds.addAll(novoMapa.keySet());
-            for (Long idEq : allIds) {
-                int novoQtd = novoMapa.getOrDefault(idEq, 0);
-                int antigoQtd = antigoMapa.getOrDefault(idEq, 0);
-                int delta = novoQtd - antigoQtd;6
-                if (delta != 0) deltas.put(idEq, delta);
-            }
-
-            // checar disponibilidade para deltas positivos
-            List<String> faltantes = new ArrayList<>();
-            for (Map.Entry<Long, Integer> e : deltas.entrySet()) {
-                Long idEq = e.getKey();
-                int delta = e.getValue();
-                if (delta <= 0) continue;
-                Equipamento eq = equipamentoRepository.findById(idEq)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
-                Integer disponivel = (eq.getQuantidadeDisponivel() == null) ? 0 : eq.getQuantidadeDisponivel();
-                if (disponivel < delta) {
-                    faltantes.add("Equipamento '" + eq.getNome() + "' (id=" + idEq + "): disponível " + disponivel + ", requerido adicional " + delta);
-                }
-            }
-            if (!faltantes.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Estoque insuficiente para edição: " + String.join("; ", faltantes));
-            }
-
-            // aplicar deltas
-            for (Map.Entry<Long, Integer> e : deltas.entrySet()) {
-                Long idEq = e.getKey();
-                int delta = e.getValue();
-                Equipamento eq = equipamentoRepository.findById(idEq)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
-                if (delta > 0) {
-                    eq.reduzirQuantidade(delta);
-                } else if (delta < 0) {
-                    eq.devolverQuantidade(-delta);
-                }
-                equipamentoRepository.save(eq);
-            }
-        }
-
-        if (existente.getUsosEquipamentos() == null) {
-            existente.setUsosEquipamentos(new ArrayList<>());
-        } else {
-            // remove todos os elementos da lista gerenciada (triggera orphanRemoval)
-            existente.getUsosEquipamentos().clear();
-        }
-
-        // agora crie e salve os novos usos e ADICIONE à coleção gerenciada
-        List<UsoEquipamento> novosUsos = new ArrayList<>();
-        for (Map.Entry<Long, Integer> e : novoMapa.entrySet()) {
-            Long idEq = e.getKey();
-            Integer qtd = e.getValue();
-            Equipamento eq = equipamentoRepository.findById(idEq)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
-            UsoEquipamento uso = new UsoEquipamento();
-            uso.setOrcamento(existente);
-            uso.setEquipamento(eq);
-            uso.setQuantidadeUsada(qtd);
-            uso = usoEquipamentoRepository.save(uso);
-            novosUsos.add(uso);
-
-            // add no MESMO objeto — NÃO usar setUsosEquipamentos(novosUsos)
-            existente.getUsosEquipamentos().add(uso);
-        }
+//        // Buscar usos antigos vinculados
+//        List<UsoEquipamento> usosAntigos = usoEquipamentoRepository.findByOrcamento_Id(existente.getId());
+//        if (usosAntigos == null) usosAntigos = new ArrayList<>();
+//
+//        // Construir mapa novo: equipamentoId -> quantidade
+//        Map<Long, Integer> novoMapa = new HashMap<>();
+//        if (dto.getUsosEquipamentos() != null && !dto.getUsosEquipamentos().isEmpty()) {
+//            for (UsoEquipamentoDTO uDto : dto.getUsosEquipamentos()) {
+//                Long idEq = uDto.getIdEquipamento();
+//                Integer qtd = (uDto.getQuantidadeUsada() == null) ? 1 : uDto.getQuantidadeUsada();
+//                novoMapa.put(idEq, novoMapa.getOrDefault(idEq, 0) + qtd);
+//            }
+//        } else if (dto.getEquipamentos() != null) {
+//            for (Long idEq : dto.getEquipamentos()) {
+//                novoMapa.put(idEq, novoMapa.getOrDefault(idEq, 0) + 1);
+//            }
+//        }
+//
+//        // Mapear usos antigos para mapa
+//        Map<Long, Integer> antigoMapa = new HashMap<>();
+//        for (UsoEquipamento u : usosAntigos) {
+//            if (u.getEquipamento() == null) continue;
+//            Long idEq = u.getEquipamento().getId();
+//            Integer q = (u.getQuantidadeUsada() == null) ? 0 : u.getQuantidadeUsada();
+//            antigoMapa.put(idEq, antigoMapa.getOrDefault(idEq, 0) + q);
+//        }
+//
+//        boolean estavaConfirmado = "Confirmado".equalsIgnoreCase(statusAnterior);
+//
+//        // Se estava confirmado, aplicar deltas (checagem de disponibilidade para deltas positivos)
+//        if (estavaConfirmado) {
+//            Map<Long, Integer> deltas = new HashMap<>();
+//            Set<Long> allIds = new HashSet<>();
+//            allIds.addAll(antigoMapa.keySet());
+//            allIds.addAll(novoMapa.keySet());
+//            for (Long idEq : allIds) {
+//                int novoQtd = novoMapa.getOrDefault(idEq, 0);
+//                int antigoQtd = antigoMapa.getOrDefault(idEq, 0);
+//                int delta = novoQtd - antigoQtd;
+//                if (delta != 0) deltas.put(idEq, delta);
+//            }
+//
+//            // checar disponibilidade para deltas positivos
+//            List<String> faltantes = new ArrayList<>();
+//            for (Map.Entry<Long, Integer> e : deltas.entrySet()) {
+//                Long idEq = e.getKey();
+//                int delta = e.getValue();
+//                if (delta <= 0) continue;
+//                Equipamento eq = equipamentoRepository.findById(idEq)
+//                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
+//                Integer disponivel = (eq.getQuantidadeDisponivel() == null) ? 0 : eq.getQuantidadeDisponivel();
+//                if (disponivel < delta) {
+//                    faltantes.add("Equipamento '" + eq.getNome() + "' (id=" + idEq + "): disponível " + disponivel + ", requerido adicional " + delta);
+//                }
+//            }
+//            if (!faltantes.isEmpty()) {
+//                throw new ResponseStatusException(HttpStatus.CONFLICT, "Estoque insuficiente para edição: " + String.join("; ", faltantes));
+//            }
+//
+//            // aplicar deltas
+//            for (Map.Entry<Long, Integer> e : deltas.entrySet()) {
+//                Long idEq = e.getKey();
+//                int delta = e.getValue();
+//                Equipamento eq = equipamentoRepository.findById(idEq)
+//                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
+//                if (delta > 0) {
+//                    eq.reduzirQuantidade(delta);
+//                } else if (delta < 0) {
+//                    eq.devolverQuantidade(-delta);
+//                }
+//                equipamentoRepository.save(eq);
+//            }
+//        }
+//
+//        if (existente.getUsosEquipamentos() == null) {
+//            existente.setUsosEquipamentos(new ArrayList<>());
+//        } else {
+//            // remove todos os elementos da lista gerenciada (triggera orphanRemoval)
+//            existente.getUsosEquipamentos().clear();
+//        }
+//
+//        // agora crie e salve os novos usos e ADICIONE à coleção gerenciada
+//        List<UsoEquipamento> novosUsos = new ArrayList<>();
+//        for (Map.Entry<Long, Integer> e : novoMapa.entrySet()) {
+//            Long idEq = e.getKey();
+//            Integer qtd = e.getValue();
+//            Equipamento eq = equipamentoRepository.findById(idEq)
+//                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
+//            UsoEquipamento uso = new UsoEquipamento();
+//            uso.setOrcamento(existente);
+//            uso.setEquipamento(eq);
+//            uso.setQuantidadeUsada(qtd);
+//            uso = usoEquipamentoRepository.save(uso);
+//            novosUsos.add(uso);
+//
+//            // add no MESMO objeto — NÃO usar setUsosEquipamentos(novosUsos)
+//            existente.getUsosEquipamentos().add(uso);
+//        }
 
         // atualizar lista many-to-many de equipamentos (opcional/compat)
         if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
             List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
-            existente.setEquipamentos(equipamentos);
-        } else {
-            existente.setEquipamentos(new ArrayList<>());
+            atualizar.setEquipamentos(equipamentos);
         }
 
         // Respeita o valorTotal enviado pelo front-end (pode ser manual ou calculado automaticamente).
         // Só recalcula se o campo não foi informado no DTO.
         if (dto.getValorTotal() == null) {
-            double totalAtualizado = calcularValorTotal(existente);
-            existente.setValorTotal(totalAtualizado);
-        } else {
-            existente.setValorTotal(dto.getValorTotal());
+            double totalAtualizado = calcularValorTotal(atualizar);
+            atualizar.setValorTotal(totalAtualizado);
         }
 
-        // tratar mudança de status solicitada no DTO
-        String novoStatusDto = dto.getStatus();
-        String novoStatus = (novoStatusDto == null) ? statusAnterior : novoStatusDto;
-        boolean seraConfirmado = "Confirmado".equalsIgnoreCase(novoStatus);
-
-        // Se não houve mudnça de status confirm<->nao-confirm, apenas persistir status e retornar
-        if ( ("Confirmado".equalsIgnoreCase(statusAnterior)) == seraConfirmado ) {
-            existente.setStatus(novoStatus);
-            Orcamento salvo = orcamentoRepository.save(existente);
-            salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
-            return salvo;
+        List<UsoEquipamento> usos = new ArrayList<>();
+        if (dto.getUsosEquipamentos() != null && !dto.getUsosEquipamentos().isEmpty()) {
+            for (UsoEquipamentoDTO uDto : dto.getUsosEquipamentos()) {
+                Long idEq = uDto.getIdEquipamento();
+                Integer qtd = (uDto.getQuantidadeUsada() == null) ? 1 : uDto.getQuantidadeUsada();
+                Equipamento eq = equipamentoRepository.findById(idEq)
+                  .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
+                UsoEquipamento uso = new UsoEquipamento();
+                uso.setOrcamento(atualizar);
+                uso.setEquipamento(eq);
+                uso.setQuantidadeUsada(qtd);
+                usos.add(uso);
+            }
+        } else if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
+            for (Long idEq : dto.getEquipamentos()) {
+                Equipamento eq = equipamentoRepository.findById(idEq)
+                  .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
+                UsoEquipamento uso = new UsoEquipamento();
+                uso.setOrcamento(atualizar);
+                uso.setEquipamento(eq);
+                uso.setQuantidadeUsada(1);
+                usos.add(uso);
+            }
         }
+        atualizar.setUsosEquipamentos(usos);
 
         // Se vai virar Confirmado: checar estoque (usos já atualizados)
-        if (seraConfirmado && !"Confirmado".equalsIgnoreCase(statusAnterior)) {
-            List<UsoEquipamento> usos = usoEquipamentoRepository.findByOrcamento_Id(existente.getId());
-            List<String> faltantes = new ArrayList<>();
-            for (UsoEquipamento uso : usos) {
-                Equipamento eq = uso.getEquipamento();
-                if (eq == null) continue;
-                Integer disponivel = (eq.getQuantidadeDisponivel() == null) ? 0 : eq.getQuantidadeDisponivel();
-                Integer requisitado = (uso.getQuantidadeUsada() == null) ? 0 : uso.getQuantidadeUsada();
-                if (disponivel < requisitado) {
-                    faltantes.add("Equipamento '" + eq.getNome() + "' (id=" + eq.getId() + "): disponível " + disponivel + ", requisitado " + requisitado);
-                }
-            }
-            if (!faltantes.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Estoque insuficiente: " + String.join("; ", faltantes));
-            }
-            existente.setStatus("Confirmado");
-            Orcamento salvo = orcamentoRepository.save(existente);
+        if (atualizar.getStatus().equalsIgnoreCase("Confirmado")) {
+            tratarSobreposicoes(atualizar);
+
+            // OK: persistir status e notificar observers
+            Orcamento salvo = orcamentoRepository.save(atualizar);
             notifyObservers(salvo, statusAnterior, "Confirmado");
+
+            // Enviar com campo de duração para usar no front
             salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
             return salvo;
         }
 
-        // Se estava confirmado e agora deixa de ser: persistir e notificar devolução
-        if (!seraConfirmado && "Confirmado".equalsIgnoreCase(statusAnterior)) {
-            existente.setStatus(novoStatus);
-            Orcamento salvo = orcamentoRepository.save(existente);
-            notifyObservers(salvo, statusAnterior, novoStatus);
-            salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
-            return salvo;
-        }
+        Orcamento salvoFallback = orcamentoRepository.save(atualizar);
 
-        // fallback - persistir e retornar
-        existente.setStatus(novoStatus);
-        Orcamento salvoFallback = orcamentoRepository.save(existente);
+        // Enviar com campo de duração para usar no front
         salvoFallback.setDuracaoEvento(calcularDuracaoEvento(salvoFallback));
         return salvoFallback;
     }
 
+    // ---------------------------------------------------------------------
+    // TRATAR SOBREPOSIÇÕES - mét0do privado para orçamentos confirmados
+    // ---------------------------------------------------------------------
+    private void tratarSobreposicoes(Orcamento orcamento) {
+        List<EquipamentoSobrepostoDTO> eqsSob =
+          usoEquipamentoRepository.findSobrepostos(
+            orcamento.getDataInicio(), orcamento.getDataTermino(),
+            orcamento.getEquipamentos()
+              .stream().mapToLong(Equipamento::getId).toArray()
+          );
+
+        if (eqsSob.isEmpty()) {
+            return;
+        }
+
+        List<String> equipamentosEmConflito = new ArrayList<>();
+
+        for (EquipamentoSobrepostoDTO eqSob : eqsSob) {
+            for (UsoEquipamento uso : orcamento.getUsosEquipamentos()) {
+                if (!Objects.equals(uso.getEquipamento().getId(), eqSob.getIdEquipamento())) {
+                    continue;
+                }
+
+                BigDecimal soma = eqSob.getQuantidadeUsada().add(BigDecimal.valueOf(uso.getQuantidadeUsada()));
+                // a comparação retorna 1 se a soma for maior que a quantidade total do equipamento
+                int comparacao = soma.compareTo(BigDecimal.valueOf(eqSob.getQuantidadeTotal().longValue()));
+                if (comparacao > 0) {
+                    BigDecimal disponiveis =
+                      eqSob.getQuantidadeUsada()
+                        .subtract(BigDecimal.valueOf(eqSob.getQuantidadeTotal().longValue()));
+                    equipamentosEmConflito.add(
+                      "%s | Usado em: %s | Disponíveis: %s | Requisitados: %d"
+                        .formatted(
+                          uso.getEquipamento().getNome(),
+                          eqSob.getOrcamentos(),
+                          disponiveis,
+                          uso.getQuantidadeUsada()
+                        )
+                    );
+                }
+            }
+        }
+
+        if (!equipamentosEmConflito.isEmpty()) {
+            throw new EstoqueInsuficienteException(equipamentosEmConflito);
+        }
+
+    }
 
     // ---------------------------------------------------------------------
     // Atualizar status do orçamento
