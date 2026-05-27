@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+import { toast, ToastContainer } from "react-toastify";
+import { Notificacao } from "../components/Notificacao/Notificacao";
+
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { BotaoBordaGradiente } from "../components/Buttons/BotaoBordaGradiente";
@@ -18,8 +21,31 @@ import { CardServico } from "../components/Cards/CardServico";
 import { CardOrcamento } from "../components/Cards/CardOrcamento";
 import { ContainerProfissional } from "../components/Containers/ContainerProfissional";
 import { ContainerListagemDinamico } from "../components/Containers/ContainerListagemDinamico";
+import { Block } from "@mui/icons-material";
 
 export function AplicacaoComponentes() {
+  // notificação (toast)
+  const [segundosSucesso, setSegundosSucesso] = useState(3);
+
+  function notificar(status) {
+    toast(
+      <Notificacao
+        funcaoReq={() => simulacaoReq(status)}
+        fecharSucessoApos={segundosSucesso}
+      />,
+    );
+  }
+
+  async function simulacaoReq(status) {
+    const promessa = new Promise((resolve) => setTimeout(resolve, 1000));
+    await promessa;
+
+    return {
+      status: status,
+      data: { message: "Mensagem da requisição" },
+    };
+  }
+
   // botões
   function click() {
     alert("Clicado!");
@@ -103,145 +129,178 @@ export function AplicacaoComponentes() {
   const [itensSelecionados, setItensSelecionados] = useState([]);
 
   return (
-    <main className="w-full p-6 overflow-y-scroll bg-white flex flex-col gap-15">
-      <section>
-        <h2>Botões</h2>
+    <>
+      <ToastContainer
+        hideProgressBar={true}
+        autoClose={false}
+        toastStyle={{
+          display: "block",
+          boxShadow: "0 0 0.5rem rgba(0, 0, 0, 0.4)",
+        }}
+      />
+      <main className="w-full p-6 overflow-y-scroll bg-white flex flex-col gap-15">
+        <section>
+          <h2>Testar notificação (Toast)</h2>
 
-        <div className="flex gap-4">
-          <BotaoPrimario onClick={click} className="w-3" />
-          <BotaoSecundario onClick={click} className="w-60" />
-          <BotaoBordaGradiente onClick={click} />
-        </div>
-      </section>
-
-      <section>
-        <h2>Inputs {captura && `- captura: ${captura}`}</h2>
-
-        <div className="flex gap-7">
-          <div>
+          <div className="flex gap-3 items-center">
+            <BotaoPrimario titulo="Caso de sucesso" onClick={() => notificar(200)} />
+            <BotaoPrimario
+              titulo="Caso de erro"
+              onClick={() => notificar(400)}
+            />
             <InputBordaLabel
-              type="text"
-              titulo="Nome completo"
-              placeholder="Insira o nome aqui"
-              className="w-80"
-              onInput={input}
-            />
-
-            <TextareaBordaLabel
-              titulo="Observações"
-              placeholder="Digite aqui informações importantes"
-              larguraCampo="w-80"
-              rows="4"
-              onInput={input}
-            />
-          </div>
-
-          <div>
-            <InputDataBordaLabel titulo="Data e hora" />
-
-            <InputFundoCor
+              titulo="Segundos para fechar caso de sucesso"
+              className="ml-5"
               type="number"
-              titulo="Telefone"
-              placeholder="Somente números"
-              onInput={input}
+              value={segundosSucesso}
+              onInput={(e) => setSegundosSucesso(e.target.value)}
             />
-
-            <InputCheckbox texto="Checkbox" onChange={check} className="mt-2" />
           </div>
+        </section>
 
-          <div className="flex gap-3">
-            <InputFoto onChange={lidarFoto} icone="bi bi-person-up" />
+        <section>
+          <h2>Botões</h2>
 
+          <div className="flex gap-4">
+            <BotaoPrimario onClick={click} className="w-3" />
+            <BotaoSecundario onClick={click} className="w-60" />
+            <BotaoBordaGradiente onClick={click} />
+          </div>
+        </section>
+
+        <section>
+          <h2>Inputs {captura && `- captura: ${captura}`}</h2>
+
+          <div className="flex gap-7">
             <div>
-              <span>Captura do InputFoto:</span>
-              <img
-                src={urlImagem}
-                className="h-40 border-violet-500 border-2 rounded-md"
+              <InputBordaLabel
+                type="text"
+                titulo="Nome completo"
+                placeholder="Insira o nome aqui"
+                className="w-80"
+                onInput={input}
+              />
+
+              <TextareaBordaLabel
+                titulo="Observações"
+                placeholder="Digite aqui informações importantes"
+                larguraCampo="w-80"
+                rows="4"
+                onInput={input}
               />
             </div>
+
+            <div>
+              <InputDataBordaLabel titulo="Data e hora" />
+
+              <InputFundoCor
+                type="number"
+                titulo="Telefone"
+                placeholder="Somente números"
+                onInput={input}
+              />
+
+              <InputCheckbox
+                texto="Checkbox"
+                onChange={check}
+                className="mt-2"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <InputFoto onChange={lidarFoto} icone="bi bi-person-up" />
+
+              <div>
+                <span>Captura do InputFoto:</span>
+                <img
+                  src={urlImagem}
+                  className="h-40 border-violet-500 border-2 rounded-md"
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section>
-        <h2>Containers</h2>
+        <section>
+          <h2>Containers</h2>
 
-        <ContainerListagem
-          dados={{
-            nome: "Câmera 01",
-            quantidadeTotal: 5,
-            categoria: "Gravação",
-            marca: "Sony",
-            modelo: "C9-20mm DisplayHD",
-            numeroSerie: "N00123",
-            valorPorHora: 25.5,
-          }}
-          onClickEdit={() => clickContainer("editar", "equipamento")}
-          onClickDel={() => clickContainer("", "equipamento")}
-        />
-
-        <ContainerProfissional
-          dados={{
-            nome: "Roberto",
-            disponibilidade: "Ter a qui das 12h às 20h",
-            contato: "roberto@gmail.com",
-          }}
-        />
-
-        <ContainerSelectTags
-          itens={[
-            { value: "ariel", label: "Ariel" },
-            { value: "sebastian", label: "Sebastião" },
-            { value: "flounder", label: "Linguado" },
-            { value: "ursula", label: "Úrsula" },
-            { value: "eric", label: "Príncipe Eric" },
-          ]}
-          preSelecao={[{ value: "ariel", label: "Ariel" }]}
-          onChange={(itens) => setItensSelecionados(itens)}
-        />
-
-        <div className="text-xl">
-          <span className="font-medium">Itens selecionados:</span>
-
-          <ul className="list-disc list-inside">
-            {itensSelecionados.map((item, index) => (
-              <li key={index}>{item.label}</li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="mb-3">Cards</h2>
-
-        <div className="flex flex-wrap gap-7">
-          <CardServico
-            dados={dadosCardServico}
-            onClickEdit={() => clickContainer("editar", "serviço")}
-            onClickDel={() => clickContainer("", "serviço")}
+          <ContainerListagem
+            dados={{
+              nome: "Câmera 01",
+              quantidadeTotal: 5,
+              categoria: "Gravação",
+              marca: "Sony",
+              modelo: "C9-20mm DisplayHD",
+              numeroSerie: "N00123",
+              valorPorHora: 25.5,
+            }}
+            onClickEdit={() => clickContainer("editar", "equipamento")}
+            onClickDel={() => clickContainer("", "equipamento")}
           />
 
-          <CardOrcamento
-            dados={dadosCardOrcamento}
-            onClickEdit={() => clickContainer("editar", "serviço")}
-            onClickDel={() => clickContainer("", "serviço")}
+          <ContainerProfissional
+            dados={{
+              nome: "Roberto",
+              disponibilidade: "Ter a qui das 12h às 20h",
+              contato: "roberto@gmail.com",
+            }}
           />
-        </div>
-      </section>
 
-      <section>
-        <h2>Containers de listagem dinâmicos</h2>
+          <ContainerSelectTags
+            itens={[
+              { value: "ariel", label: "Ariel" },
+              { value: "sebastian", label: "Sebastião" },
+              { value: "flounder", label: "Linguado" },
+              { value: "ursula", label: "Úrsula" },
+              { value: "eric", label: "Príncipe Eric" },
+            ]}
+            preSelecao={[{ value: "ariel", label: "Ariel" }]}
+            onChange={(itens) => setItensSelecionados(itens)}
+          />
 
-        <ContainerListagemDinamico
-          dados={{
-            nome: "Roberto",
-            disponibilidade: "Terça das 15 às 16",
-            contato: "email@email.meu.com",
-            categoria: "trabalhador",
-            quantidadeDisponivel: "um só ne"
-          }}
-        />
-      </section>
-    </main>
+          <div className="text-xl">
+            <span className="font-medium">Itens selecionados:</span>
+
+            <ul className="list-disc list-inside">
+              {itensSelecionados.map((item, index) => (
+                <li key={index}>{item.label}</li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="mb-3">Cards</h2>
+
+          <div className="flex flex-wrap gap-7">
+            <CardServico
+              dados={dadosCardServico}
+              onClickEdit={() => clickContainer("editar", "serviço")}
+              onClickDel={() => clickContainer("", "serviço")}
+            />
+
+            <CardOrcamento
+              dados={dadosCardOrcamento}
+              onClickEdit={() => clickContainer("editar", "serviço")}
+              onClickDel={() => clickContainer("", "serviço")}
+            />
+          </div>
+        </section>
+
+        <section>
+          <h2>Containers de listagem dinâmicos</h2>
+
+          <ContainerListagemDinamico
+            dados={{
+              nome: "Roberto",
+              disponibilidade: "Terça das 15 às 16",
+              contato: "email@email.meu.com",
+              categoria: "trabalhador",
+              quantidadeDisponivel: "um só ne",
+            }}
+          />
+        </section>
+      </main>
+    </>
   );
 }
