@@ -66,7 +66,7 @@ public class EquipamentoController {
                     array = @ArraySchema(schema = @Schema(implementation = Equipamento.class))))
     @GetMapping
     public ResponseEntity<List<Equipamento>> listarTodos() {
-        List<Equipamento> equipamentos = repository.findAll();
+        List<Equipamento> equipamentos = equipamentoService.listarTodos();
         if (equipamentos.isEmpty()) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(equipamentos);
     }
@@ -98,9 +98,9 @@ public class EquipamentoController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<Equipamento> recuperar(@PathVariable("id") Long id) {
-        return repository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        Equipamento equipamento = equipamentoService.buscarPorId(id);
+        if (equipamento == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(equipamento);
     }
 
     @Operation(summary = "Remove um equipamento pelo ID")
@@ -110,14 +110,9 @@ public class EquipamentoController {
             @ApiResponse(responseCode = "404", description = "Equipamento não encontrado")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Equipamento> excluir(@PathVariable("id") Long id) {
-        if (repository.existsById(id)) {
-            ResponseEntity<Equipamento> deletado = repository.findById(id)
-                    .map(ResponseEntity::ok)
-                    .orElseGet(() -> ResponseEntity.notFound().build());
-            repository.deleteById(id);
-            return deletado;
-        }
+    public ResponseEntity<Void> excluir(@PathVariable("id") Long id) {
+        boolean removido = equipamentoService.deletarEquipamento(id); // ✅ invalida cache
+        if (removido) return ResponseEntity.ok().build();
         return ResponseEntity.notFound().build();
     }
 
@@ -129,19 +124,9 @@ public class EquipamentoController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<Equipamento> atualizar(@PathVariable("id") Long id, @RequestBody Equipamento equipamentoBody) {
-        return repository.findById(id).map(existente -> {
-            if (equipamentoBody.getNome() != null) existente.setNome(equipamentoBody.getNome());
-            if (equipamentoBody.getCategoria() != null) existente.setCategoria(equipamentoBody.getCategoria());
-            if (equipamentoBody.getMarca() != null) existente.setMarca(equipamentoBody.getMarca());
-            if (equipamentoBody.getNumeroSerie() != null) existente.setNumeroSerie(equipamentoBody.getNumeroSerie());
-            if (equipamentoBody.getModelo() != null) existente.setModelo(equipamentoBody.getModelo());
-            if (equipamentoBody.getValorPorHora() != null) existente.setValorPorHora(equipamentoBody.getValorPorHora());
-            if (equipamentoBody.getQuantidadeTotal() != null) {
-                existente.setQuantidadeTotal(equipamentoBody.getQuantidadeTotal());
-            }
-            Equipamento salvo = repository.save(existente);
-            return ResponseEntity.ok(salvo);
-        }).orElseGet(() -> ResponseEntity.notFound().build());
+        Equipamento atualizado = equipamentoService.atualizarEquipamento(id, equipamentoBody);
+        if (atualizado == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(atualizado);
     }
 
     @PostMapping("/{id}/imagem")
