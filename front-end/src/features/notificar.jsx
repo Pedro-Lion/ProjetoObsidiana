@@ -32,7 +32,7 @@ export function notificar(
           return (
             <div className="text-xl">
               <h1>{textos.error}</h1>
-              <p className="mt-3">{corpoErro.message}</p>
+              <p className="mt-3">{corpoErro.message ?? corpoErro}</p>
               {corpoErro.equipamentosEmConflito?.length > 0 && (
                 <>
                   <p className="mt-3 mb-1 font-semibold">

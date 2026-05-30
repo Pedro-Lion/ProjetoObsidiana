@@ -6,7 +6,7 @@ import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { api } from "../api.js";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Modal } from "../components/Modal/Modal.jsx";
+import { notificar } from "../features/notificar.jsx";
 
 export function CadastrarNovoServico() {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ export function CadastrarNovoServico() {
 
   const [horas, setHoras] = useState(servico.horas ?? 0);
   const [valorHora, setValorHora] = useState(
-    servico.valorPorHora ? servico.valorPorHora.toFixed(2) : "0.00"
+    servico.valorPorHora ? servico.valorPorHora.toFixed(2) : "0.00",
   );
 
   // Erros de validação
@@ -68,60 +68,42 @@ export function CadastrarNovoServico() {
     return Object.keys(novosErros).length === 0;
   }
 
-  async function cadastrar() {
+  function cadastrar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.post("/servico", servico, {
+    notificar(
+      api.post("/servico", servico, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status == 201) {
-        // Redireciona direto para a lista, sem modal de sucesso
-        navigate("/servicos");
+      }),
+      (req) => {if(req.status == 201) navigate("/servicos")},
+      {
+        pending: "Cadastrando serviço...",
+        success: [
+          "Serviço cadastrado com sucesso!",
+          "Retornando à página de serviços"
+        ],
+        error: "Ocorreu um erro ao cadastrar o serviço"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Serviço não pôde ser cadastrado. Tente novamente.");
-      setModalActions(
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    );
   }
 
-  async function editar() {
+  function editar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.put(`/servico/${id}`, servico, {
+    notificar(
+      api.put(`/servico/${id}`, servico, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status == 200) {
-        // Redireciona direto para a lista, sem modal de sucesso
-        navigate("/servicos");
+      }),
+      (req) => {if(req.status == 200) navigate("/servicos")},
+      {
+        pending: "Salvando alterações...",
+        success: [
+          "Alterações do serviço salvas com sucesso!",
+          "Retornando à página de serviços"
+        ],
+        error: "Ocorreu um erro durante o registro das alterações"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Serviço não pôde ser editado. Tente novamente.");
-      setModalActions(
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    );
   }
 
   const ErroMsg = ({ campo }) =>

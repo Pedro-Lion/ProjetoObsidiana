@@ -598,7 +598,7 @@ export function CadastroOrcamento() {
                     "Orçamento cadastrado com sucesso!",
                     "Retornando à página de orçamentos"
                   ],
-                  error: "Ocorreu um erro durante o cadastro do orçamento"
+                  error: "Ocorreu um erro ao cadastrar o orçamento"
                 }
               )
             }}
@@ -619,7 +619,7 @@ export function CadastroOrcamento() {
                     "Alterações do orçamento salvas com sucesso!",
                     "Retornando à página de orçamentos"
                   ],
-                  error: "Ocorreu um erro durante o registro"
+                  error: "Ocorreu um erro durante o registro das alterações"
                 }
               );
             }}
