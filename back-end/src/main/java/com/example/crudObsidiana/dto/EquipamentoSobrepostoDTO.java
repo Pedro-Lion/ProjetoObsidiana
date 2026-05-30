@@ -12,7 +12,7 @@ public class EquipamentoSobrepostoDTO {
         this.idEquipamento = idEquipamento;
         this.quantidadeTotal = quantidadeTotal;
         this.quantidadeUsada = quantidadeUsada;
-        this.orcamentos = orcamentos.split(" , ");
+        this.orcamentos = orcamentos.split(",");
     }
 
     public Long getIdEquipamento() { return idEquipamento; }

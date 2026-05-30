@@ -6,7 +6,12 @@ public class EstoqueInsuficienteException extends RuntimeException {
     private final List<String> equipamentosEmConflito;
 
     public EstoqueInsuficienteException(List<String> lista) {
-        super("Estoque insuficiente do(s) equipamento(s) para o período selecionado");
+        super("Estoque insuficiente do(s) equipamento(s) selecionado(s)");
+        this.equipamentosEmConflito = lista;
+    }
+
+    public EstoqueInsuficienteException(String message, List<String> lista) {
+        super(message);
         this.equipamentosEmConflito = lista;
     }
 

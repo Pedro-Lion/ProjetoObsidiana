@@ -37,6 +37,24 @@ public interface UsoEquipamentoRepository extends JpaRepository<UsoEquipamento, 
     """)
     List<EquipamentoSobrepostoDTO> findSobrepostos(Date dataInicio, Date dataTermino, long[] idsEquipamentos);
 
+    // mesma coisa do primeiro, mas exclui o id de um orçamento
+    @NativeQuery("""
+        SELECT
+        u.fk_equipamento AS id_equipamento,
+        e.quantidade_total,
+        SUM(u.quantidade_usada) AS quantidade_usada,
+        GROUP_CONCAT(o.descricao) AS orcamentos
+        FROM uso_equipamento u
+        JOIN equipamento e ON e.id = u.fk_equipamento
+        JOIN orcamento o ON o.id = u.fk_orcamento
+        WHERE
+        o.id != ?1
+        AND o.data_termino > ?2 AND o.data_inicio < ?3
+        AND o.status = 'Confirmado' AND u.fk_equipamento IN (?4)
+        GROUP BY u.fk_equipamento;
+    """)
+    List<EquipamentoSobrepostoDTO> findSobrepostosOrcamentoNot(Long idOrcamento, Date dataInicio, Date dataTermino, long[] idsEquipamentos);
+
 //    METODO EM CASO DE ALTERACAO DE ORCAMENTO JÁ CRIADO
     @Modifying
     @Transactional
