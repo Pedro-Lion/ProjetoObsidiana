@@ -1,7 +1,7 @@
 import { useState } from "react";
 
-import { toast, ToastContainer } from "react-toastify";
-import { Notificacao } from "../components/Notificacao/Notificacao";
+import { notificar } from "../features/notificar";
+import { ToastContainer } from "react-toastify";
 
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
@@ -21,29 +21,27 @@ import { CardServico } from "../components/Cards/CardServico";
 import { CardOrcamento } from "../components/Cards/CardOrcamento";
 import { ContainerProfissional } from "../components/Containers/ContainerProfissional";
 import { ContainerListagemDinamico } from "../components/Containers/ContainerListagemDinamico";
-import { Block } from "@mui/icons-material";
 
 export function AplicacaoComponentes() {
   // notificação (toast)
-  const [segundosSucesso, setSegundosSucesso] = useState(3);
-
-  function notificar(status) {
-    toast(
-      <Notificacao
-        funcaoReq={() => simulacaoReq(status)}
-        fecharSucessoApos={segundosSucesso}
-      />,
-    );
+  function criarNotificacao(sucesso) {
+    notificar(simulacaoReq(sucesso));
   }
 
-  async function simulacaoReq(status) {
-    const promessa = new Promise((resolve) => setTimeout(resolve, 1000));
-    await promessa;
-
-    return {
-      status: status,
-      data: { message: "Mensagem da requisição" },
-    };
+  function simulacaoReq(sucesso = true) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        sucesso
+          ? resolve("Operação concluída com sucesso!")
+          : reject({
+              response: {
+                data: {
+                  message: "Mensagem de erro da requisição",
+                },
+              },
+            });
+      }, 1000);
+    });
   }
 
   // botões
@@ -131,31 +129,25 @@ export function AplicacaoComponentes() {
   return (
     <>
       <ToastContainer
-        hideProgressBar={true}
-        autoClose={false}
         toastStyle={{
-          display: "block",
-          boxShadow: "0 0 0.5rem rgba(0, 0, 0, 0.4)",
+          boxShadow: "0 0 0.5rem rgba(0, 0, 0, 0.3)",
+          width: "100%",
+          maxWidth: "36rem",
         }}
       />
       <main className="w-full p-6 overflow-y-scroll bg-white flex flex-col gap-15">
         <section>
           <h2>Testar notificação (Toast)</h2>
 
-          <div className="flex gap-3 items-center">
-            <BotaoPrimario titulo="Caso de sucesso" onClick={() => notificar(200)} />
-            <BotaoPrimario
-              titulo="Caso de erro"
-              onClick={() => notificar(400)}
-            />
-            <InputBordaLabel
-              titulo="Segundos para fechar caso de sucesso"
-              className="ml-5"
-              type="number"
-              value={segundosSucesso}
-              onInput={(e) => setSegundosSucesso(e.target.value)}
-            />
-          </div>
+          <BotaoPrimario
+            titulo="Caso de sucesso"
+            onClick={() => criarNotificacao()}
+            className="mr-3"
+          />
+          <BotaoPrimario
+            titulo="Caso de erro"
+            onClick={() => criarNotificacao(false)}
+          />
         </section>
 
         <section>

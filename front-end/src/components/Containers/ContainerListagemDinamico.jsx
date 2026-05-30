@@ -24,7 +24,7 @@ export function ContainerListagemDinamico({
       chave[0].toUpperCase() + chave.slice(1, chave.length);
 
     listaCampos.push(
-      <div className="estilo-campos">
+      <div className="estilo-campos" key={"container_campo_" + chave}>
         <label className="estilo-titulo-campo w-fit">{chaveCapitalizada}</label>
         <label className="estilo-conteudo-campo">{valor || "—"}</label>
       </div>,
