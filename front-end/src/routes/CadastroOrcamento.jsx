@@ -21,14 +21,7 @@ import { editar } from "../features/orcamento/services/editar.js";
 
 export function CadastroOrcamento() {
   const navigate = useNavigate();
-
   const { instance } = useMsal();
-
-  // Estados do modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitulo, setModalTitulo] = useState("");
-  const [modalDescricao, setModalDescricao] = useState("");
-  const [modalActions, setModalActions] = useState(null);
 
   const [equipamentosDoServico, setEquipamentosDoServico] = useState([]);
 
@@ -635,12 +628,6 @@ export function CadastroOrcamento() {
         />
         {/* <BotaoSecundario onClick={() => { console.log(orcamento) }} /> */}
       </div>
-
-      {modalOpen && (
-        <Modal titulo={modalTitulo} descricao={modalDescricao}>
-          {modalActions}
-        </Modal>
-      )}
     </>
   );
 }

@@ -24,12 +24,6 @@ export function CadastrarNovoServico() {
   // Erros de validação
   const [erros, setErros] = useState({});
 
-  // Estados para o modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitulo, setModalTitulo] = useState("");
-  const [modalDescricao, setModalDescricao] = useState("");
-  const [modalActions, setModalActions] = useState(null);
-
   useEffect(() => {
     async function getEquipamentos() {
       try {
@@ -207,12 +201,6 @@ export function CadastrarNovoServico() {
           />
         </div>
       </section>
-
-      {modalOpen && (
-        <Modal titulo={modalTitulo} descricao={modalDescricao}>
-          {modalActions}
-        </Modal>
-      )}
     </>
   );
 }

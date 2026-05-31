@@ -20,11 +20,6 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
   // Erros de validação
   const [erros, setErros] = useState({});
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitulo, setModalTitulo] = useState("");
-  const [modalDescricao, setModalDescricao] = useState("");
-  const [modalActions, setModalActions] = useState(null);
-
   // Carrega preview de foto existente no modo edição
   useEffect(() => {
     async function carregarPreview() {
@@ -219,12 +214,6 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
           <BotaoSecundario titulo="Cancelar" className="mb-0 mt-0" onClick={cancelar} />
         </div>
       </section>
-
-      {modalOpen && (
-        <Modal titulo={modalTitulo} descricao={modalDescricao}>
-          {modalActions}
-        </Modal>
-      )}
     </>
   );
 }

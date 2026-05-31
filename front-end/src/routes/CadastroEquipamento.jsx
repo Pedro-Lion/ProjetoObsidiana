@@ -37,11 +37,6 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
   // Erros de validação
   const [erros, setErros] = useState({});
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitulo, setModalTitulo] = useState("");
-  const [modalDescricao, setModalDescricao] = useState("");
-  const [modalActions, setModalActions] = useState(null);
-
   const onChangeTexto = (campo) => (e) =>
     setEquipamento((prev) => ({ ...prev, [campo]: e.target.value }));
 
@@ -296,12 +291,6 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
           <BotaoSecundario titulo="Cancelar" className="mb-0 mt-0" onClick={cancelar} />
         </div>
       </div>
-
-      {modalOpen && (
-        <Modal titulo={modalTitulo} descricao={modalDescricao}>
-          {modalActions}
-        </Modal>
-      )}
     </>
   );
 }
