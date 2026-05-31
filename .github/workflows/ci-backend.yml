@@ -36,12 +36,12 @@ jobs:
       # 4. Compila o projeto e gera o JAR (pula os testes nessa etapa)
       - name: Build com Maven
         working-directory: back-end
-        run: mvn -B package -DskipTests
+        run: mvn -B package -DskipTests -Dfile.encoding=UTF-8 -Dproject.build.sourceEncoding=UTF-8
 
       # 5. Roda os testes separadamente (fica mais fácil ver onde falhou)
       - name: Executar Testes
         working-directory: back-end
-        run: mvn test
+        run: mvn test -Dfile.encoding=UTF-8 -Dproject.build.sourceEncoding=UTF-8
 
       # 6. Sobe o JAR como artefato — fica disponível para download
       #    na aba "Actions" do GitHub por 7 dias
