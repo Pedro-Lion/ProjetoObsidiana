@@ -219,7 +219,11 @@ export function CadastroOrcamento() {
 
   useEffect(() => {
     async function buscarEquipamentosDoServico() {
-      if (orcamento.servicos.length == 0) return;
+      // para impedir a criação de filhos com mesma chave no ContainerSelectTags,
+      // é melhor esperar para que as opções sejam preenchidas
+      if (opcoes.servico.length == 0) return;
+
+      if (!orcamento.servicos || orcamento.servicos.length == 0) return;
 
       const servicoIds = (orcamento.servicos || []).map((s) =>
         typeof s === "number" ? s : s?.id
@@ -439,7 +443,6 @@ export function CadastroOrcamento() {
         />
 
         <ContainerSelectTags
-          key={idsEquipamentosDoServico.join(",")}
           titulo="Equipamentos"
           itens={opcoes.equipamento}
           preSelecao={formatarOpcoesComQuantidade(
@@ -630,6 +633,7 @@ export function CadastroOrcamento() {
           className="mb-0 mt-0"
           onClick={() => navigate(-1)}
         />
+        {/* <BotaoSecundario onClick={() => { console.log(orcamento) }} /> */}
       </div>
 
       {modalOpen && (
