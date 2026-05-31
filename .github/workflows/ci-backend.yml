@@ -1,0 +1,53 @@
+name: CI - Backend (Spring Boot)
+
+# Dispara quando alguém faz push ou merge na branch main
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'back-end/**'   # Só roda se arquivos do backend mudarem
+
+jobs:
+  build:
+    name: Compilar JAR do Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Clona o repositório
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      # 2. Configura o Java 17 (ajuste a versão se seu projeto usar outra)
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 3. Cache do Maven para não baixar dependências toda vez (mais rápido)
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('back-end/**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # 4. Compila o projeto e gera o JAR (pula os testes nessa etapa)
+      - name: Build com Maven
+        working-directory: back-end
+        run: mvn -B package -DskipTests
+
+      # 5. Roda os testes separadamente (fica mais fácil ver onde falhou)
+      - name: Executar Testes
+        working-directory: back-end
+        run: mvn test
+
+      # 6. Sobe o JAR como artefato — fica disponível para download
+      #    na aba "Actions" do GitHub por 7 dias
+      - name: Publicar JAR como Artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: back-end/target/*.jar
+          retention-days: 7

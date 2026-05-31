@@ -1,0 +1,45 @@
+name: CI - Frontend (React + TypeScript)
+
+# Dispara quando alguém faz push ou merge na branch main
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'front-end/**'  # Só roda se arquivos do frontend mudarem
+
+jobs:
+  build:
+    name: Build do Frontend React
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Clona o repositório
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      # 2. Configura o Node.js
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: front-end/package-lock.json
+
+      # 3. Instala as dependências do projeto
+      - name: Instalar dependências
+        working-directory: front-end
+        run: npm ci
+
+      # 4. Faz o build de produção do React
+      - name: Build do React
+        working-directory: front-end
+        run: npm run build
+
+      # 5. Sobe a pasta de build como artefato — fica disponível para download
+      #    na aba "Actions" do GitHub por 7 dias
+      - name: Publicar build como Artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: front-end/dist/       # Se usar Vite; troque por front-end/build/ se usar CRA
+          retention-days: 7
