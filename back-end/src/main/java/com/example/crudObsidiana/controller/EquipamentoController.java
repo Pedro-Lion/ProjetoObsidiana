@@ -179,7 +179,7 @@ public class EquipamentoController {
         } catch (IOException e) {
             return ResponseEntity.notFound().build();
         }
-        //só pra testar ci
+        //só pra testar ci 2
 
     }
 }
