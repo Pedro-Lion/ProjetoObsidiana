@@ -1,5 +1,7 @@
 package com.example.crudObsidiana.config;
 
+import com.example.crudObsidiana.exception.ErroEstoqueInsuficiente;
+import com.example.crudObsidiana.exception.EstoqueInsuficienteException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,20 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(EstoqueInsuficienteException.class)
+    public ResponseEntity<ErroEstoqueInsuficiente> handleEstoqueInsuficienteException(EstoqueInsuficienteException ex) {
+        Throwable cause = ex.getCause();
+        log.error("EstoqueInsuficienteException: message='{}' causeClass='{}' causeMessage='{}'",
+          ex.getMessage(),
+          cause != null ? cause.getClass().getName() : "null",
+          cause != null ? cause.getMessage() : "null",
+          ex
+        );
+
+        return ResponseEntity.status(409)
+          .body(new ErroEstoqueInsuficiente(ex.getMessage(), ex.getEquipamentosEmConflito()));
+    }
+    
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<?> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         Throwable cause = ex.getMostSpecificCause();

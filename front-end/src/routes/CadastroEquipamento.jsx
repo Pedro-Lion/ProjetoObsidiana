@@ -37,11 +37,6 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
   // Erros de validação
   const [erros, setErros] = useState({});
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitulo, setModalTitulo] = useState("");
-  const [modalDescricao, setModalDescricao] = useState("");
-  const [modalActions, setModalActions] = useState(null);
-
   const onChangeTexto = (campo) => (e) =>
     setEquipamento((prev) => ({ ...prev, [campo]: e.target.value }));
 
@@ -147,75 +142,58 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
     setArquivoImagem(file);
   }
 
-  async function cadastrar() {
+  function cadastrar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.post("/equipamento", equipamento, {
+    notificar(
+      api.post("/equipamento", equipamento, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status == 201) {
-        const criado = request.data;
-        // Fix upload via modal: usa o arquivo do state, não depende de ref perdida
-        if (arquivoImagem && criado?.id) {
-          await uploadImagem(criado.id);
+      }),
+      async (req) => {
+        if (req.status == 201) {
+          const criado = req.data;
+          // Fix upload via modal: usa o arquivo do state, não depende de ref perdida
+          if (arquivoImagem && criado?.id) {
+            await uploadImagem(criado.id);
+          }
+          irParaLista();
         }
-
-        // Redireciona direto para a lista, sem modal de sucesso
-        irParaLista();
+      },
+      {
+        pending: "Cadastrando equipamento...",
+        success: [
+          "Equipamento cadastrado com sucesso!",
+          "Retornando à página de serviços"
+        ],
+        error: "Ocorreu um erro ao cadastrar o equipamento"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Equipamento não pôde ser cadastrado. Tente novamente.");
-      setModalActions(
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    )
   }
 
   async function editar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.put(`/equipamento/${id}`, equipamento, {
+    notificar(
+      api.put("/equipamento", equipamento, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status == 200) {
-        if (arquivoImagem && id) {
-          await uploadImagem(id);
+      }),
+      async (req) => {
+        if (req.status == 200) {
+          if (arquivoImagem && id) {
+            await uploadImagem(id);
+          }
+          irParaLista();
         }
-        // Redireciona direto para a lista, sem modal de sucesso
-        irParaLista();
-      } else {
-        setModalTitulo("Erro");
-        setModalDescricao("Equipamento não pôde ser editado. Tente novamente.");
-        setModalActions(
-          <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
-            Fechar
-          </button>
-        );
-        setModalOpen(true);
+      },
+      {
+        pending: "Salvando alterações...",
+        success: [
+          "Alterações do equipamento salvas com sucesso!",
+          "Retornando à página de equipamentos"
+        ],
+        error: "Ocorreu um erro durante o registro das alterações"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Erro ao editar equipamento.");
-      setModalActions(
-        <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    )
   }
 
   // Componente auxiliar para exibir mensagem de erro abaixo do campo
@@ -313,12 +291,6 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
           <BotaoSecundario titulo="Cancelar" className="mb-0 mt-0" onClick={cancelar} />
         </div>
       </div>
-
-      {modalOpen && (
-        <Modal titulo={modalTitulo} descricao={modalDescricao}>
-          {modalActions}
-        </Modal>
-      )}
     </>
   );
 }

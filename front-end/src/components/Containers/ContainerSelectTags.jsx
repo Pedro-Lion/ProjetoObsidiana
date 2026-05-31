@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Select from "react-select";
 
 export function ContainerSelectTags({ titulo = "Container", placeholder = "Escolha uma opção", itens, preSelecao, onChange, temQuantidade = false }) {
+  // Rastreia o último payload enviado para evitar chamar onChange desnecessariamente
+  const payloadAnteriorRef = useRef(null);
+
   const [itensSelecionados, setItensSelecionados] = useState(preSelecao != undefined ? preSelecao : []);
 
   function definirQuantidades() {
@@ -62,19 +65,44 @@ export function ContainerSelectTags({ titulo = "Container", placeholder = "Escol
   2) depois, o useEffect dispara
   3) só então o pai atualiza o estado (setOrcamento) */
 
+  // Notifica o pai APENAS se o payload realmente mudou
   useEffect(() => {
     if (!onChange) return;
+    
+    let payload;
+    
     if (!temQuantidade) {
-      onChange(itensSelecionados || []);
-      return;
+      payload = itensSelecionados || [];
+    } else {
+      payload = (itensSelecionados || []).map(it => ({
+        ...it,
+        quantidade: quantidades?.[it.value] ?? 1
+      }));
     }
-    // caso tenha quantidade (de equipamentos):
-    const payload = (itensSelecionados || []).map(it => ({
-      ...it,
-      quantidade: quantidades?.[it.value] ?? 1
-    }));
-    onChange(payload);
-  }, [itensSelecionados, quantidades, temQuantidade]); //FIM useEffect
+
+    // Comparação profunda: serializa o payload para comparar com o anterior
+    const payloadSerializado = JSON.stringify(payload);
+    
+    if (payloadAnteriorRef.current !== payloadSerializado) {
+      payloadAnteriorRef.current = payloadSerializado;
+      onChange(payload);
+    }
+  }, [itensSelecionados, quantidades, temQuantidade]);
+
+  // SINCRONIZA o estado com a prop preSelecao quando ela muda
+  useEffect(() => {
+    if (preSelecao && preSelecao.length > 0) {
+      setItensSelecionados(preSelecao);
+      
+      if (temQuantidade) {
+        const qtd = {};
+        preSelecao.forEach((item) => {
+          qtd[item.value] = item.quantidade ?? 1;
+        });
+        setQuantidades(qtd);
+      }
+    }
+  }, [preSelecao, temQuantidade]);
 
   const MultiValue = () => null;
 
@@ -166,7 +194,7 @@ export function ContainerSelectTags({ titulo = "Container", placeholder = "Escol
           (
             itensSelecionados.map((selecionado) => (
               <div
-                key={selecionado.value}
+                key={titulo.toLowerCase() + selecionado.value}
                 className="flex gap-2 items-center px-3 py-2 rounded-md text-[1.1rem] bg-violet-200 text-slate-700">
                 {temQuantidade ? (
                   <input

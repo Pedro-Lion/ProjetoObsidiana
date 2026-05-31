@@ -60,10 +60,6 @@ export function Servicos() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    buscarServicos(0, "");
-  }, []);
-
   function mudarPagina(novaPagina) {
     if (novaPagina < 0 || novaPagina >= totalPaginas) return;
     buscarServicos(novaPagina);

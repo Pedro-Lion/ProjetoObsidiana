@@ -101,6 +101,7 @@ export function Equipamentos() {
 
   // Debounce: busca no backend 400ms após parar de digitar
   useEffect(() => {
+    if (!search) return;
     const timer = setTimeout(() => {
       buscarEquipamentos(0, search);
     }, 400);

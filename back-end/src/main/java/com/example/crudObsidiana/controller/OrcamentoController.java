@@ -186,23 +186,8 @@ public class OrcamentoController {
     // ----------------------------------------------------------------------
     @PutMapping("/{id}")
     public ResponseEntity<Orcamento> atualizarOrcamento(@PathVariable("id") Long id, @RequestBody OrcamentoDTO dto) {
-        try {
-            Orcamento atualizado = orcamentoService.editarOrcamento(id, dto);
-            return ResponseEntity.ok(atualizado);
-        } catch (ResponseStatusException ex) {
-            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            } else if (ex.getStatusCode() == HttpStatus.CONFLICT) {
-                // opcional: retornar mensagem ou corpo com detalhes
-                return ResponseEntity.status(HttpStatus.CONFLICT).build();
-            }
-            return ResponseEntity.status(ex.getStatusCode()).build();
-        } catch (RuntimeException ex) {
-            System.out.println(ex);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(null);
-
-        }
+        Orcamento atualizado = orcamentoService.editarOrcamento(id, dto);
+        return ResponseEntity.ok(atualizado);
     }
 
     // ----------------------------------------------------------------------
