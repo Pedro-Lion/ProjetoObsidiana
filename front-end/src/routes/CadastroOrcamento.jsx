@@ -15,19 +15,13 @@ import { InputDataBordaLabel } from "../components/Inputs/InputDataBordaLabel";
 import moment from "moment";
 
 import { api } from "../api";
+import { notificar } from "../features/notificar.jsx";
 import { cadastrar } from "../features/orcamento/services/cadastrar.js";
 import { editar } from "../features/orcamento/services/editar.js";
 
 export function CadastroOrcamento() {
   const navigate = useNavigate();
-
   const { instance } = useMsal();
-
-  // Estados do modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitulo, setModalTitulo] = useState("");
-  const [modalDescricao, setModalDescricao] = useState("");
-  const [modalActions, setModalActions] = useState(null);
 
   const [equipamentosDoServico, setEquipamentosDoServico] = useState([]);
 
@@ -218,6 +212,12 @@ export function CadastroOrcamento() {
 
   useEffect(() => {
     async function buscarEquipamentosDoServico() {
+      // para impedir a criação de filhos com mesma chave no ContainerSelectTags,
+      // é melhor esperar para que as opções sejam preenchidas
+      if (opcoes.servico.length == 0) return;
+
+      if (!orcamento.servicos || orcamento.servicos.length == 0) return;
+
       const servicoIds = (orcamento.servicos || []).map((s) =>
         typeof s === "number" ? s : s?.id
       );
@@ -436,7 +436,6 @@ export function CadastroOrcamento() {
         />
 
         <ContainerSelectTags
-          key={idsEquipamentosDoServico.join(",")}
           titulo="Equipamentos"
           itens={opcoes.equipamento}
           preSelecao={formatarOpcoesComQuantidade(
@@ -583,9 +582,21 @@ export function CadastroOrcamento() {
           <BotaoPrimario
             titulo="Cadastrar"
             className="mb-0 mt-0"
-            onClick={async () => {
+            onClick={() => {
               if (!validar()) return;
-              if (await cadastrar(orcamento)) navigate("/orcamentos");
+              
+              notificar(
+                cadastrar(orcamento),
+                (req) => {if (req.status == 201) navigate("/orcamentos")},
+                {
+                  pending: "Cadastrando orçamento...",
+                  success: [
+                    "Orçamento cadastrado com sucesso!",
+                    "Retornando à página de orçamentos"
+                  ],
+                  error: "Ocorreu um erro ao cadastrar o orçamento"
+                }
+              )
             }}
           />
         ) : (
@@ -594,9 +605,19 @@ export function CadastroOrcamento() {
             className="mb-0 mt-0"
             onClick={async () => {
               if (!validar()) return;
-              if (await editar(orcamento, instance)) {
-                navigate("/orcamentos");
-              }
+
+              notificar(
+                editar(orcamento, instance),
+                (req) => {if (req.status == 200) navigate("/orcamentos")},
+                {
+                  pending: "Salvando alterações...",
+                  success: [
+                    "Alterações do orçamento salvas com sucesso!",
+                    "Retornando à página de orçamentos"
+                  ],
+                  error: "Ocorreu um erro durante o registro das alterações"
+                }
+              );
             }}
           />
         )}
@@ -605,13 +626,8 @@ export function CadastroOrcamento() {
           className="mb-0 mt-0"
           onClick={() => navigate(-1)}
         />
+        {/* <BotaoSecundario onClick={() => { console.log(orcamento) }} /> */}
       </div>
-
-      {modalOpen && (
-        <Modal titulo={modalTitulo} descricao={modalDescricao}>
-          {modalActions}
-        </Modal>
-      )}
     </>
   );
 }

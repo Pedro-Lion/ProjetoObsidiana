@@ -6,7 +6,7 @@ import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { api } from "../api.js";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Modal } from "../components/Modal/Modal.jsx";
+import { notificar } from "../features/notificar.jsx";
 
 export function CadastrarNovoServico() {
   const navigate = useNavigate();
@@ -18,17 +18,11 @@ export function CadastrarNovoServico() {
 
   const [horas, setHoras] = useState(servico.horas ?? 0);
   const [valorHora, setValorHora] = useState(
-    servico.valorPorHora ? servico.valorPorHora.toFixed(2) : "0.00"
+    servico.valorPorHora ? servico.valorPorHora.toFixed(2) : "0.00",
   );
 
   // Erros de validação
   const [erros, setErros] = useState({});
-
-  // Estados para o modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitulo, setModalTitulo] = useState("");
-  const [modalDescricao, setModalDescricao] = useState("");
-  const [modalActions, setModalActions] = useState(null);
 
   useEffect(() => {
     async function getEquipamentos() {
@@ -59,9 +53,7 @@ export function CadastrarNovoServico() {
     if (!servico.nome || servico.nome.trim() === "") {
       novosErros.nome = "Nome do serviço é obrigatório.";
     }
-    if (!horas || Number(horas) <= 0) {
-      novosErros.horas = "Duração não pode ser 0.";
-    }
+    // Duração não é mais obrigatória — campo pode ser 0 ou deixado em branco
     if (!servico.valorPorHora || Number(servico.valorPorHora) <= 0) {
       novosErros.valorPorHora = "Valor por hora não pode ser 0.";
     }
@@ -70,60 +62,42 @@ export function CadastrarNovoServico() {
     return Object.keys(novosErros).length === 0;
   }
 
-  async function cadastrar() {
+  function cadastrar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.post("/servico", servico, {
+    notificar(
+      api.post("/servico", servico, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status == 201) {
-        // Redireciona direto para a lista, sem modal de sucesso
-        navigate("/servicos");
+      }),
+      (req) => {if(req.status == 201) navigate("/servicos")},
+      {
+        pending: "Cadastrando serviço...",
+        success: [
+          "Serviço cadastrado com sucesso!",
+          "Retornando à página de serviços"
+        ],
+        error: "Ocorreu um erro ao cadastrar o serviço"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Serviço não pôde ser cadastrado. Tente novamente.");
-      setModalActions(
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    );
   }
 
-  async function editar() {
+  function editar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.put(`/servico/${id}`, servico, {
+    notificar(
+      api.put(`/servico/${id}`, servico, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status == 200) {
-        // Redireciona direto para a lista, sem modal de sucesso
-        navigate("/servicos");
+      }),
+      (req) => {if(req.status == 200) navigate("/servicos")},
+      {
+        pending: "Salvando alterações...",
+        success: [
+          "Alterações do serviço salvas com sucesso!",
+          "Retornando à página de serviços"
+        ],
+        error: "Ocorreu um erro durante o registro das alterações"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Serviço não pôde ser editado. Tente novamente.");
-      setModalActions(
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    );
   }
 
   const ErroMsg = ({ campo }) =>
@@ -149,9 +123,10 @@ export function CadastrarNovoServico() {
           </div>
 
           <div className="flex flex-col w-full">
+            {/* Duração não é obrigatória — o campo permanece disponível mas sem validação */}
             <InputBordaLabel
               type="number"
-              titulo="Duração em Horas"
+              titulo="Duração em Horas (opcional)"
               className="w-full"
               value={horas}
               onInput={(e) => {
@@ -162,7 +137,6 @@ export function CadastrarNovoServico() {
                 setServico({ ...servico, horas: v });
               }}
             />
-            <ErroMsg campo="horas" />
           </div>
 
           <div className="flex flex-col w-full">
@@ -227,12 +201,6 @@ export function CadastrarNovoServico() {
           />
         </div>
       </section>
-
-      {modalOpen && (
-        <Modal titulo={modalTitulo} descricao={modalDescricao}>
-          {modalActions}
-        </Modal>
-      )}
     </>
   );
 }

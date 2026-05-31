@@ -4,6 +4,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { Foto } from "./components/Foto.jsx";
 import "./App.css";
 import { useEffect, useState, useCallback } from 'react';
+import { ToastContainer } from 'react-toastify';
 
 export function App() {
   const navigate = useNavigate();
@@ -91,6 +92,13 @@ export function App() {
       <main className="relative w-full min-w-0 pt-25 px-10 pb-10 md:p-20 overflow-y-auto overflow-x-hidden flex flex-col gap-5 shadow-md bg-white/90">
         <Outlet />
       </main>
+      <ToastContainer 
+        toastStyle={{
+          boxShadow: "0 0 0.5rem rgba(0, 0, 0, 0.3)",
+          width: "100%",
+          maxWidth: "36rem"
+        }}
+      />
     </>
   );
 }

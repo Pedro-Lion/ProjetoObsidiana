@@ -20,11 +20,6 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
   // Erros de validação
   const [erros, setErros] = useState({});
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitulo, setModalTitulo] = useState("");
-  const [modalDescricao, setModalDescricao] = useState("");
-  const [modalActions, setModalActions] = useState(null);
-
   // Carrega preview de foto existente no modo edição
   useEffect(() => {
     async function carregarPreview() {
@@ -86,6 +81,10 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
     if (!profissional.nome || profissional.nome.trim() === "") {
       novosErros.nome = "Nome é obrigatório.";
     }
+    // Contato é obrigatório para garantir comunicação com o profissional
+    if (!profissional.contato || profissional.contato.trim() === "") {
+      novosErros.contato = "Contato é obrigatório.";
+    }
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
   }
@@ -103,63 +102,57 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
     }
   }
 
-  async function cadastrar() {
+  function cadastrar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.post("/profissional", profissional, {
+    notificar(
+      api.post("/profissional", profissional, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status === 201) {
-        const criado = request.data;
-        if (arquivoFoto && criado?.id) {
-          await uploadFoto(criado.id);
+      }),
+      async (req) => {
+        if (req.status == 201) {
+          const criado = req.data;
+          if (arquivoFoto && criado?.id) {
+            await uploadFoto(criado.id);
+          }
+          irParaLista();
         }
-
-        // Redireciona direto para a lista, sem modal de sucesso
-        irParaLista();
+      },
+      {
+        pending: "Cadastrando profissional...",
+        success: [
+          "Profissional cadastrado com sucesso!",
+          "Retornando à página de profissionais"
+        ],
+        error: "Ocorreu um erro ao cadastrar o profissional"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Profissional não pôde ser cadastrado. Tente novamente.");
-      setModalActions(
-        <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    )
   }
 
-  async function editar() {
+  function editar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.put(`/profissional/${id}`, profissional, {
+    notificar(
+      api.put(`/profissional/${id}`, profissional, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status === 200) {
-        if (arquivoFoto && id) {
-          await uploadFoto(id);
+      }),
+      async (req) => {
+        if (req.status == 200) {
+          if (arquivoFoto && id) {
+            await uploadFoto(id);
+          }
+          irParaLista();
         }
-
-        // Redireciona direto para a lista, sem modal de sucesso
-        irParaLista();
+      },
+      {
+        pending: "Salvando alterações...",
+        success: [
+          "Alterações do profissinal salvas com sucesso!",
+          "Retornando à página de profissionais"
+        ],
+        error: "Ocorreu um erro durante o registro das alterações"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Profissional não pôde ser editado. Tente novamente.");
-      setModalActions(
-        <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    )
   }
 
   const ErroMsg = ({ campo }) =>
@@ -194,12 +187,16 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
             value={profissional.disponibilidade ?? ""}
             onInput={(e) => setProfissional({ ...profissional, disponibilidade: e.target.value })}
           />
-          <InputBordaLabel
-            titulo="Contato"
-            placeholder="Ex: (11) 91234-1234 ou fulano@email.com"
-            onInput={(e) => setProfissional({ ...profissional, contato: e.target.value })}
-            value={profissional.contato ?? ""}
-          />
+          {/* Contato agora é obrigatório — envolvido em div para exibir a mensagem de erro */}
+          <div className="flex flex-col">
+            <InputBordaLabel
+              titulo="Contato"
+              placeholder="Ex: (11) 91234-1234 ou fulano@email.com"
+              onInput={(e) => setProfissional({ ...profissional, contato: e.target.value })}
+              value={profissional.contato ?? ""}
+            />
+            <ErroMsg campo="contato" />
+          </div>
           <InputBordaLabel
             titulo="Categoria"
             placeholder="Ex: Fotógrafo, Videógrafo, Editor..."
@@ -217,12 +214,6 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
           <BotaoSecundario titulo="Cancelar" className="mb-0 mt-0" onClick={cancelar} />
         </div>
       </section>
-
-      {modalOpen && (
-        <Modal titulo={modalTitulo} descricao={modalDescricao}>
-          {modalActions}
-        </Modal>
-      )}
     </>
   );
 }
