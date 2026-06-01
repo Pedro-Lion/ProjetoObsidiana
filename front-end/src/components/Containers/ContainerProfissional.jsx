@@ -1,9 +1,17 @@
 import { Foto } from "../Foto";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
-export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onClickDel = () => {} }) {
+export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onClickDel = () => {}, highlight = false }) {
   const [fotoUrl, setFotoUrl] = useState(null);
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
+  // Rola suavemente para o item quando ele é destacado após cadastro/edição
+  const containerRef = useRef(null);
+  useEffect(() => {
+    if (highlight && containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlight]);
 
   // Carrega a foto via fetch autenticado (mesmo padrão do equipamento)
   useEffect(() => {
@@ -43,7 +51,10 @@ export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onCl
   );
 
   return (
-    <div className="w-full mb-4 bg-[#f5f3ff] rounded-lg overflow-hidden">
+    <div
+      ref={containerRef}
+      className="w-full mb-4 bg-[#f5f3ff] rounded-lg overflow-hidden"
+    >
 
       {/* Cabeçalho */}
       <div className="flex flex-row justify-between items-baseline bg-violet-200 px-5 py-1.5 mb-4 gap-2 flex-wrap">

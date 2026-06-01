@@ -4,7 +4,7 @@ import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { SelectBordaLabel } from "../components/Inputs/SelectBordaLabel";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { api } from "../api.js";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Modal } from "../components/Modal/Modal.jsx";
 import { ModalFormulario } from "../components/Modal/ModalFormulario.jsx";
 import { CadastroEquipamentos } from "./CadastroEquipamento.jsx";
@@ -14,6 +14,7 @@ const ITENS_POR_PAGINA = 5;
 
 export function Equipamentos() {
   const navigate = useNavigate();
+  const location = useLocation();
   const previewsRef = useRef([]);
 
   const [data, setData] = useState([]);
@@ -38,6 +39,12 @@ export function Equipamentos() {
 
   // Modal de cadastro
   const [modalCadastroAberta, setModalCadastroAberta] = useState(false);
+
+  // Highlight: ID do item recém cadastrado/editado para animar a borda
+  const [highlightId, setHighlightId] = useState(null);
+
+  // Guarda o state de navegação no mount para ler highlightId/pagina vindos do formulário de edição
+  const initialNavStateRef = useRef(location.state);
 
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -99,7 +106,9 @@ export function Equipamentos() {
     }
   }
 
-  // Debounce: busca no backend 400ms após parar de digitar
+  // Debounce: busca no backend 400ms após parar de digitar.
+  // Na primeira execução (search ainda vazio), verifica se há highlightId vindo do formulário
+  // de edição via rota e carrega a página correta em vez de sempre começar na página 0.
   useEffect(() => {
     if (!search) return;
     const timer = setTimeout(() => {
@@ -109,7 +118,13 @@ export function Equipamentos() {
   }, [search]);
 
   useEffect(() => {
-    buscarEquipamentos(0, "");
+    const initState = initialNavStateRef.current;
+    if (initState?.highlightId) {
+      setHighlightId(initState.highlightId);
+      buscarEquipamentos(initState.pagina ?? 0, "");
+    } else {
+      buscarEquipamentos(0, "");
+    }
     return () => {
       if (previewsRef.current?.length) {
         previewsRef.current.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) { } });
@@ -117,6 +132,13 @@ export function Equipamentos() {
       }
     };
   }, []);
+
+  // Limpa o highlight após a animação terminar (~2.2s)
+  useEffect(() => {
+    if (!highlightId) return;
+    const timer = setTimeout(() => setHighlightId(null), 2200);
+    return () => clearTimeout(timer);
+  }, [highlightId]);
 
   /* ── Troca de página ── */
   function mudarPagina(novaPagina) {
@@ -274,7 +296,8 @@ export function Equipamentos() {
                   dados={e}
                   preview={e.preview}
                   onClickDel={() => deletar(e)}
-                  onClickEdit={() => navigate(`/editar/equipamento/${e.id}`, { state: e })}
+                  onClickEdit={() => navigate(`/editar/equipamento/${e.id}`, { state: { ...e, paginaOrigem: paginaAtual } })}
+                  highlight={highlightId !== null && e.id === highlightId}
                 />
               ))
             ) : (
@@ -305,9 +328,12 @@ export function Equipamentos() {
           onFechar={() => setModalCadastroAberta(false)}
         >
           <CadastroEquipamentos
-            onSucesso={() => {
+            onSucesso={(novoId) => {
               setModalCadastroAberta(false);
-              buscarEquipamentos(paginaAtual);
+              // Novo item vai para a última página; +1 porque o total ainda não foi atualizado
+              const ultimaPagina = Math.max(0, Math.ceil((totalElementos + 1) / ITENS_POR_PAGINA) - 1);
+              setHighlightId(novoId);
+              buscarEquipamentos(ultimaPagina);
             }}
             onCancelar={() => setModalCadastroAberta(false)}
           />

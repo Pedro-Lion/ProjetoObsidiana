@@ -1,8 +1,17 @@
 import { InputFoto } from "../Inputs/InputFoto";
 import { formatarPreco } from "../../../utils/formatarPreco";
+import { useEffect, useRef } from "react";
 
-export function ContainerListagem({ dados = {}, onClickEdit = () => {}, onClickDel = () => {} }) {
+export function ContainerListagem({ dados = {}, onClickEdit = () => {}, onClickDel = () => {}, highlight = false }) {
   const valorFormatado = formatarPreco(dados.valorPorHora);
+
+  // Rola suavemente para o item quando ele é destacado após cadastro/edição
+  const containerRef = useRef(null);
+  useEffect(() => {
+    if (highlight && containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlight]);
 
   const Campo = ({ titulo, valor }) => (
     <div className="flex flex-row md:flex-col gap-1">
@@ -12,7 +21,10 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => {}, onClickD
   );
 
   return (
-    <div className="w-full mb-4 bg-[#f5f3ff] rounded-lg overflow-hidden">
+    <div
+      ref={containerRef}
+      className="w-full mb-4 bg-[#f5f3ff] rounded-lg overflow-hidden"
+    >
 
       {/* Cabeçalho */}
       <div className="flex flex-row justify-between items-baseline bg-violet-200 px-5 py-1.5 mb-4 gap-2 flex-wrap">

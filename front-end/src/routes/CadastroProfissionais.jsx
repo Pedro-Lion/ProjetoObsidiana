@@ -4,6 +4,7 @@ import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { api } from "../api";
 import { Modal } from "../components/Modal/Modal.jsx";
+import { notificar } from "../features/notificar.jsx";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 
@@ -55,11 +56,15 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
     };
   }, [id]);
 
-  function irParaLista() {
+  // novoId: id do item recém criado ou editado, para destacá-lo na listagem
+  function irParaLista(novoId) {
     if (onSucesso) {
-      onSucesso();
+      onSucesso(novoId);
     } else {
-      navigate("/profissionais");
+      // Edição via rota: state.paginaOrigem guarda a página de onde o usuário veio
+      navigate("/profissionais", {
+        state: { highlightId: novoId, pagina: state?.paginaOrigem ?? 0 },
+      });
     }
   }
 
@@ -115,7 +120,7 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
           if (arquivoFoto && criado?.id) {
             await uploadFoto(criado.id);
           }
-          irParaLista();
+          irParaLista(criado?.id);
         }
       },
       {
@@ -141,7 +146,8 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
           if (arquivoFoto && id) {
             await uploadFoto(id);
           }
-          irParaLista();
+          // id vem do useParams (modo edição via rota)
+          irParaLista(id ? Number(id) : undefined);
         }
       },
       {

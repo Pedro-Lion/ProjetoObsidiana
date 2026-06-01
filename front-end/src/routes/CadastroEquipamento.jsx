@@ -6,6 +6,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import { useState, useEffect, useRef } from "react";
 import { Modal } from "../components/Modal/Modal.jsx";
+import { notificar } from "../features/notificar.jsx";
 
 export function CadastroEquipamentos({ onSucesso, onCancelar }) {
   const navigate = useNavigate();
@@ -87,11 +88,15 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
     };
   }, [id]);
 
-  function irParaLista() {
+  // novoId: id do item recém criado ou editado, para destacá-lo na listagem
+  function irParaLista(novoId) {
     if (onSucesso) {
-      onSucesso();
+      onSucesso(novoId);
     } else {
-      navigate("/equipamentos");
+      // Edição via rota: state.paginaOrigem guarda a página de onde o usuário veio
+      navigate("/equipamentos", {
+        state: { highlightId: novoId, pagina: state?.paginaOrigem ?? 0 },
+      });
     }
   }
 
@@ -156,7 +161,7 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
           if (arquivoImagem && criado?.id) {
             await uploadImagem(criado.id);
           }
-          irParaLista();
+          irParaLista(criado?.id);
         }
       },
       {
@@ -174,7 +179,7 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
     if (!validar()) return;
 
     notificar(
-      api.put("/equipamento", equipamento, {
+      api.put(`/equipamento/${id ?? equipamento.id}`, equipamento, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       }),
       async (req) => {
@@ -182,7 +187,8 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
           if (arquivoImagem && id) {
             await uploadImagem(id);
           }
-          irParaLista();
+          // id vem do useParams (modo edição via rota)
+          irParaLista(id ? Number(id) : undefined);
         }
       },
       {
