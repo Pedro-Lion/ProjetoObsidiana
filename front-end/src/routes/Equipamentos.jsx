@@ -46,7 +46,10 @@ export function Equipamentos() {
   // Guarda o state de navegação no mount para ler highlightId/pagina vindos do formulário de edição
   const initialNavStateRef = useRef(location.state);
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+  // Fallback alinhado com o do api.js — sem isso, quando VITE_API_BASE_URL não está
+  // definida o fetch ia para o próprio Vite (5173) e voltava o index.html (200 text/html),
+  // o que travava o preview da imagem com !ctype.startsWith("image/").
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
   /* ── Carrega previews de imagem ── */
   async function carregarPreviews(equipamentos) {
@@ -58,9 +61,13 @@ export function Equipamentos() {
     const promessas = equipamentos.map(async (eq) => {
       if (!eq.nomeArquivoImagem) return { ...eq, preview: null };
       try {
-        const url = `${API_BASE}/equipamento/${eq.id}/imagem`;
+        // Cache-buster com o nome do arquivo: garante que, ao trocar a imagem,
+        // a URL muda e o browser não devolve uma resposta cacheada (304 vinha
+        // sendo capturado como !resp.ok, zerando o preview).
+        const url = `${API_BASE}/equipamento/${eq.id}/imagem?v=${encodeURIComponent(eq.nomeArquivoImagem)}`;
         const resp = await fetch(url, {
           method: "GET",
+          cache: "no-store",
           headers: { Authorization: token ? "Bearer " + token : "" },
         });
         if (!resp.ok) return { ...eq, preview: null };
