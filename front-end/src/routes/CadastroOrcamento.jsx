@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 
 import { useMsal } from "@azure/msal-react";
@@ -21,6 +21,7 @@ import { editar } from "../features/orcamento/services/editar.js";
 
 export function CadastroOrcamento() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { instance } = useMsal();
 
   const [equipamentosDoServico, setEquipamentosDoServico] = useState([]);
@@ -30,7 +31,8 @@ export function CadastroOrcamento() {
 
   const state = useLocation().state;
   function definirState() {
-    if (!state) return undefined;
+    // Em cadastro (sem :id), state carrega { totalElementos, itensPorPagina } — não é dado do orçamento
+    if (!id || !state) return undefined;
     let copiaState = { ...state };
 
     const formatador = new Intl.DateTimeFormat("pt-BR", {
@@ -356,7 +358,7 @@ export function CadastroOrcamento() {
 
   return (
     <>
-      <h1>{!state ? "Cadastrar" : "Editar"} orçamento</h1>
+      <h1>{!id ? "Cadastrar" : "Editar"} orçamento</h1>
 
       <section className="flex flex-col gap-2">
         <div className="flex justify-between md:gap-5 flex-wrap md:flex-nowrap">
@@ -368,7 +370,7 @@ export function CadastroOrcamento() {
               { label: "Confirmado" },
               { label: "Cancelado" },
             ]}
-            disabled={!state ? true : false}
+            disabled={!id ? true : false}
             onChange={(e) =>
               setOrcamento({ ...orcamento, status: e.target.value })
             }
@@ -578,16 +580,26 @@ export function CadastroOrcamento() {
 
       {/* Botões de ação */}
       <div className="flex gap-3 self-end">
-        {!state ? (
+        {!id ? (
           <BotaoPrimario
             titulo="Cadastrar"
             className="mb-0 mt-0"
             onClick={() => {
               if (!validar()) return;
-              
+
               notificar(
                 cadastrar(orcamento),
-                (req) => {if (req.status == 201) navigate("/orcamentos")},
+                (req) => {
+                  if (req.status == 201) {
+                    // Item novo cai na última página da listagem
+                    const total = state?.totalElementos ?? 0;
+                    const itens = state?.itensPorPagina ?? 6;
+                    const ultimaPagina = Math.max(0, Math.ceil((total + 1) / itens) - 1);
+                    navigate("/orcamentos", {
+                      state: { highlightId: req.data?.id, pagina: ultimaPagina },
+                    });
+                  }
+                },
                 {
                   pending: "Cadastrando orçamento...",
                   success: [
@@ -608,7 +620,13 @@ export function CadastroOrcamento() {
 
               notificar(
                 editar(orcamento, instance),
-                (req) => {if (req.status == 200) navigate("/orcamentos")},
+                (req) => {
+                  if (req.status == 200) {
+                    navigate("/orcamentos", {
+                      state: { highlightId: Number(id), pagina: state?.paginaOrigem ?? 0 },
+                    });
+                  }
+                },
                 {
                   pending: "Salvando alterações...",
                   success: [

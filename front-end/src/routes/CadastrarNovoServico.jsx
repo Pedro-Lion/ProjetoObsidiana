@@ -13,7 +13,9 @@ export function CadastrarNovoServico() {
   const { id } = useParams();
 
   const state = useLocation().state;
-  const [servico, setServico] = useState(state ?? {});
+  // Em edição (com :id na URL), state traz os dados do serviço pré-preenchidos.
+  // Em cadastro, state pode trazer { totalElementos, itensPorPagina } para calcular a última página após salvar.
+  const [servico, setServico] = useState(id ? state ?? {} : {});
   const [opcoes, setOpcoes] = useState([]);
 
   const [horas, setHoras] = useState(servico.horas ?? 0);
@@ -69,7 +71,17 @@ export function CadastrarNovoServico() {
       api.post("/servico", servico, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       }),
-      (req) => {if(req.status == 201) navigate("/servicos")},
+      (req) => {
+        if (req.status == 201) {
+          // Item novo cai na última página da listagem
+          const total = state?.totalElementos ?? 0;
+          const itens = state?.itensPorPagina ?? 6;
+          const ultimaPagina = Math.max(0, Math.ceil((total + 1) / itens) - 1);
+          navigate("/servicos", {
+            state: { highlightId: req.data?.id, pagina: ultimaPagina },
+          });
+        }
+      },
       {
         pending: "Cadastrando serviço...",
         success: [
@@ -88,7 +100,13 @@ export function CadastrarNovoServico() {
       api.put(`/servico/${id}`, servico, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       }),
-      (req) => {if(req.status == 200) navigate("/servicos")},
+      (req) => {
+        if (req.status == 200) {
+          navigate("/servicos", {
+            state: { highlightId: Number(id), pagina: state?.paginaOrigem ?? 0 },
+          });
+        }
+      },
       {
         pending: "Salvando alterações...",
         success: [
@@ -107,7 +125,7 @@ export function CadastrarNovoServico() {
 
   return (
     <>
-      {state ? <h1>Editar serviço</h1> : <h1>Cadastrar serviço</h1>}
+      {id ? <h1>Editar serviço</h1> : <h1>Cadastrar serviço</h1>}
 
       <section className="flex flex-col">
         <div className="flex justify-between gap-3 items-start mb flex-wrap md:flex-nowrap">
@@ -168,9 +186,16 @@ export function CadastrarNovoServico() {
         <ContainerSelectTags
           titulo="Equipamentos"
           itens={opcoes}
-          preSelecao={servico?.equipamentos?.map((s) => {
-            return { value: s.id, label: s.nome };
-          })}
+          preSelecao={servico?.equipamentos
+            ?.map((s) => {
+              // s pode ser objeto {id, nome} (vindo da listagem em edição) ou apenas o id (após onChange interno)
+              if (s == null) return null;
+              const equipId = typeof s === "object" ? s.id : s;
+              if (equipId == null) return null;
+              const opcao = opcoes.find((o) => o.value === equipId);
+              return { value: equipId, label: s?.nome ?? opcao?.label ?? "" };
+            })
+            .filter(Boolean)}
           onChange={(itens) =>
             setServico({
               ...servico,
@@ -181,7 +206,7 @@ export function CadastrarNovoServico() {
         />
 
         <div className="flex gap-3 self-end mt-4">
-          {!state ? (
+          {!id ? (
             <BotaoPrimario
               titulo="Cadastrar Serviço"
               className="mb-0 mt-0"
