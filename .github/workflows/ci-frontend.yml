@@ -3,7 +3,7 @@ name: CI - Frontend (React + TypeScript)
 # Dispara quando alguém faz push ou merge na branch main
 on:
   push:
-    branches: [ rafael ]
+    branches: [ homologacao ]
     paths:
       - 'front-end/**'  # Só roda se arquivos do frontend mudarem
 
