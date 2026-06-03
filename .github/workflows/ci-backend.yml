@@ -3,7 +3,7 @@ name: CI - Backend (Spring Boot)
 # Dispara quando alguém faz push ou merge na branch main
 on:
   push:
-    branches: [ homologacao ]
+    branches: [ main ]
     paths:
       - 'back-end/**'   # Só roda se arquivos do backend mudarem
 
