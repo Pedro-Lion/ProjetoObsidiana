@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
 import { BotaoPrimario } from "../Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../Buttons/BotaoSecundario";
 
@@ -21,8 +22,18 @@ export function CardOrcamento({
     ],
   },
   onClickDel,
+  onClickEdit,
+  highlight = false,
 }) {
   const navigate = useNavigate();
+
+  // Rola suavemente para o item quando ele é destacado após cadastro/edição
+  const containerRef = useRef(null);
+  useEffect(() => {
+    if (highlight && containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlight]);
 
   const formatarValor = new Intl.NumberFormat("pt-br", {
     style: "currency",
@@ -102,7 +113,7 @@ export function CardOrcamento({
 
   return (
     // overflow-hidden garante que a faixa superior respeite o border-radius do card
-    <div className="w-120 h-160 flex flex-col bg-white rounded-xl shadow-md border border-indigo-100 overflow-hidden hover:shadow-lg transition duration-300">
+    <div ref={containerRef} className="w-120 h-160 flex flex-col bg-white rounded-xl shadow-md border border-indigo-100 overflow-hidden hover:shadow-lg transition duration-300">
 
       {/* Faixa de destaque superior com gradiente da identidade visual */}
       <div className="bg-gradient-to-r from-indigo-500 to-violet-500 h-1.5 shrink-0" />
@@ -153,7 +164,7 @@ export function CardOrcamento({
       {/* Footer com botões de largura total separados por borda vertical */}
       <div className="h-14 border-t border-indigo-100 flex shrink-0">
         <button
-          onClick={() => navigate(`/editar/orcamento/${dados.id}`, { state: dados })}
+          onClick={onClickEdit ?? (() => navigate(`/editar/orcamento/${dados.id}`, { state: dados }))}
           className="flex-1 flex items-center justify-center gap-2 text-xl text-slate-500 hover:text-indigo-500 hover:bg-indigo-50 transition duration-200 rounded-bl-xl"
         >
           <i className="bi bi-pencil"></i>

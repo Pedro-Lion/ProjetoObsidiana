@@ -116,12 +116,19 @@ public class ProfissionalController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<Profissional> atualizar(@PathVariable("id") Long id, @RequestBody Profissional profissional) {
-        if (repository.existsById(id)) {
-            profissional.setId(id);
-            repository.save(profissional);
-            return ResponseEntity.ok(profissional);
-        }
-        return ResponseEntity.notFound().build();
+        // Update parcial: só sobrescreve os campos que vieram não-nulos no body.
+        // Importante: NÃO mexe em nomeArquivoImagem/tipoImagem/caminhoImagem aqui —
+        // esses campos são exclusivamente gravados pelo endpoint POST /{id}/imagem.
+        // Substituir a entidade inteira (save(profissional) direto) zerava as referências
+        // de imagem ao editar dados textuais do profissional.
+        return repository.findById(id).map(existente -> {
+            if (profissional.getNome() != null) existente.setNome(profissional.getNome());
+            if (profissional.getDisponibilidade() != null) existente.setDisponibilidade(profissional.getDisponibilidade());
+            if (profissional.getContato() != null) existente.setContato(profissional.getContato());
+            if (profissional.getCategoria() != null) existente.setCategoria(profissional.getCategoria());
+            Profissional salvo = repository.save(existente);
+            return ResponseEntity.ok(salvo);
+        }).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/imagem")

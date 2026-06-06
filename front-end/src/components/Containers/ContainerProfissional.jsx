@@ -1,9 +1,18 @@
 import { Foto } from "../Foto";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
-export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onClickDel = () => {} }) {
+export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onClickDel = () => {}, highlight = false }) {
   const [fotoUrl, setFotoUrl] = useState(null);
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+  // Fallback alinhado com o do api.js — sem isso o fetch ia para o Vite (5173) e voltava index.html (200 text/html)
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+
+  // Rola suavemente para o item quando ele é destacado após cadastro/edição
+  const containerRef = useRef(null);
+  useEffect(() => {
+    if (highlight && containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlight]);
 
   // Carrega a foto via fetch autenticado (mesmo padrão do equipamento)
   useEffect(() => {
@@ -12,7 +21,11 @@ export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onCl
     let objectUrl = null;
     const token = sessionStorage.getItem("token");
 
-    fetch(`${API_BASE}/profissional/${dados.id}/imagem`, {
+    // Cache-buster com o nome do arquivo: ao trocar a foto, a URL muda e o
+    // browser não devolve uma resposta cacheada (304 vinha sendo capturado
+    // como !resp.ok, zerando o preview).
+    fetch(`${API_BASE}/profissional/${dados.id}/imagem?v=${encodeURIComponent(dados.nomeArquivoImagem)}`, {
+      cache: "no-store",
       headers: { Authorization: token ? "Bearer " + token : "" },
     })
       .then((resp) => {
@@ -43,7 +56,10 @@ export function ContainerProfissional({ dados = {}, onClickEdit = () => {}, onCl
   );
 
   return (
-    <div className="w-full mb-4 bg-[#f5f3ff] rounded-lg overflow-hidden">
+    <div
+      ref={containerRef}
+      className="w-full mb-4 bg-[#f5f3ff] rounded-lg overflow-hidden"
+    >
 
       {/* Cabeçalho */}
       <div className="flex flex-row justify-between items-baseline bg-violet-200 px-5 py-1.5 mb-4 gap-2 flex-wrap">

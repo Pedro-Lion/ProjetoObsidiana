@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
@@ -42,6 +42,10 @@ export function Orcamentos() {
   const [paginaAtual, setPaginaAtual] = useState(0);
   const [totalPaginas, setTotalPaginas] = useState(0);
   const [totalElementos, setTotalElementos] = useState(0);
+
+  // Highlight: ID do item recém cadastrado/editado para scroll após retorno
+  const [highlightId, setHighlightId] = useState(null);
+  const initialNavStateRef = useRef(location.state);
 
   // Estados do modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -91,13 +95,28 @@ export function Orcamentos() {
     }
   }
 
-  // Debounce: busca no backend 400ms após parar de digitar
+  // Debounce: busca no backend 400ms após parar de digitar.
+  // Na primeira execução, lê highlightId/pagina vindos do formulário de edição via rota.
   useEffect(() => {
     const timer = setTimeout(() => {
-      buscarOrcamentos(0, search);
+      const initState = initialNavStateRef.current;
+      if (initState?.highlightId) {
+        setHighlightId(initState.highlightId);
+        buscarOrcamentos(initState.pagina ?? 0, search);
+        initialNavStateRef.current = null;
+      } else {
+        buscarOrcamentos(0, search);
+      }
     }, 400);
     return () => clearTimeout(timer);
   }, [search]);
+
+  // Limpa o highlight após a animação/scroll (~2.2s)
+  useEffect(() => {
+    if (!highlightId) return;
+    const timer = setTimeout(() => setHighlightId(null), 2200);
+    return () => clearTimeout(timer);
+  }, [highlightId]);
 
   function mudarPagina(novaPagina) {
     if (novaPagina < 0 || novaPagina >= totalPaginas) return;
@@ -273,7 +292,7 @@ export function Orcamentos() {
           />
           <BotaoPrimario
             titulo="+ Novo orçamento"
-            onClick={() => navigate("/cadastro/orcamentos")}
+            onClick={() => navigate("/cadastro/orcamentos", { state: { totalElementos, itensPorPagina: ITENS_POR_PAGINA } })}
             className="w-full md:w-fit"
           />
         </div>
@@ -348,6 +367,8 @@ export function Orcamentos() {
                   key={o.id}
                   dados={o}
                   onClickDel={() => deletar(o)}
+                  onClickEdit={() => navigate(`/editar/orcamento/${o.id}`, { state: { ...o, paginaOrigem: paginaAtual } })}
+                  highlight={highlightId !== null && o.id === highlightId}
                 />
               ))
             ) : (

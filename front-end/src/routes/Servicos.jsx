@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { SelectBordaLabel } from "../components/Inputs/SelectBordaLabel";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../api";
 import { CardServico } from "../components/Cards/CardServico";
 import { Modal } from "../components/Modal/Modal.jsx";
@@ -12,7 +12,12 @@ const ITENS_POR_PAGINA = 6;
 
 export function Servicos() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [servicos, setServicos] = useState([]);
+
+  // Highlight: ID do item recém cadastrado/editado para scroll após retorno
+  const [highlightId, setHighlightId] = useState(null);
+  const initialNavStateRef = useRef(location.state);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -52,13 +57,28 @@ export function Servicos() {
     }
   }
 
-  // Debounce: busca no backend 400ms após parar de digitar
+  // Debounce: busca no backend 400ms após parar de digitar.
+  // Na primeira execução, lê highlightId/pagina vindos do formulário de edição via rota.
   useEffect(() => {
     const timer = setTimeout(() => {
-      buscarServicos(0, search);
+      const initState = initialNavStateRef.current;
+      if (initState?.highlightId) {
+        setHighlightId(initState.highlightId);
+        buscarServicos(initState.pagina ?? 0, search);
+        initialNavStateRef.current = null;
+      } else {
+        buscarServicos(0, search);
+      }
     }, 400);
     return () => clearTimeout(timer);
   }, [search]);
+
+  // Limpa o highlight após a animação/scroll (~2.2s)
+  useEffect(() => {
+    if (!highlightId) return;
+    const timer = setTimeout(() => setHighlightId(null), 2200);
+    return () => clearTimeout(timer);
+  }, [highlightId]);
 
   function mudarPagina(novaPagina) {
     if (novaPagina < 0 || novaPagina >= totalPaginas) return;
@@ -159,7 +179,7 @@ export function Servicos() {
         <div className="block md:hidden border-b border-slate-300 w-full mt-3.5 mb-2"/>
         <BotaoPrimario
           titulo="+ Novo serviço"
-          onClick={() => navigate("/cadastro/servicos")}
+          onClick={() => navigate("/cadastro/servicos", { state: { totalElementos, itensPorPagina: ITENS_POR_PAGINA } })}
           className="w-full md:w-fit"
         />
       </div>
@@ -203,7 +223,13 @@ export function Servicos() {
           <section className="flex flex-wrap gap-5">
             {servicosFiltrados.length !== 0 ? (
               servicosFiltrados.map((s) => (
-                <CardServico key={s.id} dados={s} onClickDel={() => deletar(s.id)} />
+                <CardServico
+                  key={s.id}
+                  dados={s}
+                  onClickDel={() => deletar(s.id)}
+                  onClickEdit={() => navigate(`/editar/servico/${s.id}`, { state: { ...s, paginaOrigem: paginaAtual } })}
+                  highlight={highlightId !== null && s.id === highlightId}
+                />
               ))
             ) : (
               <p className="text-xl">Nenhum serviço encontrado{search ? ` para "${search}"` : ""}.</p>

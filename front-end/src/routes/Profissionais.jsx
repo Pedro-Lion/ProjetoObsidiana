@@ -1,5 +1,5 @@
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { SelectBordaLabel } from "../components/Inputs/SelectBordaLabel";
@@ -14,6 +14,7 @@ const ITENS_POR_PAGINA = 5;
 
 export function Profissionais() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [profissionais, setProfissionais] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -26,6 +27,12 @@ export function Profissionais() {
   const [paginaAtual, setPaginaAtual] = useState(0);
   const [totalPaginas, setTotalPaginas] = useState(0);
   const [totalElementos, setTotalElementos] = useState(0);
+
+  // Highlight: ID do item recém cadastrado/editado para animar a borda
+  const [highlightId, setHighlightId] = useState(null);
+
+  // Guarda o state de navegação no mount para ler highlightId/pagina vindos do formulário de edição
+  const initialNavStateRef = useRef(location.state);
 
   // Modal de confirmação/exclusão
   const [modalOpen, setModalOpen] = useState(false);
@@ -57,13 +64,29 @@ export function Profissionais() {
     }
   }
 
-  // Debounce: busca no backend 400ms após parar de digitar
+  // Debounce: busca no backend 400ms após parar de digitar.
+  // Na primeira execução (search ainda vazio), verifica se há highlightId vindo do formulário
+  // de edição via rota e carrega a página correta em vez de sempre começar na página 0.
   useEffect(() => {
     const timer = setTimeout(() => {
-      getProfissionais(0, search);
+      const initState = initialNavStateRef.current;
+      if (initState?.highlightId) {
+        setHighlightId(initState.highlightId);
+        getProfissionais(initState.pagina ?? 0, search);
+        initialNavStateRef.current = null; // consome o state uma única vez
+      } else {
+        getProfissionais(0, search);
+      }
     }, 400);
     return () => clearTimeout(timer);
   }, [search]);
+
+  // Limpa o highlight após a animação terminar (~2.2s)
+  useEffect(() => {
+    if (!highlightId) return;
+    const timer = setTimeout(() => setHighlightId(null), 2200);
+    return () => clearTimeout(timer);
+  }, [highlightId]);
 
   function mudarPagina(novaPagina) {
     if (novaPagina < 0 || novaPagina >= totalPaginas) return;
@@ -203,7 +226,8 @@ export function Profissionais() {
                   key={p.id}
                   dados={p}
                   onClickDel={() => deletar(p.id)}
-                  onClickEdit={() => navigate(`/editar/profissional/${p.id}`, { state: p })}
+                  onClickEdit={() => navigate(`/editar/profissional/${p.id}`, { state: { ...p, paginaOrigem: paginaAtual } })}
+                  highlight={highlightId !== null && p.id === highlightId}
                 />
               ))
             ) : (
@@ -233,9 +257,12 @@ export function Profissionais() {
           onFechar={() => setModalCadastroAberta(false)}
         >
           <CadastroProfissionais
-            onSucesso={() => {
+            onSucesso={(novoId) => {
               setModalCadastroAberta(false);
-              getProfissionais(paginaAtual);
+              // Novo item vai para a última página; +1 porque o total ainda não foi atualizado
+              const ultimaPagina = Math.max(0, Math.ceil((totalElementos + 1) / ITENS_POR_PAGINA) - 1);
+              setHighlightId(novoId);
+              getProfissionais(ultimaPagina);
             }}
             onCancelar={() => setModalCadastroAberta(false)}
           />
