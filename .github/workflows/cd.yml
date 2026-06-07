@@ -2,10 +2,9 @@ name: CD - Fazer deploy dos artefatos para EC2
 
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["CI - Executar build e upload de artefatos"]
     types:
       - completed
-    branches: [ main, teste-cicd ]
 
 jobs:
   deploy:
