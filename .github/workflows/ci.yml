@@ -44,7 +44,7 @@ jobs:
       - name: Front-end - Enviar zip como artefato
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-dist
+          name: front-dist
           path: front-end/dist.zip
 
       - name: Back-end - Executar build e renomear JAR
