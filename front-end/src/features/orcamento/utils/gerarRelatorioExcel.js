@@ -210,15 +210,15 @@ export function gerarRelatorioExcel(orcamentos, ano) {
   wsResumo["!cols"] = [{ wch: 18 }, { wch: 14 }, { wch: 22 }];
 
   // ────────────────────────────────────────────────────────────────────────────
-  // ABA 2 — ORÇAMENTOS (listagem completa, 11 colunas A–K)
+  // ABA 2 — ORÇAMENTOS (listagem completa, 12 colunas A–L)
   // Estrutura: Título | Subtítulo | Espaçador | Cabeçalhos | uma linha por orçamento
   // ────────────────────────────────────────────────────────────────────────────
   const cabecalhos = [
-    "ID", "Observações", "Local do Evento", "Data Início", "Data Término",
+    "ID", "Título", "Observações", "Local do Evento", "Data Início", "Data Término",
     "Duração", "Status", "Valor Total", "Serviços", "Equipamentos", "Profissionais",
   ];
-  const colsOrc = cabecalhos.length; // 11
-  const lastColOrc = XLSX.utils.encode_col(colsOrc - 1); // "K"
+  const colsOrc = cabecalhos.length; // 12
+  const lastColOrc = XLSX.utils.encode_col(colsOrc - 1); // "L"
   const totalLinhasOrc = 4 + orcamentosDoAno.length;
 
   const wsOrcamentos = {};
@@ -243,6 +243,7 @@ export function gerarRelatorioExcel(orcamentos, ano) {
 
     const colunas = [
       { v: o.id,                            s: esDado(listra, "center"), t: "n" },
+      { v: o.titulo           ?? "—",       s: esDado(listra, "left")           },
       { v: o.observacoes      ?? "—",       s: esDado(listra, "left")           },
       { v: o.localEvento      ?? "—",       s: esDado(listra, "left")           },
       { v: formatarData(o.dataInicio),      s: esDado(listra, "center")         },
@@ -278,6 +279,7 @@ export function gerarRelatorioExcel(orcamentos, ano) {
   ];
   wsOrcamentos["!cols"] = [
     { wch: 6  }, // ID
+    { wch: 24 }, // Título
     { wch: 28 }, // Observações
     { wch: 22 }, // Local do Evento
     { wch: 18 }, // Data Início
