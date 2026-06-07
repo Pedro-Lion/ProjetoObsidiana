@@ -30,7 +30,7 @@ export async function tratarEventoCalendario(orcamento = {}, instance = {}) {
     }
 
     const event = {
-      subject: orcamento.descricao || "Evento sem título",
+      subject: orcamento.titulo || orcamento.observacoes || "Evento sem título",
       start: {
         dateTime: orcamento.dataInicio,
         timeZone: "America/Sao_Paulo",

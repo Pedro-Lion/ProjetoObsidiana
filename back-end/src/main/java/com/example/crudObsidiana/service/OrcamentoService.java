@@ -139,7 +139,7 @@ public class OrcamentoService implements OrcamentoSubject {
                 dto.getDataTermino(),
                 dto.getTitulo(),
                 dto.getLocalEvento(),
-                dto.getDescricao(),
+                dto.getObservacoes(),
                 dto.getStatus(),
                 dto.getValorTotal(),
                 dto.getIdCalendar()

@@ -225,7 +225,7 @@ public class SampleDataLoader implements CommandLineRunner {
                         dataTermino,
                         "Orçamento exemplo " + i, // titulo
                         "Cidade " + i, // localEvento
-                        "Evento exemplo " + i, // descricao
+                        "Evento exemplo " + i, // observacoes
                         statusPossiveis.get(random.nextInt(statusPossiveis.size())), // status inicial
                         0.0, // valorTotal (será calculado pelo serviço quando necessário)
                         null // idCalendar só é usado após orçamento ser aprovado

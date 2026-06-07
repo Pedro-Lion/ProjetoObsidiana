@@ -136,7 +136,7 @@ export function Orcamentos() {
         const camposOrcamento = [
           o.titulo,
           o.localEvento,
-          o.descricao,
+          o.observacoes,
           o.status,
           o.valorTotal?.toString(),
         ];

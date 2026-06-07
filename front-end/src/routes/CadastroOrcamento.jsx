@@ -423,12 +423,12 @@ export function CadastroOrcamento() {
           defaultValue={orcamento.localEvento}
         />
         <TextareaBordaLabel
-          titulo="Descrição"
+          titulo="Observações"
           className="h-40 -mt-4 mb-3"
           onInput={(e) =>
-            setOrcamento({ ...orcamento, descricao: e.target.value })
+            setOrcamento({ ...orcamento, observacoes: e.target.value })
           }
-          defaultValue={orcamento.descricao}
+          defaultValue={orcamento.observacoes}
         />
 
         <ContainerSelectTags

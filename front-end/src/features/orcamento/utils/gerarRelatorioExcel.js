@@ -214,7 +214,7 @@ export function gerarRelatorioExcel(orcamentos, ano) {
   // Estrutura: Título | Subtítulo | Espaçador | Cabeçalhos | uma linha por orçamento
   // ────────────────────────────────────────────────────────────────────────────
   const cabecalhos = [
-    "ID", "Descrição", "Local do Evento", "Data Início", "Data Término",
+    "ID", "Observações", "Local do Evento", "Data Início", "Data Término",
     "Duração", "Status", "Valor Total", "Serviços", "Equipamentos", "Profissionais",
   ];
   const colsOrc = cabecalhos.length; // 11
@@ -243,7 +243,7 @@ export function gerarRelatorioExcel(orcamentos, ano) {
 
     const colunas = [
       { v: o.id,                            s: esDado(listra, "center"), t: "n" },
-      { v: o.descricao        ?? "—",       s: esDado(listra, "left")           },
+      { v: o.observacoes      ?? "—",       s: esDado(listra, "left")           },
       { v: o.localEvento      ?? "—",       s: esDado(listra, "left")           },
       { v: formatarData(o.dataInicio),      s: esDado(listra, "center")         },
       { v: formatarData(o.dataTermino),     s: esDado(listra, "center")         },
@@ -278,7 +278,7 @@ export function gerarRelatorioExcel(orcamentos, ano) {
   ];
   wsOrcamentos["!cols"] = [
     { wch: 6  }, // ID
-    { wch: 28 }, // Descrição
+    { wch: 28 }, // Observações
     { wch: 22 }, // Local do Evento
     { wch: 18 }, // Data Início
     { wch: 18 }, // Data Término

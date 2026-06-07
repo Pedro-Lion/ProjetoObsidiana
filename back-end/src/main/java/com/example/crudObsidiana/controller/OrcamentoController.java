@@ -113,7 +113,7 @@ public class OrcamentoController {
     @GetMapping("/paginado")
     @Operation(
             summary = "Listar orçamentos com paginação e busca",
-            description = "Retorna uma página de orçamentos. Parâmetros: 'page' (base 0), 'size' (itens por página) e 'busca' (filtra por local do evento ou descrição, opcional)."
+            description = "Retorna uma página de orçamentos. Parâmetros: 'page' (base 0), 'size' (itens por página) e 'busca' (filtra por título, local do evento ou observações, opcional)."
     )
     @ApiResponse(responseCode = "200", description = "Página de orçamentos retornada com sucesso")
     public ResponseEntity<Page<Orcamento>> listarPaginado(

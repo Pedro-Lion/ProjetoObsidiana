@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BotaoPrimario } from "../Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../Buttons/BotaoSecundario";
 
@@ -11,7 +11,7 @@ export function CardOrcamento({
     titulo: "",
     localEvento: "",
     duracaoEvento: 0,
-    descricao: "",
+    observacoes: "",
     valorTotal: 0,
     servicos: [
       {
@@ -27,6 +27,9 @@ export function CardOrcamento({
   highlight = false,
 }) {
   const navigate = useNavigate();
+
+  // Estado local do colapsável de observações — começa fechado para manter o card limpo
+  const [mostrarObservacoes, setMostrarObservacoes] = useState(false);
 
   // Rola suavemente para o item quando ele é destacado após cadastro/edição
   const containerRef = useRef(null);
@@ -145,6 +148,29 @@ export function CardOrcamento({
           <li className="mb-1">{dados.localEvento}</li>
           <li>Duração: {duracaoFormatada}</li>
         </ul>
+
+        {/*
+          Colapsável de observações — só aparece se houver texto, mantendo o card
+          limpo quando não há nada a mostrar. Quando aberto, limita a altura com
+          overflow-y-auto para não estourar o card de altura fixa.
+        */}
+        {dados.observacoes && (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => setMostrarObservacoes((v) => !v)}
+              className="text-lg text-indigo-400 hover:text-indigo-600 transition flex items-center gap-1"
+            >
+              {mostrarObservacoes ? "Ocultar observações" : "Ver observações"}
+              <i className={`bi ${mostrarObservacoes ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+            </button>
+            {mostrarObservacoes && (
+              <p className="mt-2 text-lg text-slate-600 max-h-24 overflow-y-auto whitespace-pre-wrap">
+                {dados.observacoes}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="p-3 text-2xl text-slate-700 flex justify-between">
