@@ -20,6 +20,9 @@ public class Orcamento {
 
     private Date dataTermino;
 
+    @Schema(description = "Título do orçamento")
+    private String titulo;
+
     @Schema(description = "Local do evento")
     @Column(name = "local_evento")
     private String localEvento;
@@ -78,6 +81,7 @@ public class Orcamento {
     public Orcamento(
             Date dataInicio,
             Date dataTermino,
+            String titulo,
             String localEvento,
             String descricao,
             String status,
@@ -86,6 +90,7 @@ public class Orcamento {
     ) {
         this.dataInicio = dataInicio;
         this.dataTermino = dataTermino;
+        this.titulo = titulo;
         this.localEvento = localEvento;
         this.descricao = descricao;
         this.status = status;
@@ -105,6 +110,9 @@ public class Orcamento {
 
     public Date getDataTermino() { return dataTermino; }
     public void setDataTermino(Date dataTermino) { this.dataTermino = dataTermino; }
+
+    public String getTitulo() { return titulo; }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
 
     public String getLocalEvento() { return localEvento; }
     public void setLocalEvento(String localEvento) { this.localEvento = localEvento; }

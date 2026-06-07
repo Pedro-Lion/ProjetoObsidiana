@@ -407,6 +407,14 @@ export function CadastroOrcamento() {
         </div>
 
         <InputBordaLabel
+          titulo="Título"
+          className="w-full -mt-4"
+          onInput={(e) =>
+            setOrcamento({ ...orcamento, titulo: e.target.value })
+          }
+          defaultValue={orcamento.titulo}
+        />
+        <InputBordaLabel
           titulo="Local do evento"
           className="w-full -mt-4"
           onInput={(e) =>

@@ -20,7 +20,7 @@ export function Profissionais() {
   const [loading, setLoading] = useState(true);
 
   // Ordenação local: campo e direção
-  const [ordenarPor, setOrdenarPor] = useState("");
+  const [ordenarPor, setOrdenarPor] = useState("nome");
   const [direcaoOrdem, setDirecaoOrdem] = useState("asc");
 
   // Paginação
@@ -146,7 +146,6 @@ export function Profissionais() {
     })
     // Ordenação local aplicada sobre os resultados filtrados
     .sort((a, b) => {
-      if (!ordenarPor) return 0;
       let va, vb;
       if (ordenarPor === "nome") {
         va = a.nome?.toLowerCase() ?? "";
@@ -191,7 +190,6 @@ export function Profissionais() {
           className="w-48"
           value={ordenarPor}
           onChange={(e) => setOrdenarPor(e.target.value)}
-          placeholder="Padrão"
           options={[
             { value: "nome", label: "Nome" },
             { value: "categoria", label: "Categoria" },

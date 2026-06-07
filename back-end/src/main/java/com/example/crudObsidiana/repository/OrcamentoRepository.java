@@ -33,7 +33,8 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
             LEFT JOIN servico               s   ON os.servico_id = s.id
             LEFT JOIN orcamento_equipamentos oeq ON o.id = oeq.orcamento_id
             LEFT JOIN equipamento            e   ON oeq.equipamento_id = e.id
-            WHERE LOWER(COALESCE(o.local_evento, ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+            WHERE LOWER(COALESCE(o.titulo,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.local_evento, ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(o.descricao,    ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(o.status,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
                OR CAST(COALESCE(o.valor_total, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
@@ -51,7 +52,8 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
             LEFT JOIN servico               s   ON os.servico_id = s.id
             LEFT JOIN orcamento_equipamentos oeq ON o.id = oeq.orcamento_id
             LEFT JOIN equipamento            e   ON oeq.equipamento_id = e.id
-            WHERE LOWER(COALESCE(o.local_evento, ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+            WHERE LOWER(COALESCE(o.titulo,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.local_evento, ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(o.descricao,    ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(o.status,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
                OR CAST(COALESCE(o.valor_total, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
