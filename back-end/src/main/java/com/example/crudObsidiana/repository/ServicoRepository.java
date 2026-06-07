@@ -23,8 +23,8 @@ public interface ServicoRepository extends JpaRepository<Servico, Long> {
             LEFT JOIN equipamento e ON se.equipamento_id = e.id
             WHERE LOWER(COALESCE(s.nome,      '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(s.descricao, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
-               OR CAST(s.horas AS VARCHAR)             LIKE CONCAT('%', :busca, '%')
-               OR CAST(COALESCE(s.valor_por_hora, 0) AS VARCHAR) LIKE CONCAT('%', :busca, '%')
+               OR CAST(s.horas AS CHAR)             LIKE CONCAT('%', :busca, '%')
+               OR CAST(COALESCE(s.valor_por_hora, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
                OR LOWER(COALESCE(e.nome,      '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(e.categoria, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(e.marca,     '')) LIKE LOWER(CONCAT('%', :busca, '%'))
@@ -36,8 +36,8 @@ public interface ServicoRepository extends JpaRepository<Servico, Long> {
             LEFT JOIN equipamento e ON se.equipamento_id = e.id
             WHERE LOWER(COALESCE(s.nome,      '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(s.descricao, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
-               OR CAST(s.horas AS VARCHAR)             LIKE CONCAT('%', :busca, '%')
-               OR CAST(COALESCE(s.valor_por_hora, 0) AS VARCHAR) LIKE CONCAT('%', :busca, '%')
+               OR CAST(s.horas AS CHAR)             LIKE CONCAT('%', :busca, '%')
+               OR CAST(COALESCE(s.valor_por_hora, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
                OR LOWER(COALESCE(e.nome,      '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(e.categoria, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(e.marca,     '')) LIKE LOWER(CONCAT('%', :busca, '%'))

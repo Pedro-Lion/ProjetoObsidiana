@@ -14,8 +14,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +35,11 @@ public class EquipamentoController {
 
     private final EquipamentoRepository repository;
     private final FileStorageService fileStorageService;
+
+    // EntityManager para montar a query paginada com ORDER BY dinâmico (whitelist)
+    // — Spring Data não aplica Sort automaticamente em @Query nativas.
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     private EquipamentoService equipamentoService;
@@ -66,7 +74,7 @@ public class EquipamentoController {
                     array = @ArraySchema(schema = @Schema(implementation = Equipamento.class))))
     @GetMapping
     public ResponseEntity<List<Equipamento>> listarTodos() {
-        List<Equipamento> equipamentos = repository.findAll();
+        List<Equipamento> equipamentos = equipamentoService.listarTodos();
         if (equipamentos.isEmpty()) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(equipamentos);
     }
@@ -74,20 +82,65 @@ public class EquipamentoController {
     // ---------------------------------------------------------------
     // GET /equipamento/paginado?page=0&size=10
     // ---------------------------------------------------------------
-    @Operation(summary = "Lista equipamentos com paginação e busca",
-            description = "Retorna uma página de equipamentos. Parâmetros: 'page' (base 0), 'size' (itens por página) e 'busca' (filtra por nome, opcional).")
+    // Whitelist de campos ordenáveis → nome da COLUNA no banco (snake_case).
+    // Obrigatório para evitar SQL injection no `ORDER BY ?#{#pageable}` da query nativa.
+    private static final java.util.Map<String, String> COLUNAS_ORDENAVEIS = java.util.Map.of(
+            "nome",         "nome",
+            "valorPorHora", "valor_por_hora",
+            "categoria",    "categoria"
+    );
+
+    @Operation(summary = "Lista equipamentos com paginação, busca e ordenação",
+            description = "Retorna uma página de equipamentos. Parâmetros: 'page', 'size', 'busca', 'ordenarPor' (nome|valorPorHora|categoria) e 'direcao' (asc|desc).")
     @ApiResponse(responseCode = "200", description = "Página de equipamentos retornada com sucesso")
     @GetMapping("/paginado")
     public ResponseEntity<Page<Equipamento>> listarPaginado(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "") String busca) {
+            @RequestParam(defaultValue = "") String busca,
+            @RequestParam(defaultValue = "nome") String ordenarPor,
+            @RequestParam(defaultValue = "asc") String direcao) {
+        // Resolve coluna SQL pela whitelist — único caminho de injeção possível, já bloqueado.
+        String colunaSql = COLUNAS_ORDENAVEIS.getOrDefault(ordenarPor, "nome");
+        String dir = "desc".equalsIgnoreCase(direcao) ? "DESC" : "ASC";
+
+        // Mesma SQL da @Query findByBusca, mas montada aqui para conseguir ORDER BY dinâmico
+        // (Spring Data não auto-aplica Sort em queries nativas). Concatenação direta no final
+        // evita String.formatted/printf, que interpretaria os '%' do LIKE como diretivas de formato.
+        String sql = """
+            SELECT * FROM equipamento e
+            WHERE LOWER(COALESCE(e.nome,         '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.categoria,    '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.marca,        '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.modelo,       '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.numero_serie, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR CAST(COALESCE(e.valor_por_hora, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
+            """ + " ORDER BY " + colunaSql + " " + dir;
+
+        String countSql = """
+            SELECT COUNT(*) FROM equipamento e
+            WHERE LOWER(COALESCE(e.nome,         '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.categoria,    '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.marca,        '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.modelo,       '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.numero_serie, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR CAST(COALESCE(e.valor_por_hora, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
+            """;
+
         Pageable pageable = PageRequest.of(page, size);
-        // Usa findByBusca para pesquisar em todos os campos (nome, categoria, marca, modelo, etc.)
-        Page<Equipamento> resultado = busca.isBlank()
-                ? repository.findAll(pageable)
-                : repository.findByBusca(busca, pageable);
-        return ResponseEntity.ok(resultado);
+
+        @SuppressWarnings("unchecked")
+        List<Equipamento> conteudo = entityManager.createNativeQuery(sql, Equipamento.class)
+                .setParameter("busca", busca)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize())
+                .getResultList();
+
+        long total = ((Number) entityManager.createNativeQuery(countSql)
+                .setParameter("busca", busca)
+                .getSingleResult()).longValue();
+
+        return ResponseEntity.ok(new PageImpl<>(conteudo, pageable, total));
     }
 
     @Operation(summary = "Recupera um equipamento pelo ID")
@@ -98,9 +151,9 @@ public class EquipamentoController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<Equipamento> recuperar(@PathVariable("id") Long id) {
-        return repository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        Equipamento equipamento = equipamentoService.buscarPorId(id);
+        if (equipamento == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(equipamento);
     }
 
     @Operation(summary = "Remove um equipamento pelo ID")
@@ -110,14 +163,9 @@ public class EquipamentoController {
             @ApiResponse(responseCode = "404", description = "Equipamento não encontrado")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Equipamento> excluir(@PathVariable("id") Long id) {
-        if (repository.existsById(id)) {
-            ResponseEntity<Equipamento> deletado = repository.findById(id)
-                    .map(ResponseEntity::ok)
-                    .orElseGet(() -> ResponseEntity.notFound().build());
-            repository.deleteById(id);
-            return deletado;
-        }
+    public ResponseEntity<Void> excluir(@PathVariable("id") Long id) {
+        boolean removido = equipamentoService.deletarEquipamento(id); // ✅ invalida cache
+        if (removido) return ResponseEntity.ok().build();
         return ResponseEntity.notFound().build();
     }
 
@@ -129,19 +177,9 @@ public class EquipamentoController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<Equipamento> atualizar(@PathVariable("id") Long id, @RequestBody Equipamento equipamentoBody) {
-        return repository.findById(id).map(existente -> {
-            if (equipamentoBody.getNome() != null) existente.setNome(equipamentoBody.getNome());
-            if (equipamentoBody.getCategoria() != null) existente.setCategoria(equipamentoBody.getCategoria());
-            if (equipamentoBody.getMarca() != null) existente.setMarca(equipamentoBody.getMarca());
-            if (equipamentoBody.getNumeroSerie() != null) existente.setNumeroSerie(equipamentoBody.getNumeroSerie());
-            if (equipamentoBody.getModelo() != null) existente.setModelo(equipamentoBody.getModelo());
-            if (equipamentoBody.getValorPorHora() != null) existente.setValorPorHora(equipamentoBody.getValorPorHora());
-            if (equipamentoBody.getQuantidadeTotal() != null) {
-                existente.setQuantidadeTotal(equipamentoBody.getQuantidadeTotal());
-            }
-            Equipamento salvo = repository.save(existente);
-            return ResponseEntity.ok(salvo);
-        }).orElseGet(() -> ResponseEntity.notFound().build());
+        Equipamento atualizado = equipamentoService.atualizarEquipamento(id, equipamentoBody);
+        if (atualizado == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(atualizado);
     }
 
     @PostMapping("/{id}/imagem")
@@ -182,5 +220,7 @@ public class EquipamentoController {
         } catch (IOException e) {
             return ResponseEntity.notFound().build();
         }
+        //só pra testar ci 4
+
     }
 }

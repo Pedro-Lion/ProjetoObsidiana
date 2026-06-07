@@ -24,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
  import org.springframework.data.domain.PageRequest;
  import org.springframework.data.domain.Pageable;
 
+import java.sql.SQLOutput;
 import java.util.List;
 import java.util.Optional;
 
@@ -111,15 +112,17 @@ public class OrcamentoController {
     // ----------------------------------------------------------------------
     @GetMapping("/paginado")
     @Operation(
-            summary = "Listar orçamentos com paginação e busca",
-            description = "Retorna uma página de orçamentos. Parâmetros: 'page' (base 0), 'size' (itens por página) e 'busca' (filtra por local do evento ou descrição, opcional)."
+            summary = "Listar orçamentos com paginação, busca e ordenação",
+            description = "Retorna uma página de orçamentos. Parâmetros: 'page', 'size', 'busca', 'ordenarPor' (titulo|localEvento|dataInicio|valorTotal|status) e 'direcao' (asc|desc)."
     )
     @ApiResponse(responseCode = "200", description = "Página de orçamentos retornada com sucesso")
     public ResponseEntity<Page<Orcamento>> listarPaginado(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
-            @RequestParam(defaultValue = "") String busca) {
-        Page<Orcamento> resultado = orcamentoService.listarPaginado(page, size, busca);
+            @RequestParam(defaultValue = "") String busca,
+            @RequestParam(defaultValue = "titulo") String ordenarPor,
+            @RequestParam(defaultValue = "asc") String direcao) {
+        Page<Orcamento> resultado = orcamentoService.listarPaginado(page, size, busca, ordenarPor, direcao);
         return ResponseEntity.ok(resultado);
     }
 
@@ -185,21 +188,8 @@ public class OrcamentoController {
     // ----------------------------------------------------------------------
     @PutMapping("/{id}")
     public ResponseEntity<Orcamento> atualizarOrcamento(@PathVariable("id") Long id, @RequestBody OrcamentoDTO dto) {
-        try {
-            Orcamento atualizado = orcamentoService.editarOrcamento(id, dto);
-            return ResponseEntity.ok(atualizado);
-        } catch (ResponseStatusException ex) {
-            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            } else if (ex.getStatusCode() == HttpStatus.CONFLICT) {
-                // opcional: retornar mensagem ou corpo com detalhes
-                return ResponseEntity.status(HttpStatus.CONFLICT).build();
-            }
-            return ResponseEntity.status(ex.getStatusCode()).build();
-        } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(null);
-        }
+        Orcamento atualizado = orcamentoService.editarOrcamento(id, dto);
+        return ResponseEntity.ok(atualizado);
     }
 
     // ----------------------------------------------------------------------

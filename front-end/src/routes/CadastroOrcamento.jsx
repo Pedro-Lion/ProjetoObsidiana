@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 
 import { useMsal } from "@azure/msal-react";
@@ -15,26 +15,24 @@ import { InputDataBordaLabel } from "../components/Inputs/InputDataBordaLabel";
 import moment from "moment";
 
 import { api } from "../api";
+import { notificar } from "../features/notificar.jsx";
 import { cadastrar } from "../features/orcamento/services/cadastrar.js";
 import { editar } from "../features/orcamento/services/editar.js";
 
 export function CadastroOrcamento() {
   const navigate = useNavigate();
-
+  const { id } = useParams();
   const { instance } = useMsal();
 
-  // Estados do modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitulo, setModalTitulo] = useState("");
-  const [modalDescricao, setModalDescricao] = useState("");
-  const [modalActions, setModalActions] = useState(null);
+  const [equipamentosDoServico, setEquipamentosDoServico] = useState([]);
 
   // Erros de validação
   const [erros, setErros] = useState({});
 
   const state = useLocation().state;
   function definirState() {
-    if (!state) return undefined;
+    // Em cadastro (sem :id), state carrega { totalElementos, itensPorPagina } — não é dado do orçamento
+    if (!id || !state) return undefined;
     let copiaState = { ...state };
 
     const formatador = new Intl.DateTimeFormat("pt-BR", {
@@ -214,6 +212,84 @@ export function CadastroOrcamento() {
     getOpcoes();
   }, []);
 
+  useEffect(() => {
+    async function buscarEquipamentosDoServico() {
+      // para impedir a criação de filhos com mesma chave no ContainerSelectTags,
+      // é melhor esperar para que as opções sejam preenchidas
+      if (opcoes.servico.length == 0) return;
+
+      if (!orcamento.servicos || orcamento.servicos.length == 0) return;
+
+      const servicoIds = (orcamento.servicos || []).map((s) =>
+        typeof s === "number" ? s : s?.id
+      );
+
+      try {
+        // Se não há serviços, remove apenas os equipamentos que vieram de serviço
+        // (mantém os adicionados manualmente)
+        if (servicoIds.length === 0) {
+          setEquipamentosDoServico([]);
+          setOrcamento((prev) => ({
+            ...prev,
+            usosEquipamentos: (prev.usosEquipamentos || []).filter(
+              (u) => !u.veioDeServico
+            ),
+            equipamentos: (prev.usosEquipamentos || [])
+              .filter((u) => !u.veioDeServico)
+              .map((u) => u.idEquipamento),
+          }));
+          return;
+        }
+
+        const respostas = await Promise.all(
+          servicoIds.map((id) =>
+            api.get(`/servico/${id}`, {
+              headers: {
+                Authorization: "Bearer " + sessionStorage.getItem("token"),
+              },
+            })
+          )
+        );
+
+        const todosEquipamentos = respostas
+          .flatMap((r) => r.data.equipamentos ?? [])
+          .filter(
+            (eq, index, self) => self.findIndex((e) => e.id === eq.id) === index
+          );
+
+        setEquipamentosDoServico(todosEquipamentos);
+
+        setOrcamento((prev) => {
+          // Mantém apenas os usos adicionados manualmente
+          const usosManuais = (prev.usosEquipamentos || []).filter(
+            (u) => !u.veioDeServico
+          );
+
+          // Cria usos para equipamentos do serviço que ainda não estão nos manuais
+          const usosDoServico = todosEquipamentos
+            .filter((eq) => !usosManuais.some((u) => u.idEquipamento === eq.id))
+            .map((eq) => ({
+              idEquipamento: eq.id,
+              quantidadeUsada: 1,
+              veioDeServico: true, // flag para identificar origem
+            }));
+
+          const todosUsos = [...usosManuais, ...usosDoServico];
+
+          return {
+            ...prev,
+            usosEquipamentos: todosUsos,
+            equipamentos: todosUsos.map((u) => u.idEquipamento),
+          };
+        });
+      } catch (error) {
+        console.error("Erro ao buscar equipamentos do serviço:", error);
+      }
+    }
+
+    buscarEquipamentosDoServico();
+  }, [orcamento.servicos]);
+
   // Cálculo automático do valor total com base nos itens selecionados
   const { totalServicos, totalEquipamentos, valorCalculado } = useMemo(() => {
     // Normaliza IDs de serviços (podem chegar como número ou como objeto {id, nome})
@@ -244,6 +320,12 @@ export function CadastroOrcamento() {
     };
   }, [orcamento.servicos, orcamento.usosEquipamentos, opcoes.servico, opcoes.equipamento]);
 
+  // Adicione esse memo para ter os IDs dos equipamentos dos serviços sempre atualizados
+  const idsEquipamentosDoServico = useMemo(
+    () => equipamentosDoServico.map((e) => e.id),
+    [equipamentosDoServico]
+  );
+
   // Sincroniza o valorTotal do orçamento com o valor calculado automaticamente,
   // mas apenas depois que as opções foram carregadas e o usuário não editou manualmente
   useEffect(() => {
@@ -252,6 +334,23 @@ export function CadastroOrcamento() {
     }
   }, [valorCalculado, valorManual, opcoesCarregadas]);
 
+  // Converte usosEquipamentos em formato que o ContainerSelectTags entende,
+  // incluindo nome (label) e quantidade já selecionada
+  function formatarOpcoesComQuantidade(usos = [], opcoesEquipamento = []) {
+    return usos
+      .map((uso) => {
+        const idEq = uso.idEquipamento ?? uso.equipamento?.id;
+        const opcao = opcoesEquipamento.find((o) => o.value === idEq);
+        if (!opcao) return null;
+        return {
+          value: opcao.value,
+          label: opcao.label,
+          quantidade: uso.quantidadeUsada ?? 1,
+        };
+      })
+      .filter(Boolean);
+  }
+
   const ErroMsg = ({ campo }) =>
     erros[campo] ? (
       <span className="text-red-500 text-[1rem] mt-1">{erros[campo]}</span>
@@ -259,7 +358,7 @@ export function CadastroOrcamento() {
 
   return (
     <>
-      <h1>{!state ? "Cadastrar" : "Editar"} orçamento</h1>
+      <h1>{!id ? "Cadastrar" : "Editar"} orçamento</h1>
 
       <section className="flex flex-col gap-2">
         <div className="flex justify-between md:gap-5 flex-wrap md:flex-nowrap">
@@ -271,7 +370,7 @@ export function CadastroOrcamento() {
               { label: "Confirmado" },
               { label: "Cancelado" },
             ]}
-            disabled={!state ? true : false}
+            disabled={!id ? true : false}
             onChange={(e) =>
               setOrcamento({ ...orcamento, status: e.target.value })
             }
@@ -308,6 +407,14 @@ export function CadastroOrcamento() {
         </div>
 
         <InputBordaLabel
+          titulo="Título"
+          className="w-full -mt-4"
+          onInput={(e) =>
+            setOrcamento({ ...orcamento, titulo: e.target.value })
+          }
+          defaultValue={orcamento.titulo}
+        />
+        <InputBordaLabel
           titulo="Local do evento"
           className="w-full -mt-4"
           onInput={(e) =>
@@ -316,12 +423,12 @@ export function CadastroOrcamento() {
           defaultValue={orcamento.localEvento}
         />
         <TextareaBordaLabel
-          titulo="Descrição"
+          titulo="Observações"
           className="h-40 -mt-4 mb-3"
           onInput={(e) =>
-            setOrcamento({ ...orcamento, descricao: e.target.value })
+            setOrcamento({ ...orcamento, observacoes: e.target.value })
           }
-          defaultValue={orcamento.descricao}
+          defaultValue={orcamento.observacoes}
         />
 
         <ContainerSelectTags
@@ -341,22 +448,46 @@ export function CadastroOrcamento() {
         <ContainerSelectTags
           titulo="Equipamentos"
           itens={opcoes.equipamento}
-          preSelecao={
-            orcamento.equipamentos
-              ? formatarOpcoes(orcamento.equipamentos)
-              : []
-          }
+          preSelecao={formatarOpcoesComQuantidade(
+            (orcamento.usosEquipamentos || []),
+            opcoes.equipamento
+          )}
           temQuantidade={true}
           onChange={(itensComQtd) => {
             const equipamentoIds = (itensComQtd || []).map((i) => i.value);
-            const usos = (itensComQtd || []).map((i) => ({
-              idEquipamento: i.value,
-              quantidadeUsada: i.quantidade ?? 1,
-            }));
-            setOrcamento({
-              ...orcamento,
-              equipamentos: equipamentoIds,
-              usosEquipamentos: usos,
+
+            setOrcamento((prev) => {
+              // Usos do serviço que continuam presentes na seleção atual
+              const usosServicoRestantes = (prev.usosEquipamentos || [])
+                .filter((u) => u.veioDeServico && equipamentoIds.includes(u.idEquipamento))
+                .map((u) => ({
+                  ...u,
+                  // Atualiza quantidade se o usuário editou
+                  quantidadeUsada:
+                    itensComQtd.find((i) => i.value === u.idEquipamento)?.quantidade ??
+                    u.quantidadeUsada,
+                }));
+
+              // Usos manuais: itens selecionados que não são do serviço
+              const idsDoServico = (prev.usosEquipamentos || [])
+                .filter((u) => u.veioDeServico)
+                .map((u) => u.idEquipamento);
+
+              const usosManuais = itensComQtd
+                .filter((i) => !idsDoServico.includes(i.value))
+                .map((i) => ({
+                  idEquipamento: i.value,
+                  quantidadeUsada: i.quantidade ?? 1,
+                  veioDeServico: false,
+                }));
+
+              const todosUsos = [...usosServicoRestantes, ...usosManuais];
+
+              return {
+                ...prev,
+                usosEquipamentos: todosUsos,
+                equipamentos: todosUsos.map((u) => u.idEquipamento),
+              };
             });
           }}
         />
@@ -381,7 +512,7 @@ export function CadastroOrcamento() {
       {/* Seção de valor do orçamento */}
       <div className="justify-start border-t border-slate-300 pt-5">
 
-          <h3 className="mb-2">Valor do Orçamento</h3>
+        <h3 className="mb-2">Valor do Orçamento</h3>
 
         {!valorManual ? (
           /* Modo calculado: exibe o total e o detalhamento por categoria */
@@ -457,13 +588,35 @@ export function CadastroOrcamento() {
 
       {/* Botões de ação */}
       <div className="flex gap-3 self-end">
-        {!state ? (
+        {!id ? (
           <BotaoPrimario
             titulo="Cadastrar"
             className="mb-0 mt-0"
-            onClick={async () => {
+            onClick={() => {
               if (!validar()) return;
-              if (await cadastrar(orcamento)) navigate("/orcamentos");
+
+              notificar(
+                cadastrar(orcamento),
+                (req) => {
+                  if (req.status == 201) {
+                    // Item novo cai na última página da listagem
+                    const total = state?.totalElementos ?? 0;
+                    const itens = state?.itensPorPagina ?? 6;
+                    const ultimaPagina = Math.max(0, Math.ceil((total + 1) / itens) - 1);
+                    navigate("/orcamentos", {
+                      state: { highlightId: req.data?.id, pagina: ultimaPagina },
+                    });
+                  }
+                },
+                {
+                  pending: "Cadastrando orçamento...",
+                  success: [
+                    "Orçamento cadastrado com sucesso!",
+                    "Retornando à página de orçamentos"
+                  ],
+                  error: "Ocorreu um erro ao cadastrar o orçamento"
+                }
+              )
             }}
           />
         ) : (
@@ -472,9 +625,25 @@ export function CadastroOrcamento() {
             className="mb-0 mt-0"
             onClick={async () => {
               if (!validar()) return;
-              if (await editar(orcamento, instance)) {
-                navigate("/orcamentos");
-              }
+
+              notificar(
+                editar(orcamento, instance),
+                (req) => {
+                  if (req.status == 200) {
+                    navigate("/orcamentos", {
+                      state: { highlightId: Number(id), pagina: state?.paginaOrigem ?? 0 },
+                    });
+                  }
+                },
+                {
+                  pending: "Salvando alterações...",
+                  success: [
+                    "Alterações do orçamento salvas com sucesso!",
+                    "Retornando à página de orçamentos"
+                  ],
+                  error: "Ocorreu um erro durante o registro das alterações"
+                }
+              );
             }}
           />
         )}
@@ -483,13 +652,8 @@ export function CadastroOrcamento() {
           className="mb-0 mt-0"
           onClick={() => navigate(-1)}
         />
+        {/* <BotaoSecundario onClick={() => { console.log(orcamento) }} /> */}
       </div>
-
-      {modalOpen && (
-        <Modal titulo={modalTitulo} descricao={modalDescricao}>
-          {modalActions}
-        </Modal>
-      )}
     </>
   );
 }

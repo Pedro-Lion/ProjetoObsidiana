@@ -14,7 +14,10 @@ import com.example.crudObsidiana.dto.UsoEquipamentoDTO;
 @Schema(description = "Dados para criação de um novo orçamento")
 public class OrcamentoDTO {
 
-    private String descricao;
+    @Schema(description = "Título do orçamento", example = "Casamento João e Maria")
+    private String titulo;
+
+    private String observacoes;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Schema(description = "Data de início do evento", example = "2025-11-10T09:00:00")
@@ -40,8 +43,15 @@ public class OrcamentoDTO {
     private Double duracaoEvento;
 
     // Getters e Setters
-    public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public String getTitulo() { return titulo; }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
+
+    public String getObservacoes() {
+        return observacoes;
+    }
+    public void setObservacoes(String observacoes) {
+        this.observacoes = observacoes;
+    }
 
     public Date getDataInicio() { return dataInicio;}
     public void setDataInicio(Date dataInicio) { this.dataInicio = dataInicio; }

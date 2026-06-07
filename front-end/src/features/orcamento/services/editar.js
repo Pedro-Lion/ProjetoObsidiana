@@ -1,4 +1,4 @@
-import { formatarOrcamento } from "../utils";
+import { formatarOrcamento } from "../utils/utils.js"
 import { tratarEventoCalendario } from "./tratarEventoCalendario";
 import { api } from "../../../api";
 
@@ -11,13 +11,7 @@ export async function editar(orcamento = {}, instance = {}) {
     orcamento = await tratarEventoCalendario(orcamento, instance);
   }
 
-  try {
-    const request = await api.put(`/orcamento/${orcamento.id}`, orcamento, {
-      headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-    });
-    return request.status == 200
-  } catch (error) {
-    console.log(error);
-    return false;
-  }
+  return await api.put(`/orcamento/${orcamento.id}`, orcamento, {
+    headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+  });
 }

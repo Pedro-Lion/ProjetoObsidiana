@@ -1,0 +1,74 @@
+name: CI - Executar build e upload de artefatos
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build: 
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v5
+
+      - name: Instalar Node 20
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Instalar JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Front-end - Instalar dependências
+        working-directory: front-end
+        run: npm install
+
+      - name: Front-end - Criar .env e executar build
+        working-directory: front-end
+        run: |
+          cat > .env << 'EOF'
+          VITE_API_BASE_URL=https://obsidianamm.sytes.net/api
+          VITE_APP_BASE_URL=https://obsidianamm.sytes.net
+          EOF
+
+          npm run build
+
+      - name: Front-end - Fazer zip
+        working-directory: front-end
+        run: zip dist.zip -r ./dist/
+
+      - name: Front-end - Enviar zip como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: front-dist
+          path: front-end/dist.zip
+
+      - name: Back-end - Executar build e renomear JAR
+        working-directory: back-end
+        run: |
+          mvn -B package -DskipTests -Dfile.encoding=UTF-8 -Dproject.build.sourceEncoding=UTF-8
+          cd target/
+          mv *.jar app.jar
+
+      - name: Back-end - Publicar JAR como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: back-end/target/app.jar
+
+      - name: Auth microservice - Executar build e renomear JAR
+        working-directory: microservicos/Autenticacao/auth-microservice
+        run: |
+          mvn -B package -DskipTests -Dfile.encoding=UTF-8 -Dproject.build.sourceEncoding=UTF-8
+          cd target/
+          mv *.jar auth.jar
+
+      - name: Auth microservice - Publicar JAR como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: auth-jar
+          path: microservicos/Autenticacao/auth-microservice/target/auth.jar

@@ -6,29 +6,25 @@ import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { api } from "../api.js";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Modal } from "../components/Modal/Modal.jsx";
+import { notificar } from "../features/notificar.jsx";
 
 export function CadastrarNovoServico() {
   const navigate = useNavigate();
   const { id } = useParams();
 
   const state = useLocation().state;
-  const [servico, setServico] = useState(state ?? {});
+  // Em edição (com :id na URL), state traz os dados do serviço pré-preenchidos.
+  // Em cadastro, state pode trazer { totalElementos, itensPorPagina } para calcular a última página após salvar.
+  const [servico, setServico] = useState(id ? state ?? {} : {});
   const [opcoes, setOpcoes] = useState([]);
 
   const [horas, setHoras] = useState(servico.horas ?? 0);
   const [valorHora, setValorHora] = useState(
-    servico.valorPorHora ? servico.valorPorHora.toFixed(2) : "0.00"
+    servico.valorPorHora ? servico.valorPorHora.toFixed(2) : "0.00",
   );
 
   // Erros de validação
   const [erros, setErros] = useState({});
-
-  // Estados para o modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitulo, setModalTitulo] = useState("");
-  const [modalDescricao, setModalDescricao] = useState("");
-  const [modalActions, setModalActions] = useState(null);
 
   useEffect(() => {
     async function getEquipamentos() {
@@ -59,9 +55,7 @@ export function CadastrarNovoServico() {
     if (!servico.nome || servico.nome.trim() === "") {
       novosErros.nome = "Nome do serviço é obrigatório.";
     }
-    if (!horas || Number(horas) <= 0) {
-      novosErros.horas = "Duração não pode ser 0.";
-    }
+    // Duração não é mais obrigatória — campo pode ser 0 ou deixado em branco
     if (!servico.valorPorHora || Number(servico.valorPorHora) <= 0) {
       novosErros.valorPorHora = "Valor por hora não pode ser 0.";
     }
@@ -70,60 +64,58 @@ export function CadastrarNovoServico() {
     return Object.keys(novosErros).length === 0;
   }
 
-  async function cadastrar() {
+  function cadastrar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.post("/servico", servico, {
+    notificar(
+      api.post("/servico", servico, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status == 201) {
-        // Redireciona direto para a lista, sem modal de sucesso
-        navigate("/servicos");
+      }),
+      (req) => {
+        if (req.status == 201) {
+          // Item novo cai na última página da listagem
+          const total = state?.totalElementos ?? 0;
+          const itens = state?.itensPorPagina ?? 6;
+          const ultimaPagina = Math.max(0, Math.ceil((total + 1) / itens) - 1);
+          navigate("/servicos", {
+            state: { highlightId: req.data?.id, pagina: ultimaPagina },
+          });
+        }
+      },
+      {
+        pending: "Cadastrando serviço...",
+        success: [
+          "Serviço cadastrado com sucesso!",
+          "Retornando à página de serviços"
+        ],
+        error: "Ocorreu um erro ao cadastrar o serviço"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Serviço não pôde ser cadastrado. Tente novamente.");
-      setModalActions(
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    );
   }
 
-  async function editar() {
+  function editar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.put(`/servico/${id}`, servico, {
+    notificar(
+      api.put(`/servico/${id}`, servico, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status == 200) {
-        // Redireciona direto para a lista, sem modal de sucesso
-        navigate("/servicos");
+      }),
+      (req) => {
+        if (req.status == 200) {
+          navigate("/servicos", {
+            state: { highlightId: Number(id), pagina: state?.paginaOrigem ?? 0 },
+          });
+        }
+      },
+      {
+        pending: "Salvando alterações...",
+        success: [
+          "Alterações do serviço salvas com sucesso!",
+          "Retornando à página de serviços"
+        ],
+        error: "Ocorreu um erro durante o registro das alterações"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Serviço não pôde ser editado. Tente novamente.");
-      setModalActions(
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    );
   }
 
   const ErroMsg = ({ campo }) =>
@@ -133,7 +125,7 @@ export function CadastrarNovoServico() {
 
   return (
     <>
-      {state ? <h1>Editar serviço</h1> : <h1>Cadastrar serviço</h1>}
+      {id ? <h1>Editar serviço</h1> : <h1>Cadastrar serviço</h1>}
 
       <section className="flex flex-col">
         <div className="flex justify-between gap-3 items-start mb flex-wrap md:flex-nowrap">
@@ -149,9 +141,10 @@ export function CadastrarNovoServico() {
           </div>
 
           <div className="flex flex-col w-full">
+            {/* Duração não é obrigatória — o campo permanece disponível mas sem validação */}
             <InputBordaLabel
               type="number"
-              titulo="Duração em Horas"
+              titulo="Duração em Horas (opcional)"
               className="w-full"
               value={horas}
               onInput={(e) => {
@@ -162,7 +155,6 @@ export function CadastrarNovoServico() {
                 setServico({ ...servico, horas: v });
               }}
             />
-            <ErroMsg campo="horas" />
           </div>
 
           <div className="flex flex-col w-full">
@@ -194,9 +186,16 @@ export function CadastrarNovoServico() {
         <ContainerSelectTags
           titulo="Equipamentos"
           itens={opcoes}
-          preSelecao={servico?.equipamentos?.map((s) => {
-            return { value: s.id, label: s.nome };
-          })}
+          preSelecao={servico?.equipamentos
+            ?.map((s) => {
+              // s pode ser objeto {id, nome} (vindo da listagem em edição) ou apenas o id (após onChange interno)
+              if (s == null) return null;
+              const equipId = typeof s === "object" ? s.id : s;
+              if (equipId == null) return null;
+              const opcao = opcoes.find((o) => o.value === equipId);
+              return { value: equipId, label: s?.nome ?? opcao?.label ?? "" };
+            })
+            .filter(Boolean)}
           onChange={(itens) =>
             setServico({
               ...servico,
@@ -207,7 +206,7 @@ export function CadastrarNovoServico() {
         />
 
         <div className="flex gap-3 self-end mt-4">
-          {!state ? (
+          {!id ? (
             <BotaoPrimario
               titulo="Cadastrar Serviço"
               className="mb-0 mt-0"
@@ -227,12 +226,6 @@ export function CadastrarNovoServico() {
           />
         </div>
       </section>
-
-      {modalOpen && (
-        <Modal titulo={modalTitulo} descricao={modalDescricao}>
-          {modalActions}
-        </Modal>
-      )}
     </>
   );
 }

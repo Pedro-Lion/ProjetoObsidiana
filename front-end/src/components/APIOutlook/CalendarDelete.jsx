@@ -3,6 +3,10 @@ import { loginRequest } from "../../authConfig";
 // import { Button } from "react-bootstrap";
 import { BotaoSecundario } from "../../components/Buttons/BotaoSecundario";
 
+// import { getAccessToken } from "../utils/getAccessToken";
+
+import { getAccessToken } from "../../../utils/getAccessToken";
+
 export const CalendarDelete = (id) => {
     const { instance } = useMsal();
     const account = instance.getActiveAccount();
@@ -11,12 +15,10 @@ export const CalendarDelete = (id) => {
     if (!account) return;
 
     try {
-        const response = await instance.acquireTokenSilent({
-            ...loginRequest,
-            account : account
-        });
 
-        const accessToken = response.accessToken;
+
+        const accessToken = await getAccessToken(instance, account);
+
 
         const event = {
             subject: 'Reunião de Teste',

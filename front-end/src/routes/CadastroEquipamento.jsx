@@ -6,6 +6,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import { useState, useEffect, useRef } from "react";
 import { Modal } from "../components/Modal/Modal.jsx";
+import { notificar } from "../features/notificar.jsx";
+import { toast } from "react-toastify";
 
 export function CadastroEquipamentos({ onSucesso, onCancelar }) {
   const navigate = useNavigate();
@@ -15,18 +17,25 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
   const [arquivoImagem, setArquivoImagem] = useState(null);
   const [previewImagem, setPreviewImagem] = useState(null);
   const previewRef = useRef(null);
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+  // Fallback alinhado com o do api.js — sem isso o fetch ia para o Vite (5173) e voltava index.html
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
+  // Só pré-popula a partir do state quando estamos em modo edição (id presente em useParams).
+  // No modo cadastro (modal ou rota /cadastro/equipamentos), o state pode conter resíduos
+  // de navegação (ex.: {highlightId, pagina}) deixados pelo irParaLista — usar isso como
+  // dados de equipamento causava PUT /equipamento/undefined e formulário pré-populado com lixo.
   const [equipamento, setEquipamento] = useState(
-    state ?? {
-      nome: "",
-      categoria: "",
-      marca: "",
-      quantidadeTotal: 0,
-      modelo: "",
-      numeroSerie: "",
-      valorPorHora: null,
-    }
+    id
+      ? (state ?? {})
+      : {
+          nome: "",
+          categoria: "",
+          marca: "",
+          quantidadeTotal: 0,
+          modelo: "",
+          numeroSerie: "",
+          valorPorHora: null,
+        }
   );
   const [valorHora, setValorHora] = useState(
     equipamento.valorPorHora
@@ -36,11 +45,6 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
 
   // Erros de validação
   const [erros, setErros] = useState({});
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitulo, setModalTitulo] = useState("");
-  const [modalDescricao, setModalDescricao] = useState("");
-  const [modalActions, setModalActions] = useState(null);
 
   const onChangeTexto = (campo) => (e) =>
     setEquipamento((prev) => ({ ...prev, [campo]: e.target.value }));
@@ -63,9 +67,11 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
       if (!id) return;
       try {
         const token = sessionStorage.getItem("token");
-        const url = `${API_BASE}/equipamento/${id}/imagem`;
+        // cache: no-store + timestamp evita devolução de 304 do browser ao reabrir o cadastro
+        const url = `${API_BASE}/equipamento/${id}/imagem?v=${Date.now()}`;
         const resp = await fetch(url, {
           method: "GET",
+          cache: "no-store",
           headers: { Authorization: token ? "Bearer " + token : "" },
         });
         if (!resp.ok) return;
@@ -92,11 +98,15 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
     };
   }, [id]);
 
-  function irParaLista() {
+  // novoId: id do item recém criado ou editado, para destacá-lo na listagem
+  function irParaLista(novoId) {
     if (onSucesso) {
-      onSucesso();
+      onSucesso(novoId);
     } else {
-      navigate("/equipamentos");
+      // Edição via rota: state.paginaOrigem guarda a página de onde o usuário veio
+      navigate("/equipamentos", {
+        state: { highlightId: novoId, pagina: state?.paginaOrigem ?? 0 },
+      });
     }
   }
 
@@ -136,8 +146,10 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
       });
       return res.data;
     } catch (err) {
+      // Loga e relança para que cadastrar/editar consigam tratar a falha
+      // (antes o erro era engolido e o usuário via "sucesso" mesmo sem imagem anexada)
       console.error("Erro ao enviar imagem:", err);
-      return null;
+      throw err;
     }
   }
 
@@ -147,75 +159,69 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
     setArquivoImagem(file);
   }
 
-  async function cadastrar() {
+  function cadastrar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.post("/equipamento", equipamento, {
+    notificar(
+      api.post("/equipamento", equipamento, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status == 201) {
-        const criado = request.data;
-        // Fix upload via modal: usa o arquivo do state, não depende de ref perdida
-        if (arquivoImagem && criado?.id) {
-          await uploadImagem(criado.id);
+      }),
+      async (req) => {
+        if (req.status == 201) {
+          const criado = req.data;
+          // Fix upload via modal: usa o arquivo do state, não depende de ref perdida
+          if (arquivoImagem && criado?.id) {
+            try {
+              await uploadImagem(criado.id);
+            } catch (err) {
+              // Equipamento foi criado, mas a imagem falhou — avisa o usuário em vez de seguir como se tudo tivesse dado certo
+              toast.error("Equipamento criado, mas a imagem não pôde ser anexada. Tente reenviar pelo modo edição.");
+            }
+          }
+          irParaLista(criado?.id);
         }
-
-        // Redireciona direto para a lista, sem modal de sucesso
-        irParaLista();
+      },
+      {
+        pending: "Cadastrando equipamento...",
+        success: [
+          "Equipamento cadastrado com sucesso!",
+          "Retornando à página de serviços"
+        ],
+        error: "Ocorreu um erro ao cadastrar o equipamento"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Equipamento não pôde ser cadastrado. Tente novamente.");
-      setModalActions(
-        <button
-          className="bg-gray-300 px-4 py-2 rounded"
-          onClick={() => setModalOpen(false)}
-        >
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    )
   }
 
   async function editar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.put(`/equipamento/${id}`, equipamento, {
+    notificar(
+      api.put(`/equipamento/${id ?? equipamento.id}`, equipamento, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status == 200) {
-        if (arquivoImagem && id) {
-          await uploadImagem(id);
+      }),
+      async (req) => {
+        if (req.status == 200) {
+          if (arquivoImagem && id) {
+            try {
+              await uploadImagem(id);
+            } catch (err) {
+              // Alterações textuais foram salvas, mas a nova imagem não — avisa o usuário
+              toast.error("Alterações salvas, mas a nova imagem não pôde ser enviada. Tente reenviar a foto.");
+            }
+          }
+          // id vem do useParams (modo edição via rota)
+          irParaLista(id ? Number(id) : undefined);
         }
-        // Redireciona direto para a lista, sem modal de sucesso
-        irParaLista();
-      } else {
-        setModalTitulo("Erro");
-        setModalDescricao("Equipamento não pôde ser editado. Tente novamente.");
-        setModalActions(
-          <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
-            Fechar
-          </button>
-        );
-        setModalOpen(true);
+      },
+      {
+        pending: "Salvando alterações...",
+        success: [
+          "Alterações do equipamento salvas com sucesso!",
+          "Retornando à página de equipamentos"
+        ],
+        error: "Ocorreu um erro durante o registro das alterações"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Erro ao editar equipamento.");
-      setModalActions(
-        <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    )
   }
 
   // Componente auxiliar para exibir mensagem de erro abaixo do campo
@@ -305,7 +311,8 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
         </div>
 
         <div className="flex gap-3 mt-10">
-          {!state ? (
+          {/* Discrimina cadastro vs edição pelo id de useParams, não pelo state — ver comentário no useState acima */}
+          {!id ? (
             <BotaoPrimario titulo="Cadastrar" className="mb-0 mt-0" onClick={cadastrar} />
           ) : (
             <BotaoPrimario titulo="Salvar alterações" className="mb-0 mt-0" onClick={editar} />
@@ -313,12 +320,6 @@ export function CadastroEquipamentos({ onSucesso, onCancelar }) {
           <BotaoSecundario titulo="Cancelar" className="mb-0 mt-0" onClick={cancelar} />
         </div>
       </div>
-
-      {modalOpen && (
-        <Modal titulo={modalTitulo} descricao={modalDescricao}>
-          {modalActions}
-        </Modal>
-      )}
     </>
   );
 }

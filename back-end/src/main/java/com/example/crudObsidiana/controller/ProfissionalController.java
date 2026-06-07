@@ -14,8 +14,11 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +35,11 @@ public class ProfissionalController {
 
     private final ProfissionalRepository repository;
     private final FileStorageService fileStorageService;
+
+    // EntityManager para montar a query paginada com ORDER BY dinâmico (whitelist)
+    // — Spring Data não aplica Sort automaticamente em @Query nativas.
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public ProfissionalController(ProfissionalRepository repository, FileStorageService fileStorageService) {
         this.repository = repository;
@@ -56,20 +64,59 @@ public class ProfissionalController {
     // ---------------------------------------------------------------
     // GET /profissional/paginado?page=0&size=10
     // ---------------------------------------------------------------
-    @Operation(summary = "Lista profissionais com paginação e busca",
-            description = "Retorna uma página de profissionais. Parâmetros: 'page' (base 0), 'size' (itens por página) e 'busca' (filtra por nome, opcional).")
+    // Whitelist de campos ordenáveis → nome da COLUNA no banco (snake_case).
+    // Obrigatório para evitar SQL injection no `ORDER BY ?#{#pageable}` da query nativa.
+    private static final java.util.Map<String, String> COLUNAS_ORDENAVEIS = java.util.Map.of(
+            "nome",      "nome",
+            "categoria", "categoria"
+    );
+
+    @Operation(summary = "Lista profissionais com paginação, busca e ordenação",
+            description = "Retorna uma página de profissionais. Parâmetros: 'page', 'size', 'busca', 'ordenarPor' (nome|categoria) e 'direcao' (asc|desc).")
     @ApiResponse(responseCode = "200", description = "Página de profissionais retornada com sucesso")
     @GetMapping("/paginado")
     public ResponseEntity<Page<Profissional>> listarPaginado(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "") String busca) {
+            @RequestParam(defaultValue = "") String busca,
+            @RequestParam(defaultValue = "nome") String ordenarPor,
+            @RequestParam(defaultValue = "asc") String direcao) {
+        // Resolve coluna SQL pela whitelist — único caminho de injeção possível, já bloqueado.
+        String colunaSql = COLUNAS_ORDENAVEIS.getOrDefault(ordenarPor, "nome");
+        String dir = "desc".equalsIgnoreCase(direcao) ? "DESC" : "ASC";
+
+        // Mesma SQL da @Query findByBusca, mas montada aqui para conseguir ORDER BY dinâmico.
+        // Concatenação direta evita String.formatted/printf, que interpretaria os '%' do LIKE como diretivas.
+        String sql = """
+            SELECT * FROM profissional p
+            WHERE LOWER(COALESCE(p.nome,            '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(p.disponibilidade, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(p.contato,         '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(p.categoria,       '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+            """ + " ORDER BY " + colunaSql + " " + dir;
+
+        String countSql = """
+            SELECT COUNT(*) FROM profissional p
+            WHERE LOWER(COALESCE(p.nome,            '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(p.disponibilidade, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(p.contato,         '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(p.categoria,       '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+            """;
+
         Pageable pageable = PageRequest.of(page, size);
-        // Usa findByBusca para pesquisar em todos os campos (nome, disponibilidade, contato)
-        Page<Profissional> resultado = busca.isBlank()
-                ? repository.findAll(pageable)
-                : repository.findByBusca(busca, pageable);
-        return ResponseEntity.ok(resultado);
+
+        @SuppressWarnings("unchecked")
+        List<Profissional> conteudo = entityManager.createNativeQuery(sql, Profissional.class)
+                .setParameter("busca", busca)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize())
+                .getResultList();
+
+        long total = ((Number) entityManager.createNativeQuery(countSql)
+                .setParameter("busca", busca)
+                .getSingleResult()).longValue();
+
+        return ResponseEntity.ok(new PageImpl<>(conteudo, pageable, total));
     }
 
     @Operation(summary = "Recupera um profissional pelo ID")
@@ -116,12 +163,19 @@ public class ProfissionalController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<Profissional> atualizar(@PathVariable("id") Long id, @RequestBody Profissional profissional) {
-        if (repository.existsById(id)) {
-            profissional.setId(id);
-            repository.save(profissional);
-            return ResponseEntity.ok(profissional);
-        }
-        return ResponseEntity.notFound().build();
+        // Update parcial: só sobrescreve os campos que vieram não-nulos no body.
+        // Importante: NÃO mexe em nomeArquivoImagem/tipoImagem/caminhoImagem aqui —
+        // esses campos são exclusivamente gravados pelo endpoint POST /{id}/imagem.
+        // Substituir a entidade inteira (save(profissional) direto) zerava as referências
+        // de imagem ao editar dados textuais do profissional.
+        return repository.findById(id).map(existente -> {
+            if (profissional.getNome() != null) existente.setNome(profissional.getNome());
+            if (profissional.getDisponibilidade() != null) existente.setDisponibilidade(profissional.getDisponibilidade());
+            if (profissional.getContato() != null) existente.setContato(profissional.getContato());
+            if (profissional.getCategoria() != null) existente.setCategoria(profissional.getCategoria());
+            Profissional salvo = repository.save(existente);
+            return ResponseEntity.ok(salvo);
+        }).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/imagem")

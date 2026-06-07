@@ -1,16 +1,14 @@
 import { loginRequest } from "../../../authConfig";
 
+import { getAccessToken } from "../../../../utils/getAccessToken";
+
 export async function tratarEventoCalendario(orcamento = {}, instance = {}) {
   const account = instance.getActiveAccount();
   if (!account) return orcamento;
 
   try {
-    const response = await instance.acquireTokenSilent({
-      ...loginRequest,
-      account: account,
-    });
+    const accessToken = await getAccessToken(instance, account);
 
-    const accessToken = response.accessToken;
 
     // se o orçamento já foi registrado no calendário,
     // mas agora o status não é mais confirmado,
@@ -32,7 +30,7 @@ export async function tratarEventoCalendario(orcamento = {}, instance = {}) {
     }
 
     const event = {
-      subject: orcamento.descricao || "Evento sem título",
+      subject: orcamento.titulo || orcamento.observacoes || "Evento sem título",
       start: {
         dateTime: orcamento.dataInicio,
         timeZone: "America/Sao_Paulo",

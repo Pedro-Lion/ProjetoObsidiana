@@ -3,6 +3,11 @@ import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
 import { InputFoto } from "../components/Inputs/InputFoto";
+import { useMsal } from "@azure/msal-react";
+import { api } from "../api";
+
+// Fallback alinhado com o do api.js — sem isso o fetch ia para o Vite (5173) e voltava index.html
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 function decodeToken(token) {
   try {
@@ -27,19 +32,73 @@ export function Perfil() {
   const confirmarRef = useRef("");
   const [arquivoFoto, setArquivoFoto] = useState(null);
 
-  // Carrega dados do sessionStorage ao montar
+  // userId vem do claim "userId" do JWT (gerado em TokenService.generateToken)
+  const [userId, setUserId] = useState(null);
+
+  // Guarda o objectURL do blob para conseguir revogá-lo ao trocar/sair
+  const fotoObjectUrlRef = useRef(null);
+
+  // Carrega a foto do back-end (fonte da verdade); nome continua em sessionStorage por enquanto
+  async function carregarFotoDoServidor(idUsuario) {
+    if (!idUsuario) return;
+    try {
+      const token = sessionStorage.getItem("token");
+      // cache: no-store + timestamp evita 304 do browser depois de trocar a foto
+      const resp = await fetch(`${API_BASE}/usuario/${idUsuario}/imagem?v=${Date.now()}`, {
+        method: "GET",
+        cache: "no-store",
+        headers: { Authorization: token ? "Bearer " + token : "" },
+      });
+      if (!resp.ok) return;
+      const ctype = resp.headers.get("content-type") || "";
+      if (!ctype.startsWith("image/")) return;
+      const blob = await resp.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      // Revoga o blob anterior (se houver) antes de trocar
+      if (fotoObjectUrlRef.current) {
+        try { URL.revokeObjectURL(fotoObjectUrlRef.current); } catch (e) { /* ignore */ }
+      }
+      fotoObjectUrlRef.current = objectUrl;
+      setFotoUrl(objectUrl);
+    } catch (e) {
+      // Sem foto ou falha de rede: mantém o placeholder
+    }
+  }
+
+  // Carrega dados iniciais
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     const nomeSalvo = sessionStorage.getItem("perfil_nome");
     const emailSalvo = sessionStorage.getItem("perfil_email");
-    const fotoSalva = sessionStorage.getItem("perfil_foto");
 
     if (token) {
       const payload = decodeToken(token);
       setEmail(emailSalvo || payload.sub || payload.email || "");
     }
     if (nomeSalvo) setNome(nomeSalvo);
-    if (fotoSalva) setFotoUrl(fotoSalva);
+
+    // O JWT emitido pelo auth-microservice só tem o e-mail no subject (sem userId),
+    // então buscamos o usuário em /usuario/me para descobrir o id antes de pedir a foto.
+    (async () => {
+      try {
+        const resp = await api.get("/usuario/me", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        const id = resp?.data?.id ?? null;
+        setUserId(id);
+        await carregarFotoDoServidor(id);
+      } catch (e) {
+        // Sem usuário autenticado ou erro de rede: mantém placeholder
+      }
+    })();
+
+    return () => {
+      // Revoga o blob ao desmontar para não vazar memória
+      if (fotoObjectUrlRef.current) {
+        try { URL.revokeObjectURL(fotoObjectUrlRef.current); } catch (e) { /* ignore */ }
+        fotoObjectUrlRef.current = null;
+      }
+    };
   }, []);
 
   function abrirEdicao() {
@@ -60,7 +119,7 @@ export function Perfil() {
     setArquivoFoto(e.target.files?.[0] ?? null);
   }
 
-  function salvar() {
+  async function salvar() {
     const novaSenha = senhaRef.current;
     const confirmar = confirmarRef.current;
 
@@ -69,39 +128,70 @@ export function Perfil() {
       return;
     }
 
-    // Persiste nome
+    // Persiste nome (continua só em sessionStorage por enquanto — não foi parte do pedido de imagem)
     const novoNome = nomeRef.current.trim() || nome;
     sessionStorage.setItem("perfil_nome", novoNome);
     setNome(novoNome);
 
-    // Persiste foto como base64
-    if (arquivoFoto) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const base64 = ev.target.result;
-        sessionStorage.setItem("perfil_foto", base64);
-        setFotoUrl(base64);
-        window.dispatchEvent(new CustomEvent("perfil-atualizado", {
-          detail: { nome: novoNome, foto: base64 },
-        }));
-      };
-      reader.readAsDataURL(arquivoFoto);
-    } else {
-      window.dispatchEvent(new CustomEvent("perfil-atualizado", {
-        detail: { nome: novoNome, foto: fotoUrl },
-      }));
+    // Persiste foto no back-end via POST /api/usuario/{id}/imagem (mesmo padrão de equipamento/profissional)
+    if (arquivoFoto && userId) {
+      try {
+        const formData = new FormData();
+        formData.append("arquivo", arquivoFoto);
+        await api.post(`/usuario/${userId}/imagem`, formData, {
+          headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+        });
+        // Recarrega a foto a partir do back para refletir o que foi efetivamente salvo
+        await carregarFotoDoServidor(userId);
+      } catch (e) {
+        setErro("Não foi possível salvar a foto. Tente novamente.");
+        return;
+      }
     }
+
+    // Notifica outros componentes (ex.: App.jsx atualiza o avatar da sidebar)
+    window.dispatchEvent(new CustomEvent("perfil-atualizado", {
+      detail: { nome: novoNome },
+    }));
 
     setModo("view");
   }
 
   function removerFoto() {
+    // Não existe DELETE de imagem no back ainda — esta ação apenas limpa a exibição local.
+    // A imagem persistida no servidor continua disponível até ser sobrescrita por novo upload.
     sessionStorage.removeItem("perfil_foto");
+    if (fotoObjectUrlRef.current) {
+      try { URL.revokeObjectURL(fotoObjectUrlRef.current); } catch (e) { /* ignore */ }
+      fotoObjectUrlRef.current = null;
+    }
     setFotoUrl(null);
     setArquivoFoto(null);
+    // foto: null sinaliza para App.jsx limpar o avatar sem refazer fetch
     window.dispatchEvent(new CustomEvent("perfil-atualizado", {
       detail: { nome, foto: null },
     }));
+  }
+
+  const { instance } = useMsal();
+
+//   const handleLogout = () => {
+//   instance.logoutRedirect(); // ou logoutPopup()
+//  };
+
+   function LogOut() {
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("perfil_nome");
+    sessionStorage.removeItem("perfil_email");
+    sessionStorage.removeItem("perfil_foto");
+    instance.clearCache();
+    
+    // setFotoUrl(null);
+    // setArquivoFoto(null);
+    window.location.href = "/login";
+    // window.dispatchEvent(new CustomEvent("perfil-atualizado", {
+    //   detail: { nome, foto: null },
+    // }));
   }
 
   // ── MODO EXIBIÇÃO ────────────────────────────────────────────────
@@ -151,11 +241,17 @@ export function Perfil() {
               <p className="text-lg text-slate-500 mt-1 tracking-widest">••••••••••</p>
             </div>
 
+            <div className="flex gap-2">
             <BotaoPrimario
               titulo="Editar perfil"
               className="w-fit mt-0"
               onClick={abrirEdicao}
             />
+            <BotaoSecundario
+              titulo="Logout"
+              className="w-fit mt-0"
+              onClick={LogOut}
+            /></div>
           </div>
         </div>
       </div>

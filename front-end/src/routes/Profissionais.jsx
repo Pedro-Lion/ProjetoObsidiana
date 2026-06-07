@@ -1,7 +1,8 @@
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
 import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { InputBordaLabel } from "../components/Inputs/InputBordaLabel";
+import { SelectBordaLabel } from "../components/Inputs/SelectBordaLabel";
 import { api } from "../api";
 import { ContainerProfissional } from "../components/Containers/ContainerProfissional";
 import { Modal } from "../components/Modal/Modal.jsx";
@@ -13,14 +14,25 @@ const ITENS_POR_PAGINA = 5;
 
 export function Profissionais() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [profissionais, setProfissionais] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Ordenação local: campo e direção
+  const [ordenarPor, setOrdenarPor] = useState("nome");
+  const [direcaoOrdem, setDirecaoOrdem] = useState("asc");
 
   // Paginação
   const [paginaAtual, setPaginaAtual] = useState(0);
   const [totalPaginas, setTotalPaginas] = useState(0);
   const [totalElementos, setTotalElementos] = useState(0);
+
+  // Highlight: ID do item recém cadastrado/editado para animar a borda
+  const [highlightId, setHighlightId] = useState(null);
+
+  // Guarda o state de navegação no mount para ler highlightId/pagina vindos do formulário de edição
+  const initialNavStateRef = useRef(location.state);
 
   // Modal de confirmação/exclusão
   const [modalOpen, setModalOpen] = useState(false);
@@ -36,7 +48,15 @@ export function Profissionais() {
     try {
       const request = await api.get("/profissional/paginado", {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-        params: { page: pagina, size: ITENS_POR_PAGINA, busca: termo },
+        params: {
+          page: pagina,
+          size: ITENS_POR_PAGINA,
+          busca: termo,
+          // Ordenação server-side: garante que itens de outras páginas migrem corretamente
+          // ao trocar campo/direção, em vez de só reordenar a página atual no client.
+          ordenarPor,
+          direcao: direcaoOrdem,
+        },
       });
       if (request.status === 200) {
         const paginaData = request.data;
@@ -52,17 +72,41 @@ export function Profissionais() {
     }
   }
 
-  // Debounce: busca no backend 400ms após parar de digitar
+  // Debounce: busca no backend 400ms após parar de digitar.
+  // Na primeira execução (search ainda vazio), verifica se há highlightId vindo do formulário
+  // de edição via rota e carrega a página correta em vez de sempre começar na página 0.
   useEffect(() => {
     const timer = setTimeout(() => {
-      getProfissionais(0, search);
+      const initState = initialNavStateRef.current;
+      if (initState?.highlightId) {
+        setHighlightId(initState.highlightId);
+        getProfissionais(initState.pagina ?? 0, search);
+        initialNavStateRef.current = null; // consome o state uma única vez
+      } else {
+        getProfissionais(0, search);
+      }
     }, 400);
     return () => clearTimeout(timer);
   }, [search]);
 
+  // Refaz a busca imediatamente quando a ordenação muda (sem debounce — ação intencional).
+  // useRef impede que esse efeito dispare também no mount, onde o useEffect de busca já roda.
+  const pularPrimeiraOrdenacao = useRef(true);
   useEffect(() => {
-    getProfissionais(0, "");
-  }, []);
+    if (pularPrimeiraOrdenacao.current) {
+      pularPrimeiraOrdenacao.current = false;
+      return;
+    }
+    getProfissionais(0, search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ordenarPor, direcaoOrdem]);
+
+  // Limpa o highlight após a animação terminar (~2.2s)
+  useEffect(() => {
+    if (!highlightId) return;
+    const timer = setTimeout(() => setHighlightId(null), 2200);
+    return () => clearTimeout(timer);
+  }, [highlightId]);
 
   function mudarPagina(novaPagina) {
     if (novaPagina < 0 || novaPagina >= totalPaginas) return;
@@ -113,12 +157,15 @@ export function Profissionais() {
   };
 
   // Filtro local dentro da página atual (inclui categoria)
-  const profissionaisFiltrados = profissionais.filter((p) => {
-    if (!search.trim()) return true;
-    const termo = search.toLowerCase();
-    const campos = [p.nome, p.disponibilidade, p.contato, p.categoria, p.funcao];
-    return campos.filter(Boolean).some((c) => c.toLowerCase().includes(termo));
-  });
+  const profissionaisFiltrados = profissionais
+    .filter((p) => {
+      if (!search.trim()) return true;
+      const termo = search.toLowerCase();
+      const campos = [p.nome, p.disponibilidade, p.contato, p.categoria, p.funcao];
+      return campos.filter(Boolean).some((c) => c.toLowerCase().includes(termo));
+    });
+  // Ordenação é aplicada no back-end (ORDER BY no SQL antes da paginação),
+  // então não há mais .sort() local — o servidor já devolve os itens na ordem correta.
 
   return (
     <>
@@ -143,6 +190,30 @@ export function Profissionais() {
         />
       </div>
 
+      {/* Controles de ordenação */}
+      <div className="flex flex-wrap gap-3 mt-2 items-end">
+        <SelectBordaLabel
+          titulo="Ordenar por"
+          className="w-48"
+          value={ordenarPor}
+          onChange={(e) => setOrdenarPor(e.target.value)}
+          options={[
+            { value: "nome", label: "Nome" },
+            { value: "categoria", label: "Categoria" },
+          ]}
+        />
+        <SelectBordaLabel
+          titulo="Direção"
+          className="w-auto"
+          value={direcaoOrdem}
+          onChange={(e) => setDirecaoOrdem(e.target.value)}
+          options={[
+            { value: "asc", label: "Crescente (A→Z)" },
+            { value: "desc", label: "Decrescente (Z→A)" },
+          ]}
+        />
+      </div>
+
       {loading && <p className="text-xl">Carregando profissionais...</p>}
 
       {!loading && (
@@ -154,13 +225,14 @@ export function Profissionais() {
           )}
 
           <section>
-            {profissionais.length !== 0 ? (
-              profissionais.map((p) => (
+            {profissionaisFiltrados.length !== 0 ? (
+              profissionaisFiltrados.map((p) => (
                 <ContainerProfissional
                   key={p.id}
                   dados={p}
                   onClickDel={() => deletar(p.id)}
-                  onClickEdit={() => navigate(`/editar/profissional/${p.id}`, { state: p })}
+                  onClickEdit={() => navigate(`/editar/profissional/${p.id}`, { state: { ...p, paginaOrigem: paginaAtual } })}
+                  highlight={highlightId !== null && p.id === highlightId}
                 />
               ))
             ) : (
@@ -190,9 +262,12 @@ export function Profissionais() {
           onFechar={() => setModalCadastroAberta(false)}
         >
           <CadastroProfissionais
-            onSucesso={() => {
+            onSucesso={(novoId) => {
               setModalCadastroAberta(false);
-              getProfissionais(paginaAtual);
+              // Novo item vai para a última página; +1 porque o total ainda não foi atualizado
+              const ultimaPagina = Math.max(0, Math.ceil((totalElementos + 1) / ITENS_POR_PAGINA) - 1);
+              setHighlightId(novoId);
+              getProfissionais(ultimaPagina);
             }}
             onCancelar={() => setModalCadastroAberta(false)}
           />

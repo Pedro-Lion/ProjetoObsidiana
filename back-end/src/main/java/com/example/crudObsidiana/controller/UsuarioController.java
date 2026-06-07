@@ -92,6 +92,21 @@ public class UsuarioController {
     }
   }
 
+  // Retorna o usuário autenticado a partir do SecurityContext.
+  // O front precisa disso porque o JWT emitido pelo auth-microservice só carrega o e-mail
+  // no subject — sem o id não dá para chamar /usuario/{id}/imagem.
+  @Operation(summary = "Retorna o usuário atualmente autenticado")
+  @ApiResponse(responseCode = "200", description = "Usuário retornado com sucesso",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = Usuario.class)))
+  @GetMapping("/me")
+  public ResponseEntity<Usuario> me(org.springframework.security.core.Authentication authentication) {
+    if (authentication == null || !(authentication.getPrincipal() instanceof Usuario)) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+    Usuario usuario = (Usuario) authentication.getPrincipal();
+    return ResponseEntity.ok(usuario);
+  }
+
   @PostMapping("/{id}/imagem")
   public ResponseEntity<?> uploadImagemUsuario(@PathVariable Long id,
                                                @RequestParam("arquivo") MultipartFile arquivo) {

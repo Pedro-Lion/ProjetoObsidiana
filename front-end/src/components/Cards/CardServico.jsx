@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
 import { BotaoPrimario } from "../Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../Buttons/BotaoSecundario";
 import { Foto } from "../Foto";
@@ -19,8 +20,18 @@ export function CardServico({
     ],
   },
   onClickDel,
+  onClickEdit,
+  highlight = false,
 }) {
   const navigate = useNavigate();
+
+  // Rola suavemente para o item quando ele é destacado após cadastro/edição
+  const containerRef = useRef(null);
+  useEffect(() => {
+    if (highlight && containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlight]);
 
   const formatarValor = new Intl.NumberFormat("pt-br", {
     style: "currency",
@@ -32,12 +43,9 @@ export function CardServico({
   const equipamentos = dados.equipamentos.map((e) => (
     <li
       key={e.id}
-      className="p-2.5 flex justify-between items-center bg-indigo-50 border border-indigo-100 rounded-md text-xl text-slate-700"
+      className="p-2.5 flex justify-between items-center bg-indigo-50 border border-indigo-100 rounded-md text-xl text-slate-600"
     >
-      <Foto tamanho="3.5" icone="bi bi-camera text-[2rem]" />
       <span className="ml-3">{e.nome}</span>
-      {/* Categoria em tom mais suave por ser informação secundária */}
-      <span className="m-auto text-slate-500">{e.categoria}</span>
       <span>{formatarValor(e.valorPorHora)}</span>
     </li>
   ));
@@ -56,7 +64,7 @@ export function CardServico({
 
   return (
     // overflow-hidden garante que a faixa superior respeite o border-radius do card
-    <div className="w-120 h-160 flex flex-col bg-white rounded-xl shadow-md border border-indigo-100 overflow-hidden hover:shadow-lg transition duration-300">
+    <div ref={containerRef} className="w-120 h-160 flex flex-col bg-white rounded-xl shadow-md border border-indigo-100 overflow-hidden hover:shadow-lg transition duration-300">
 
       {/* Faixa de destaque superior com gradiente da identidade visual */}
       <div className="bg-gradient-to-r from-indigo-500 to-violet-500 h-1.5 shrink-0" />
@@ -64,8 +72,8 @@ export function CardServico({
       <div className="p-4 border-b border-indigo-100">
         <div className="flex justify-between">
           {/* Nome do serviço em indigo, alinhado com a cor dos headings do projeto */}
-          <span className="text-4xl font-medium text-indigo-400">{dados.nome}</span>
-          <span className="text-2xl text-slate-700">
+          <span className="text-2xl font-medium text-indigo-400">{dados.nome}</span>
+          <span className="text-2xl text-slate-600 font-medium">
             {formatarValor(dados.valorPorHora + valorEquipamentos)}
           </span>
         </div>
@@ -73,13 +81,13 @@ export function CardServico({
         <p className="mt-4 text-xl text-slate-700">{dados.descricao}</p>
       </div>
 
-      <div className="p-3 text-2xl text-slate-700 flex justify-between">
+      <div className="p-3 text-xl text-slate-400 flex justify-between">
         <span>
-          <b>{dados.equipamentos.length} </b>
-          {dados.equipamentos.length > 1 ? "equipamentos" : "equipamento"}
+          {dados.equipamentos.length}
+          {dados.equipamentos.length > 1 ? " equipamentos" : " equipamento"}
         </span>
 
-        <span>{formatarValor(valorEquipamentos)}</span>
+        {/* <span>{formatarValor(valorEquipamentos)}</span> */}
       </div>
 
       {/* flex-1 faz a lista ocupar todo o espaço restante, empurrando o footer de botões para o final do card */}
@@ -90,7 +98,7 @@ export function CardServico({
       {/* Footer com botões de largura total separados por borda vertical */}
       <div className="h-14 border-t border-indigo-100 flex shrink-0">
         <button
-          onClick={() => navigate("/editar/servico/" + dados.id, { state: dados })}
+          onClick={onClickEdit ?? (() => navigate("/editar/servico/" + dados.id, { state: dados }))}
           className="flex-1 flex items-center justify-center gap-2 text-xl text-slate-500 hover:text-indigo-500 hover:bg-indigo-50 transition duration-200 rounded-bl-xl"
         >
           <i className="bi bi-pencil"></i>

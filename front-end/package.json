@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
+
   },
   "dependencies": {
     "@azure/msal-browser": "^3.19.0",
@@ -33,6 +34,7 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.9.4",
     "react-select": "^5.10.2",
+    "react-toastify": "^11.1.0",
     "sass": "^1.93.3",
     "tailwindcss": "^4.1.13",
     "xlsx": "^0.18.5",

@@ -1,8 +1,7 @@
 package com.example.crudObsidiana.service;
 
-import com.example.crudObsidiana.dto.KpisOrcamentoDTO;
-import com.example.crudObsidiana.dto.OrcamentoDTO;
-import com.example.crudObsidiana.dto.UsoEquipamentoDTO;
+import com.example.crudObsidiana.dto.*;
+import com.example.crudObsidiana.exception.EstoqueInsuficienteException;
 import com.example.crudObsidiana.model.*;
 import com.example.crudObsidiana.repository.EquipamentoRepository;
 import com.example.crudObsidiana.repository.UsoEquipamentoRepository;
@@ -11,19 +10,20 @@ import com.example.crudObsidiana.repository.ProfissionalRepository;
 import com.example.crudObsidiana.repository.ServicoRepository;
 import com.example.crudObsidiana.observer.OrcamentoObserver;
 import com.example.crudObsidiana.observer.OrcamentoSubject;
-import com.example.crudObsidiana.repository.OrcamentoRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.temporal.ChronoUnit;
+import java.math.BigDecimal;
 import java.util.*;
 
 @Service
@@ -57,6 +57,10 @@ public class OrcamentoService implements OrcamentoSubject {
     @Autowired
     private UsoEquipamentoRepository usoEquipamentoRepository;
 
+    // EntityManager para montar a query paginada com ORDER BY dinâmico (whitelist)
+    // — Spring Data não aplica Sort automaticamente em @Query nativas (sobretudo com DISTINCT).
+    @PersistenceContext
+    private EntityManager entityManager;
 
     // ---------------------------------------------------------------------
     // CALCULAR DURAÇÃO DO EVENTO
@@ -116,14 +120,80 @@ public class OrcamentoService implements OrcamentoSubject {
     }
 
     // ---------------------------------------------------------------------
-    // LISTAR COM PAGINAÇÃO E BUSCA
+    // LISTAR COM PAGINAÇÃO, BUSCA E ORDENAÇÃO
     // ---------------------------------------------------------------------
-    public Page<Orcamento> listarPaginado(int page, int size, String busca) {
+    // Whitelist de campos ordenáveis → nome da COLUNA no banco (snake_case).
+    // Obrigatório para evitar SQL injection no `ORDER BY ?#{#pageable}` da query nativa.
+    private static final java.util.Map<String, String> COLUNAS_ORDENAVEIS = java.util.Map.of(
+            "titulo",       "titulo",
+            "localEvento",  "local_evento",
+            "dataInicio",   "data_inicio",
+            "valorTotal",   "valor_total",
+            "status",       "status"
+    );
+
+    public Page<Orcamento> listarPaginado(int page, int size, String busca, String ordenarPor, String direcao) {
+        // Resolve coluna SQL pela whitelist — único caminho de injeção possível, já bloqueado.
+        String colunaSql = COLUNAS_ORDENAVEIS.getOrDefault(ordenarPor, "titulo");
+        String dir = "desc".equalsIgnoreCase(direcao) ? "DESC" : "ASC";
+
+        // Mesma SQL da @Query findByBusca, mas montada aqui para conseguir ORDER BY dinâmico.
+        // DISTINCT preserva 1 linha por orçamento mesmo com vários serviços/equipamentos casando a busca.
+        // Concatenação direta evita String.formatted/printf, que interpretaria os '%' do LIKE como diretivas.
+        String sql = """
+            SELECT DISTINCT o.* FROM orcamento o
+            LEFT JOIN orcamento_servicos    os  ON o.id = os.orcamento_id
+            LEFT JOIN servico               s   ON os.servico_id = s.id
+            LEFT JOIN orcamento_equipamentos oeq ON o.id = oeq.orcamento_id
+            LEFT JOIN equipamento            e   ON oeq.equipamento_id = e.id
+            WHERE LOWER(COALESCE(o.titulo,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.local_evento, ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.observacoes,  ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.status,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR CAST(COALESCE(o.valor_total, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
+               OR CAST(o.data_inicio  AS CHAR)             LIKE CONCAT('%', :busca, '%')
+               OR CAST(o.data_termino AS CHAR)             LIKE CONCAT('%', :busca, '%')
+               OR LOWER(COALESCE(s.nome,     ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(s.descricao,''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.nome,     ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.categoria,''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.marca,    ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+            """ + " ORDER BY " + colunaSql + " " + dir;
+
+        String countSql = """
+            SELECT COUNT(DISTINCT o.id) FROM orcamento o
+            LEFT JOIN orcamento_servicos    os  ON o.id = os.orcamento_id
+            LEFT JOIN servico               s   ON os.servico_id = s.id
+            LEFT JOIN orcamento_equipamentos oeq ON o.id = oeq.orcamento_id
+            LEFT JOIN equipamento            e   ON oeq.equipamento_id = e.id
+            WHERE LOWER(COALESCE(o.titulo,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.local_evento, ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.observacoes,  ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.status,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR CAST(COALESCE(o.valor_total, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
+               OR CAST(o.data_inicio  AS CHAR)             LIKE CONCAT('%', :busca, '%')
+               OR CAST(o.data_termino AS CHAR)             LIKE CONCAT('%', :busca, '%')
+               OR LOWER(COALESCE(s.nome,     ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(s.descricao,''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.nome,     ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.categoria,''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.marca,    ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+            """;
+
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Orcamento> paginaResult = busca.isBlank()
-                ? orcamentoRepository.findAll(pageable)
-                : orcamentoRepository.findByBusca(busca, pageable);
+        @SuppressWarnings("unchecked")
+        List<Orcamento> conteudo = entityManager.createNativeQuery(sql, Orcamento.class)
+                .setParameter("busca", busca)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize())
+                .getResultList();
+
+        long total = ((Number) entityManager.createNativeQuery(countSql)
+                .setParameter("busca", busca)
+                .getSingleResult()).longValue();
+
+        Page<Orcamento> paginaResult = new PageImpl<>(conteudo, pageable, total);
 
         // Aplica calcularDuracaoEvento em cada item, igual ao listarTodos()
         paginaResult.getContent().forEach(o -> o.setDuracaoEvento(calcularDuracaoEvento(o)));
@@ -141,308 +211,248 @@ public class OrcamentoService implements OrcamentoSubject {
         Orcamento novoOrcamento = new Orcamento(
                 dto.getDataInicio(),
                 dto.getDataTermino(),
+                dto.getTitulo(),
                 dto.getLocalEvento(),
-                dto.getDescricao(),
+                dto.getObservacoes(),
                 dto.getStatus(),
                 dto.getValorTotal(),
                 dto.getIdCalendar()
         );
 
-        // Persistir para obter ID
-        Orcamento salvo = orcamentoRepository.save(novoOrcamento);
-
-        List<UsoEquipamento> usos = new ArrayList<>();
-
-        if (dto.getUsosEquipamentos() != null && !dto.getUsosEquipamentos().isEmpty()) {
-            for (UsoEquipamentoDTO uDto : dto.getUsosEquipamentos()) {
-                Long idEq = uDto.getIdEquipamento();
-                Integer qtd = (uDto.getQuantidadeUsada() == null) ? 1 : uDto.getQuantidadeUsada();
-                Equipamento eq = equipamentoRepository.findById(idEq)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
-                UsoEquipamento uso = new UsoEquipamento();
-                uso.setOrcamento(salvo);
-                uso.setEquipamento(eq);
-                uso.setQuantidadeUsada(qtd);
-                uso = usoEquipamentoRepository.save(uso);
-                usos.add(uso);
-            }
-        } else if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
-            for (Long idEq : dto.getEquipamentos()) {
-                Equipamento eq = equipamentoRepository.findById(idEq)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
-                UsoEquipamento uso = new UsoEquipamento();
-                uso.setOrcamento(salvo);
-                uso.setEquipamento(eq);
-                uso.setQuantidadeUsada(1);
-                uso = usoEquipamentoRepository.save(uso);
-                usos.add(uso);
-            }
-        }
-        salvo.setUsosEquipamentos(usos);
+        List<UsoEquipamento> usos = popularUsos(dto, novoOrcamento);
+        novoOrcamento.setUsosEquipamentos(usos);
 
         // popular relações many-to-many (servicos/profissionais/equipamentos)
         if (dto.getServicos() != null) {
             List<Servico> servicos = servicoRepository.findAllById(dto.getServicos());
-            salvo.setServicos(servicos);
+            novoOrcamento.setServicos(servicos);
         }
         if (dto.getProfissionais() != null) {
             List<Profissional> profs = profissionalRepository.findAllById(dto.getProfissionais());
-            salvo.setProfissionais(profs);
+            novoOrcamento.setProfissionais(profs);
         }
         if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
             List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
-            salvo.setEquipamentos(equipamentos);
+            novoOrcamento.setEquipamentos(equipamentos);
         }
 
         // Se o front-end enviou um valorTotal (calculado ou manual), usa esse valor.
         // Só recalcula automaticamente se o campo não foi informado no DTO.
         if (dto.getValorTotal() == null) {
-            double total = calcularValorTotal(salvo);
-            salvo.setValorTotal(total);
+            double total = calcularValorTotal(novoOrcamento);
+            novoOrcamento.setValorTotal(total);
         }
         // (caso dto.getValorTotal() != null, o valor já foi definido no construtor do Orcamento)
 
 
-        // --- Se o DTO pediu status "Confirmado", checar estoque e notificar observers ---
         String statusDto = dto.getStatus();
-        if (statusDto != null && "Confirmado".equalsIgnoreCase(statusDto)) {
+        // --- Se o DTO pediu status "Confirmado", checar estoque e notificar observers ---
+        if (statusDto.equalsIgnoreCase("Confirmado")) {
+            // Verificar e se há sobreposições para o período passado
+            tratarSobreposicoes(novoOrcamento);
 
-            // buscar usos persistidos (garante leitura correta)
-            List<UsoEquipamento> usosPersistidos = usoEquipamentoRepository.findByOrcamento_Id(salvo.getId());
-            if (usosPersistidos == null) usosPersistidos = new ArrayList<>();
+            // OK: persistir status e notificar observers
+            String statusAnterior = novoOrcamento.getStatus();
+            novoOrcamento.setStatus("Confirmado");
+            Orcamento salvoComStatus = orcamentoRepository.save(novoOrcamento);
 
-            List<String> faltantes = new ArrayList<>();
-            for (UsoEquipamento uso : usosPersistidos) {
-                Equipamento eq = uso.getEquipamento();
-                if (eq == null) continue;
-                Integer disponivel = (eq.getQuantidadeDisponivel() == null) ? 0 : eq.getQuantidadeDisponivel();
-                Integer requisitado = (uso.getQuantidadeUsada() == null) ? 0 : uso.getQuantidadeUsada();
-                if (disponivel < requisitado) {
-                    faltantes.add("Equipamento '" + eq.getNome() + "' (id=" + eq.getId() + "): disponível " + disponivel + ", requisitado " + requisitado);
-                }
-            }
+            // Após salvar o orçamento, tem que popular o usoEquipamento
+            usoEquipamentoRepository.saveAll(usos);
 
-            if (!faltantes.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Estoque insuficiente: " + String.join("; ", faltantes));
-            }
-
-            // OK: persistir status e notificar observers para reduzir estoque
-            String statusAnterior = salvo.getStatus();
-            salvo.setStatus("Confirmado");
-            Orcamento salvoComStatus = orcamentoRepository.save(salvo);
             notifyObservers(salvoComStatus, statusAnterior, "Confirmado");
+
+            // Enviar com campo de duração para usar no front
             salvoComStatus.setDuracaoEvento(calcularDuracaoEvento(salvoComStatus));
             return salvoComStatus;
         }
 
         // não pediu confirmação imediata: retornar orcamento salvo (status como veio/por default)
+        Orcamento salvo = orcamentoRepository.save(novoOrcamento);
+
+        // Após salvar o orçamento, tem que popular o usoEquipamento (????????????)
+        // usoEquipamentoRepository.saveAll(usos);
+
+        // Enviar com campo de duração para usar no front
         salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
         return salvo;
     }
-
 
     // ---------------------------------------------------------------------
     // Editar orçamento
     // ---------------------------------------------------------------------
     @Transactional
-    public Orcamento editarOrcamento(Long id, OrcamentoDTO dto) {
-        Orcamento existente = orcamentoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orçamento não encontrado: " + id));
+    public Orcamento editarOrcamento(Long id, OrcamentoDTO dto)     {
+        String statusAnterior = orcamentoRepository.findById(id)
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orçamento não encontrado: " + id))
+          .getStatus();
 
         // salvar status anterior para decisões posteriores
-        String statusAnterior = existente.getStatus();
+        Orcamento orcamentoAtualizar = new Orcamento(
+          dto.getDataInicio(),
+          dto.getDataTermino(),
+          dto.getTitulo(),
+          dto.getLocalEvento(),
+          dto.getObservacoes(),
+          dto.getStatus(),
+          dto.getValorTotal(),
+          dto.getIdCalendar()
+        );
+        orcamentoAtualizar.setId(id);
 
-        // Atualiza campos simples
-        // não puxar getStatus() aqui ainda! há uma lógica abaixo
-        existente.setDescricao(dto.getDescricao());
-        existente.setDataInicio(dto.getDataInicio());
-        existente.setDataTermino(dto.getDataTermino());
-        existente.setLocalEvento(dto.getLocalEvento());
-        existente.setIdCalendar(dto.getIdCalendar());
+        orcamentoAtualizar.setUsosEquipamentos(popularUsos(dto, orcamentoAtualizar));
 
         // atualização das listas
         if (dto.getServicos() != null && !dto.getServicos().isEmpty()) {
             List<Servico> servicos = servicoRepository.findAllById(dto.getServicos());
-            existente.setServicos(servicos);
-        } else {
-            existente.setServicos(new ArrayList<>());
+            orcamentoAtualizar.setServicos(servicos);
         }
 
         if (dto.getProfissionais() != null && !dto.getProfissionais().isEmpty()) {
             List<Profissional> profissionais = profissionalRepository.findAllById(dto.getProfissionais());
-            existente.setProfissionais(profissionais);
-        } else {
-            existente.setProfissionais(new ArrayList<>());
+            orcamentoAtualizar.setProfissionais(profissionais);
         }
 
-        // Buscar usos antigos vinculados
-        List<UsoEquipamento> usosAntigos = usoEquipamentoRepository.findByOrcamento_Id(existente.getId());
-        if (usosAntigos == null) usosAntigos = new ArrayList<>();
-
-        // Construir mapa novo: equipamentoId -> quantidade
-        Map<Long, Integer> novoMapa = new HashMap<>();
-        if (dto.getUsosEquipamentos() != null && !dto.getUsosEquipamentos().isEmpty()) {
-            for (UsoEquipamentoDTO uDto : dto.getUsosEquipamentos()) {
-                Long idEq = uDto.getIdEquipamento();
-                Integer qtd = (uDto.getQuantidadeUsada() == null) ? 1 : uDto.getQuantidadeUsada();
-                novoMapa.put(idEq, novoMapa.getOrDefault(idEq, 0) + qtd);
-            }
-        } else if (dto.getEquipamentos() != null) {
-            for (Long idEq : dto.getEquipamentos()) {
-                novoMapa.put(idEq, novoMapa.getOrDefault(idEq, 0) + 1);
-            }
-        }
-
-        // Mapear usos antigos para mapa
-        Map<Long, Integer> antigoMapa = new HashMap<>();
-        for (UsoEquipamento u : usosAntigos) {
-            if (u.getEquipamento() == null) continue;
-            Long idEq = u.getEquipamento().getId();
-            Integer q = (u.getQuantidadeUsada() == null) ? 0 : u.getQuantidadeUsada();
-            antigoMapa.put(idEq, antigoMapa.getOrDefault(idEq, 0) + q);
-        }
-
-        boolean estavaConfirmado = "Confirmado".equalsIgnoreCase(statusAnterior);
-
-        // Se estava confirmado, aplicar deltas (checagem de disponibilidade para deltas positivos)
-        if (estavaConfirmado) {
-            Map<Long, Integer> deltas = new HashMap<>();
-            Set<Long> allIds = new HashSet<>();
-            allIds.addAll(antigoMapa.keySet());
-            allIds.addAll(novoMapa.keySet());
-            for (Long idEq : allIds) {
-                int novoQtd = novoMapa.getOrDefault(idEq, 0);
-                int antigoQtd = antigoMapa.getOrDefault(idEq, 0);
-                int delta = novoQtd - antigoQtd;
-                if (delta != 0) deltas.put(idEq, delta);
-            }
-
-            // checar disponibilidade para deltas positivos
-            List<String> faltantes = new ArrayList<>();
-            for (Map.Entry<Long, Integer> e : deltas.entrySet()) {
-                Long idEq = e.getKey();
-                int delta = e.getValue();
-                if (delta <= 0) continue;
-                Equipamento eq = equipamentoRepository.findById(idEq)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
-                Integer disponivel = (eq.getQuantidadeDisponivel() == null) ? 0 : eq.getQuantidadeDisponivel();
-                if (disponivel < delta) {
-                    faltantes.add("Equipamento '" + eq.getNome() + "' (id=" + idEq + "): disponível " + disponivel + ", requerido adicional " + delta);
-                }
-            }
-            if (!faltantes.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Estoque insuficiente para edição: " + String.join("; ", faltantes));
-            }
-
-            // aplicar deltas
-            for (Map.Entry<Long, Integer> e : deltas.entrySet()) {
-                Long idEq = e.getKey();
-                int delta = e.getValue();
-                Equipamento eq = equipamentoRepository.findById(idEq)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
-                if (delta > 0) {
-                    eq.reduzirQuantidade(delta);
-                } else if (delta < 0) {
-                    eq.devolverQuantidade(-delta);
-                }
-                equipamentoRepository.save(eq);
-            }
-        }
-
-        if (existente.getUsosEquipamentos() == null) {
-            existente.setUsosEquipamentos(new ArrayList<>());
-        } else {
-            // remove todos os elementos da lista gerenciada (triggera orphanRemoval)
-            existente.getUsosEquipamentos().clear();
-        }
-
-        // agora crie e salve os novos usos e ADICIONE à coleção gerenciada
-        List<UsoEquipamento> novosUsos = new ArrayList<>();
-        for (Map.Entry<Long, Integer> e : novoMapa.entrySet()) {
-            Long idEq = e.getKey();
-            Integer qtd = e.getValue();
-            Equipamento eq = equipamentoRepository.findById(idEq)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
-            UsoEquipamento uso = new UsoEquipamento();
-            uso.setOrcamento(existente);
-            uso.setEquipamento(eq);
-            uso.setQuantidadeUsada(qtd);
-            uso = usoEquipamentoRepository.save(uso);
-            novosUsos.add(uso);
-
-            // add no MESMO objeto — NÃO usar setUsosEquipamentos(novosUsos)
-            existente.getUsosEquipamentos().add(uso);
-        }
-
-        // atualizar lista many-to-many de equipamentos (opcional/compat)
         if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
             List<Equipamento> equipamentos = equipamentoRepository.findAllById(dto.getEquipamentos());
-            existente.setEquipamentos(equipamentos);
-        } else {
-            existente.setEquipamentos(new ArrayList<>());
+            orcamentoAtualizar.setEquipamentos(equipamentos);
         }
 
         // Respeita o valorTotal enviado pelo front-end (pode ser manual ou calculado automaticamente).
         // Só recalcula se o campo não foi informado no DTO.
         if (dto.getValorTotal() == null) {
-            double totalAtualizado = calcularValorTotal(existente);
-            existente.setValorTotal(totalAtualizado);
-        } else {
-            existente.setValorTotal(dto.getValorTotal());
-        }
-
-        // tratar mudança de status solicitada no DTO
-        String novoStatusDto = dto.getStatus();
-        String novoStatus = (novoStatusDto == null) ? statusAnterior : novoStatusDto;
-        boolean seraConfirmado = "Confirmado".equalsIgnoreCase(novoStatus);
-
-        // Se não houve mudnça de status confirm<->nao-confirm, apenas persistir status e retornar
-        if ( ("Confirmado".equalsIgnoreCase(statusAnterior)) == seraConfirmado ) {
-            existente.setStatus(novoStatus);
-            Orcamento salvo = orcamentoRepository.save(existente);
-            salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
-            return salvo;
+            double totalAtualizado = calcularValorTotal(orcamentoAtualizar);
+            orcamentoAtualizar.setValorTotal(totalAtualizado);
         }
 
         // Se vai virar Confirmado: checar estoque (usos já atualizados)
-        if (seraConfirmado && !"Confirmado".equalsIgnoreCase(statusAnterior)) {
-            List<UsoEquipamento> usos = usoEquipamentoRepository.findByOrcamento_Id(existente.getId());
-            List<String> faltantes = new ArrayList<>();
-            for (UsoEquipamento uso : usos) {
-                Equipamento eq = uso.getEquipamento();
-                if (eq == null) continue;
-                Integer disponivel = (eq.getQuantidadeDisponivel() == null) ? 0 : eq.getQuantidadeDisponivel();
-                Integer requisitado = (uso.getQuantidadeUsada() == null) ? 0 : uso.getQuantidadeUsada();
-                if (disponivel < requisitado) {
-                    faltantes.add("Equipamento '" + eq.getNome() + "' (id=" + eq.getId() + "): disponível " + disponivel + ", requisitado " + requisitado);
-                }
-            }
-            if (!faltantes.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Estoque insuficiente: " + String.join("; ", faltantes));
-            }
-            existente.setStatus("Confirmado");
-            Orcamento salvo = orcamentoRepository.save(existente);
+        if (orcamentoAtualizar.getStatus().equalsIgnoreCase("Confirmado")) {
+            tratarSobreposicoes(orcamentoAtualizar);
+
+            // OK: persistir status e notificar observers
+            Orcamento salvo = orcamentoRepository.save(orcamentoAtualizar);
             notifyObservers(salvo, statusAnterior, "Confirmado");
+
+            // Enviar com campo de duração para usar no front
             salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
             return salvo;
         }
 
-        // Se estava confirmado e agora deixa de ser: persistir e notificar devolução
-        if (!seraConfirmado && "Confirmado".equalsIgnoreCase(statusAnterior)) {
-            existente.setStatus(novoStatus);
-            Orcamento salvo = orcamentoRepository.save(existente);
-            notifyObservers(salvo, statusAnterior, novoStatus);
-            salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
-            return salvo;
-        }
+        Orcamento salvoFallback = orcamentoRepository.save(orcamentoAtualizar);
 
-        // fallback - persistir e retornar
-        existente.setStatus(novoStatus);
-        Orcamento salvoFallback = orcamentoRepository.save(existente);
+        // Enviar com campo de duração para usar no front
         salvoFallback.setDuracaoEvento(calcularDuracaoEvento(salvoFallback));
         return salvoFallback;
     }
 
+    // ------------------------------------------------------------------------------
+    // POPULAR USOS
+    // mét0do privado para converter dto em lista de Usos,
+    // lança exceção caso a qtd solicitada do equipamento seja maior que a qtd total
+    // ------------------------------------------------------------------------------
+    private List<UsoEquipamento> popularUsos(OrcamentoDTO dto, Orcamento orcamento) {
+        List<UsoEquipamento> usos = new ArrayList<>();
+
+        if (dto.getUsosEquipamentos() != null && !dto.getUsosEquipamentos().isEmpty()) {
+            List<String> eqsInsuficientes = new ArrayList<>();
+
+            for (UsoEquipamentoDTO uDto : dto.getUsosEquipamentos()) {
+                Long idEq = uDto.getIdEquipamento();
+                Integer qtd = (uDto.getQuantidadeUsada() == null) ? 1 : uDto.getQuantidadeUsada();
+                Equipamento eq = equipamentoRepository.findById(idEq)
+                  .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
+                UsoEquipamento uso = new UsoEquipamento();
+
+                if (qtd > eq.getQuantidadeTotal()) {
+                    eqsInsuficientes.add(
+                      "%s | Disponíveis: %d | Requisitados: %d"
+                        .formatted(
+                          eq.getNome(),
+                          eq.getQuantidadeTotal(),
+                          qtd
+                        )
+                    );
+                }
+
+                if (!eqsInsuficientes.isEmpty()) continue;
+
+                uso.setOrcamento(orcamento);
+                uso.setEquipamento(eq);
+                uso.setQuantidadeUsada(qtd);
+                usos.add(uso);
+            }
+
+            if (!eqsInsuficientes.isEmpty()) {
+                throw new EstoqueInsuficienteException(eqsInsuficientes);
+            }
+        } else if (dto.getEquipamentos() != null && !dto.getEquipamentos().isEmpty()) {
+            for (Long idEq : dto.getEquipamentos()) {
+                Equipamento eq = equipamentoRepository.findById(idEq)
+                  .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipamento não encontrado: " + idEq));
+                UsoEquipamento uso = new UsoEquipamento();
+                uso.setOrcamento(orcamento);
+                uso.setEquipamento(eq);
+                uso.setQuantidadeUsada(1);
+                usos.add(uso);
+            }
+        }
+
+        return usos;
+    }
+
+    // ---------------------------------------------------------------------
+    // TRATAR SOBREPOSIÇÕES - mét0do privado para orçamentos confirmados
+    // ---------------------------------------------------------------------
+    private void tratarSobreposicoes(Orcamento orcamento) {
+        List<EquipamentoSobrepostoDTO> eqsSob =
+          orcamento.getId() != null
+            ? usoEquipamentoRepository.findSobrepostosOrcamentoNot(
+                orcamento.getId(),
+                orcamento.getDataInicio(), orcamento.getDataTermino(),
+                orcamento.getEquipamentos()
+                    .stream().mapToLong(Equipamento::getId).toArray()
+            )
+            : usoEquipamentoRepository.findSobrepostos(
+                orcamento.getDataInicio(), orcamento.getDataTermino(),
+                orcamento.getEquipamentos()
+                    .stream().mapToLong(Equipamento::getId).toArray()
+            );
+
+        if (eqsSob.isEmpty()) {
+            return;
+        }
+
+        List<String> equipamentosEmConflito = new ArrayList<>();
+        for (EquipamentoSobrepostoDTO eqSob : eqsSob) {
+            for (UsoEquipamento uso : orcamento.getUsosEquipamentos()) {
+                if (!Objects.equals(uso.getEquipamento().getId(), eqSob.getIdEquipamento())) {
+                    continue;
+                }
+
+                long soma = eqSob.getQuantidadeUsada().longValue() + uso.getQuantidadeUsada();
+                if (soma > eqSob.getQuantidadeTotal()) {
+                    long disponiveis =
+                      eqSob.getQuantidadeTotal().longValue() - eqSob.getQuantidadeUsada().longValue();
+                    equipamentosEmConflito.add(
+                      "%s | Usado em: %s | Disponíveis: %d | Requisitados: %d"
+                        .formatted(
+                          uso.getEquipamento().getNome(),
+                          eqSob.getOrcamentos(),
+                          disponiveis < 0 ? 0 : disponiveis,
+                          uso.getQuantidadeUsada()
+                        )
+                    );
+                }
+            }
+        }
+
+        if (!equipamentosEmConflito.isEmpty()) {
+            throw new EstoqueInsuficienteException(
+              "Estoque insuficiente do(s) equipamento(s) para o período (data de início e data de término) selecionado",
+              equipamentosEmConflito
+            );
+        }
+
+    }
 
     // ---------------------------------------------------------------------
     // Atualizar status do orçamento
@@ -518,6 +528,8 @@ public class OrcamentoService implements OrcamentoSubject {
     public void notifyObservers(Orcamento orcamento,
                                 String statusAnterior,
                                 String novoStatus) {
+        // Notifica todos os observers registrados (EquipamentoObserver, RabbitMQOrcamentoObserver, etc.)
+        // O OrcamentoService não precisa conhecer o RabbitMQ — ele só sabe que tem uma lista de observers.
         for (OrcamentoObserver observer : observers) {
             observer.onOrcamentoUpdated(orcamento, statusAnterior, novoStatus);
         }

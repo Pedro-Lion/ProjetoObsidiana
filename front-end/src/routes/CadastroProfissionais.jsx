@@ -4,6 +4,8 @@ import { BotaoPrimario } from "../components/Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../components/Buttons/BotaoSecundario";
 import { api } from "../api";
 import { Modal } from "../components/Modal/Modal.jsx";
+import { notificar } from "../features/notificar.jsx";
+import { toast } from "react-toastify";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 
@@ -11,19 +13,19 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const state = useLocation().state;
-  const [profissional, setProfissional] = useState(state ?? {});
+  // Só pré-popula a partir do state quando estamos em modo edição (id presente em useParams).
+  // No modo cadastro (modal ou rota /cadastro/profissionais), o state pode conter resíduos
+  // de navegação (ex.: {highlightId, pagina}) deixados pelo irParaLista — usar isso como
+  // dados de profissional causava PUT /profissional/undefined.
+  const [profissional, setProfissional] = useState(id ? (state ?? {}) : {});
   const [arquivoFoto, setArquivoFoto] = useState(null);
   const [previewFoto, setPreviewFoto] = useState(null);
   const previewRef = useRef(null);
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+  // Fallback alinhado com o do api.js — sem isso o fetch ia para o Vite (5173) e voltava index.html
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
   // Erros de validação
   const [erros, setErros] = useState({});
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitulo, setModalTitulo] = useState("");
-  const [modalDescricao, setModalDescricao] = useState("");
-  const [modalActions, setModalActions] = useState(null);
 
   // Carrega preview de foto existente no modo edição
   useEffect(() => {
@@ -31,9 +33,11 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
       if (!id) return;
       try {
         const token = sessionStorage.getItem("token");
-        const url = `${API_BASE}/profissional/${id}/imagem`;
+        // cache: no-store + timestamp evita devolução de 304 do browser ao reabrir o cadastro
+        const url = `${API_BASE}/profissional/${id}/imagem?v=${Date.now()}`;
         const resp = await fetch(url, {
           method: "GET",
+          cache: "no-store",
           headers: { Authorization: token ? "Bearer " + token : "" },
         });
         if (!resp.ok) return;
@@ -60,11 +64,15 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
     };
   }, [id]);
 
-  function irParaLista() {
+  // novoId: id do item recém criado ou editado, para destacá-lo na listagem
+  function irParaLista(novoId) {
     if (onSucesso) {
-      onSucesso();
+      onSucesso(novoId);
     } else {
-      navigate("/profissionais");
+      // Edição via rota: state.paginaOrigem guarda a página de onde o usuário veio
+      navigate("/profissionais", {
+        state: { highlightId: novoId, pagina: state?.paginaOrigem ?? 0 },
+      });
     }
   }
 
@@ -86,6 +94,10 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
     if (!profissional.nome || profissional.nome.trim() === "") {
       novosErros.nome = "Nome é obrigatório.";
     }
+    // Contato é obrigatório para garantir comunicação com o profissional
+    if (!profissional.contato || profissional.contato.trim() === "") {
+      novosErros.contato = "Contato é obrigatório.";
+    }
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
   }
@@ -99,67 +111,75 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
       });
     } catch (err) {
+      // Loga e relança para que cadastrar/editar consigam tratar a falha
+      // (antes o erro era engolido e o usuário via "sucesso" mesmo sem foto anexada)
       console.error("Erro ao enviar foto:", err);
+      throw err;
     }
   }
 
-  async function cadastrar() {
+  function cadastrar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.post("/profissional", profissional, {
+    notificar(
+      api.post("/profissional", profissional, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status === 201) {
-        const criado = request.data;
-        if (arquivoFoto && criado?.id) {
-          await uploadFoto(criado.id);
+      }),
+      async (req) => {
+        if (req.status == 201) {
+          const criado = req.data;
+          if (arquivoFoto && criado?.id) {
+            try {
+              await uploadFoto(criado.id);
+            } catch (err) {
+              // Profissional foi criado, mas a foto falhou — avisa o usuário em vez de seguir como se tudo tivesse dado certo
+              toast.error("Profissional criado, mas a foto não pôde ser anexada. Tente reenviar pelo modo edição.");
+            }
+          }
+          irParaLista(criado?.id);
         }
-
-        // Redireciona direto para a lista, sem modal de sucesso
-        irParaLista();
+      },
+      {
+        pending: "Cadastrando profissional...",
+        success: [
+          "Profissional cadastrado com sucesso!",
+          "Retornando à página de profissionais"
+        ],
+        error: "Ocorreu um erro ao cadastrar o profissional"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Profissional não pôde ser cadastrado. Tente novamente.");
-      setModalActions(
-        <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    )
   }
 
-  async function editar() {
+  function editar() {
     if (!validar()) return;
 
-    try {
-      const request = await api.put(`/profissional/${id}`, profissional, {
+    notificar(
+      api.put(`/profissional/${id}`, profissional, {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-      });
-
-      if (request.status === 200) {
-        if (arquivoFoto && id) {
-          await uploadFoto(id);
+      }),
+      async (req) => {
+        if (req.status == 200) {
+          if (arquivoFoto && id) {
+            try {
+              await uploadFoto(id);
+            } catch (err) {
+              // Alterações textuais foram salvas, mas a nova foto não — avisa o usuário
+              toast.error("Alterações salvas, mas a nova foto não pôde ser enviada. Tente reenviar a foto.");
+            }
+          }
+          // id vem do useParams (modo edição via rota)
+          irParaLista(id ? Number(id) : undefined);
         }
-
-        // Redireciona direto para a lista, sem modal de sucesso
-        irParaLista();
+      },
+      {
+        pending: "Salvando alterações...",
+        success: [
+          "Alterações do profissinal salvas com sucesso!",
+          "Retornando à página de profissionais"
+        ],
+        error: "Ocorreu um erro durante o registro das alterações"
       }
-    } catch (error) {
-      console.log(error);
-      setModalTitulo("Erro");
-      setModalDescricao("Profissional não pôde ser editado. Tente novamente.");
-      setModalActions(
-        <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>
-          Fechar
-        </button>
-      );
-      setModalOpen(true);
-    }
+    )
   }
 
   const ErroMsg = ({ campo }) =>
@@ -170,7 +190,7 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
   return (
     <>
       {!onCancelar && (
-        <h1 className="mb-16">{!state ? "Cadastrar" : "Editar"} profissional</h1>
+        <h1 className="mb-16">{!id ? "Cadastrar" : "Editar"} profissional</h1>
       )}
 
       <section>
@@ -194,12 +214,16 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
             value={profissional.disponibilidade ?? ""}
             onInput={(e) => setProfissional({ ...profissional, disponibilidade: e.target.value })}
           />
-          <InputBordaLabel
-            titulo="Contato"
-            placeholder="Ex: (11) 91234-1234 ou fulano@email.com"
-            onInput={(e) => setProfissional({ ...profissional, contato: e.target.value })}
-            value={profissional.contato ?? ""}
-          />
+          {/* Contato agora é obrigatório — envolvido em div para exibir a mensagem de erro */}
+          <div className="flex flex-col">
+            <InputBordaLabel
+              titulo="Contato"
+              placeholder="Ex: (11) 91234-1234 ou fulano@email.com"
+              onInput={(e) => setProfissional({ ...profissional, contato: e.target.value })}
+              value={profissional.contato ?? ""}
+            />
+            <ErroMsg campo="contato" />
+          </div>
           <InputBordaLabel
             titulo="Categoria"
             placeholder="Ex: Fotógrafo, Videógrafo, Editor..."
@@ -209,7 +233,8 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
         </div>
 
         <div className="flex gap-3 mt-10">
-          {!state ? (
+          {/* Discrimina cadastro vs edição pelo id de useParams, não pelo state — ver comentário no useState acima */}
+          {!id ? (
             <BotaoPrimario titulo="Cadastrar" className="mb-0 mt-0" onClick={cadastrar} />
           ) : (
             <BotaoPrimario titulo="Salvar alterações" className="mb-0 mt-0" onClick={editar} />
@@ -217,12 +242,6 @@ export function CadastroProfissionais({ onSucesso, onCancelar }) {
           <BotaoSecundario titulo="Cancelar" className="mb-0 mt-0" onClick={cancelar} />
         </div>
       </section>
-
-      {modalOpen && (
-        <Modal titulo={modalTitulo} descricao={modalDescricao}>
-          {modalActions}
-        </Modal>
-      )}
     </>
   );
 }
