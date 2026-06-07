@@ -230,10 +230,25 @@ public class SampleDataLoader implements CommandLineRunner {
                     {"Vinícius Carvalho",    "vinicius.carvalho@email.com"}
             };
 
+            // Disponibilidades variadas — espelham padrões reais de agenda de freelancers.
+            // Ciclamos pelo índice do loop para distribuir as opções entre os 20 profissionais.
+            String[] disponibilidades = {
+                    "Disponível",
+                    "Dias úteis",
+                    "Aos fins de semana",
+                    "Somente às segundas",
+                    "Terças e quintas",
+                    "Período noturno",
+                    "Sob agendamento",
+                    "Ocupado até o fim do mês",
+                    "Disponível a partir de 15/06",
+                    "Apenas meio período"
+            };
+
             for (int i = 0; i < profs.length; i++) {
                 Profissional p = new Profissional(
                         profs[i][0],
-                        i % 2 == 0 ? "Disponível" : "Ocupado",
+                        disponibilidades[i % disponibilidades.length],
                         profs[i][1]
                 );
 
