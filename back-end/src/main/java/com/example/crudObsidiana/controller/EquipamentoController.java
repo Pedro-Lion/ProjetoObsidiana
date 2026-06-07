@@ -14,8 +14,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +35,11 @@ public class EquipamentoController {
 
     private final EquipamentoRepository repository;
     private final FileStorageService fileStorageService;
+
+    // EntityManager para montar a query paginada com ORDER BY dinâmico (whitelist)
+    // — Spring Data não aplica Sort automaticamente em @Query nativas.
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     private EquipamentoService equipamentoService;
@@ -74,20 +82,65 @@ public class EquipamentoController {
     // ---------------------------------------------------------------
     // GET /equipamento/paginado?page=0&size=10
     // ---------------------------------------------------------------
-    @Operation(summary = "Lista equipamentos com paginação e busca",
-            description = "Retorna uma página de equipamentos. Parâmetros: 'page' (base 0), 'size' (itens por página) e 'busca' (filtra por nome, opcional).")
+    // Whitelist de campos ordenáveis → nome da COLUNA no banco (snake_case).
+    // Obrigatório para evitar SQL injection no `ORDER BY ?#{#pageable}` da query nativa.
+    private static final java.util.Map<String, String> COLUNAS_ORDENAVEIS = java.util.Map.of(
+            "nome",         "nome",
+            "valorPorHora", "valor_por_hora",
+            "categoria",    "categoria"
+    );
+
+    @Operation(summary = "Lista equipamentos com paginação, busca e ordenação",
+            description = "Retorna uma página de equipamentos. Parâmetros: 'page', 'size', 'busca', 'ordenarPor' (nome|valorPorHora|categoria) e 'direcao' (asc|desc).")
     @ApiResponse(responseCode = "200", description = "Página de equipamentos retornada com sucesso")
     @GetMapping("/paginado")
     public ResponseEntity<Page<Equipamento>> listarPaginado(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "") String busca) {
+            @RequestParam(defaultValue = "") String busca,
+            @RequestParam(defaultValue = "nome") String ordenarPor,
+            @RequestParam(defaultValue = "asc") String direcao) {
+        // Resolve coluna SQL pela whitelist — único caminho de injeção possível, já bloqueado.
+        String colunaSql = COLUNAS_ORDENAVEIS.getOrDefault(ordenarPor, "nome");
+        String dir = "desc".equalsIgnoreCase(direcao) ? "DESC" : "ASC";
+
+        // Mesma SQL da @Query findByBusca, mas montada aqui para conseguir ORDER BY dinâmico
+        // (Spring Data não auto-aplica Sort em queries nativas). Concatenação direta no final
+        // evita String.formatted/printf, que interpretaria os '%' do LIKE como diretivas de formato.
+        String sql = """
+            SELECT * FROM equipamento e
+            WHERE LOWER(COALESCE(e.nome,         '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.categoria,    '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.marca,        '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.modelo,       '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.numero_serie, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR CAST(COALESCE(e.valor_por_hora, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
+            """ + " ORDER BY " + colunaSql + " " + dir;
+
+        String countSql = """
+            SELECT COUNT(*) FROM equipamento e
+            WHERE LOWER(COALESCE(e.nome,         '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.categoria,    '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.marca,        '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.modelo,       '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.numero_serie, '')) LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR CAST(COALESCE(e.valor_por_hora, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
+            """;
+
         Pageable pageable = PageRequest.of(page, size);
-        // Usa findByBusca para pesquisar em todos os campos (nome, categoria, marca, modelo, etc.)
-        Page<Equipamento> resultado = busca.isBlank()
-                ? repository.findAll(pageable)
-                : repository.findByBusca(busca, pageable);
-        return ResponseEntity.ok(resultado);
+
+        @SuppressWarnings("unchecked")
+        List<Equipamento> conteudo = entityManager.createNativeQuery(sql, Equipamento.class)
+                .setParameter("busca", busca)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize())
+                .getResultList();
+
+        long total = ((Number) entityManager.createNativeQuery(countSql)
+                .setParameter("busca", busca)
+                .getSingleResult()).longValue();
+
+        return ResponseEntity.ok(new PageImpl<>(conteudo, pageable, total));
     }
 
     @Operation(summary = "Recupera um equipamento pelo ID")

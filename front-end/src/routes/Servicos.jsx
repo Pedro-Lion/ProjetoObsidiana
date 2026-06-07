@@ -41,7 +41,15 @@ export function Servicos() {
     try {
       const request = await api.get("/servico/paginado", {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-        params: { page: pagina, size: ITENS_POR_PAGINA, busca: termo },
+        params: {
+          page: pagina,
+          size: ITENS_POR_PAGINA,
+          busca: termo,
+          // Ordenação server-side: garante que itens de outras páginas migrem corretamente
+          // ao trocar campo/direção, em vez de só reordenar a página atual no client.
+          ordenarPor,
+          direcao: direcaoOrdem,
+        },
       });
       if (request.status === 200) {
         const paginaData = request.data;
@@ -72,6 +80,18 @@ export function Servicos() {
     }, 400);
     return () => clearTimeout(timer);
   }, [search]);
+
+  // Refaz a busca imediatamente quando a ordenação muda (sem debounce — ação intencional).
+  // useRef impede que esse efeito dispare também no mount, onde o useEffect de busca já roda.
+  const pularPrimeiraOrdenacao = useRef(true);
+  useEffect(() => {
+    if (pularPrimeiraOrdenacao.current) {
+      pularPrimeiraOrdenacao.current = false;
+      return;
+    }
+    buscarServicos(0, search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ordenarPor, direcaoOrdem]);
 
   // Limpa o highlight após a animação/scroll (~2.2s)
   useEffect(() => {
@@ -140,25 +160,9 @@ export function Servicos() {
       return [...camposServico, ...camposEquipamentos]
         .filter(Boolean)
         .some((campo) => campo.toLowerCase().includes(termo));
-    })
-    // Ordenação local aplicada sobre os resultados filtrados
-    .sort((a, b) => {
-      let va, vb;
-      if (ordenarPor === "nome") {
-        va = a.nome?.toLowerCase() ?? "";
-        vb = b.nome?.toLowerCase() ?? "";
-      } else if (ordenarPor === "valorPorHora") {
-        va = a.valorPorHora ?? 0;
-        vb = b.valorPorHora ?? 0;
-      } else if (ordenarPor === "horas") {
-        va = a.horas ?? 0;
-        vb = b.horas ?? 0;
-      } else {
-        return 0;
-      }
-      if (direcaoOrdem === "asc") return va > vb ? 1 : va < vb ? -1 : 0;
-      return va < vb ? 1 : va > vb ? -1 : 0;
     });
+  // Ordenação é aplicada no back-end (ORDER BY no SQL antes da paginação),
+  // então não há mais .sort() local — o servidor já devolve os itens na ordem correta.
 
   return (
     <>
