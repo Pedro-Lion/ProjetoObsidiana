@@ -137,6 +137,7 @@ public class OrcamentoService implements OrcamentoSubject {
         Orcamento novoOrcamento = new Orcamento(
                 dto.getDataInicio(),
                 dto.getDataTermino(),
+                dto.getTitulo(),
                 dto.getLocalEvento(),
                 dto.getDescricao(),
                 dto.getStatus(),
@@ -215,6 +216,7 @@ public class OrcamentoService implements OrcamentoSubject {
         Orcamento orcamentoAtualizar = new Orcamento(
           dto.getDataInicio(),
           dto.getDataTermino(),
+          dto.getTitulo(),
           dto.getLocalEvento(),
           dto.getDescricao(),
           dto.getStatus(),

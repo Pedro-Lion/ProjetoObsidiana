@@ -8,6 +8,7 @@ export function CardOrcamento({
     id: 1,
     status: "",
     dataEvento: "",
+    titulo: "",
     localEvento: "",
     duracaoEvento: 0,
     descricao: "",
@@ -120,10 +121,10 @@ export function CardOrcamento({
 
       <div className="p-4 border-b border-indigo-100 text-2xl">
 
-        {/* Descrição promovida a destaque principal do card */}
+        {/* Título do orçamento como destaque principal do card */}
         <div className="flex justify-between items-start gap-3 mb-2.5">
           <span className="text-3xl font-medium text-indigo-400 line-clamp-2">
-            {dados.descricao || "Sem descrição"}
+            {dados.titulo || "Sem título"}
           </span>
 
           {/* Badge de status no formato pill — mais clean que texto + bolinha */}
@@ -138,7 +139,7 @@ export function CardOrcamento({
           </span>
         </div>
 
-        {/* Data, local e duração em tom suave — informações de apoio à descrição */}
+        {/* Data, local e duração em tom suave — informações de apoio ao título */}
         <ul className="list-disc list-inside text-slate-700">
           <li className="mb-1">{dataFormatada}</li>
           <li className="mb-1">{dados.localEvento}</li>

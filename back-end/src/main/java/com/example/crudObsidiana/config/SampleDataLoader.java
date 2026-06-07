@@ -223,6 +223,7 @@ public class SampleDataLoader implements CommandLineRunner {
                 Orcamento orc = new Orcamento(
                         dataInicio,
                         dataTermino,
+                        "Orçamento exemplo " + i, // titulo
                         "Cidade " + i, // localEvento
                         "Evento exemplo " + i, // descricao
                         statusPossiveis.get(random.nextInt(statusPossiveis.size())), // status inicial

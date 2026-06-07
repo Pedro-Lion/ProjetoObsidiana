@@ -31,7 +31,7 @@ export function Orcamentos() {
   const [loading, setLoading] = useState(true);
 
   // Ordenação local: campo e direção
-  const [ordenarPor, setOrdenarPor] = useState("");
+  const [ordenarPor, setOrdenarPor] = useState("titulo");
   const [direcaoOrdem, setDirecaoOrdem] = useState("asc");
 
   // Filtro por intervalo de datas (formato YYYY-MM-DD, nativo do input type="date")
@@ -134,6 +134,7 @@ export function Orcamentos() {
       if (search.trim()) {
         const termo = search.toLowerCase();
         const camposOrcamento = [
+          o.titulo,
           o.localEvento,
           o.descricao,
           o.status,
@@ -171,9 +172,11 @@ export function Orcamentos() {
     })
     // Ordenação local aplicada sobre os resultados filtrados
     .sort((a, b) => {
-      if (!ordenarPor) return 0;
       let va, vb;
-      if (ordenarPor === "localEvento") {
+      if (ordenarPor === "titulo") {
+        va = a.titulo?.toLowerCase() ?? "";
+        vb = b.titulo?.toLowerCase() ?? "";
+      } else if (ordenarPor === "localEvento") {
         va = a.localEvento?.toLowerCase() ?? "";
         vb = b.localEvento?.toLowerCase() ?? "";
       } else if (ordenarPor === "dataInicio") {
@@ -195,7 +198,7 @@ export function Orcamentos() {
   async function deletar(orcamento) {
     setModalTitulo("Confirmar exclusão");
     setModalDescricao(
-      `Tem certeza que deseja excluir o orçamento "${orcamento.localEvento || "este orçamento"}"?`
+      `Tem certeza que deseja excluir o orçamento "${orcamento.titulo || orcamento.localEvento || "este orçamento"}"?`
     );
     setModalActions(
       <>
@@ -305,9 +308,9 @@ export function Orcamentos() {
           className="w-48"
           value={ordenarPor}
           onChange={(e) => setOrdenarPor(e.target.value)}
-          placeholder="Padrão"
           options={[
-            { value: "localEvento", label: "Local / Nome" },
+            { value: "titulo", label: "Título" },
+            { value: "localEvento", label: "Local" },
             { value: "dataInicio", label: "Data" },
             { value: "valorTotal", label: "Valor total" },
             { value: "status", label: "Status" },
