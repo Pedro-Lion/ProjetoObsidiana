@@ -11,15 +11,18 @@ jobs:
     steps:
       - name: Download artefato front-dist
         uses: actions/download-artifact@v4
-        with: name: front-dist
+        with:
+          name: front-dist
 
       - name: Download artefato backend-jar
         uses: actions/download-artifact@v4
-        with: name: backend-jar
+        with:
+          name: backend-jar
 
       - name: Download artefato auth-jar
         uses: actions/download-artifact@v4
-        with: name: auth-jar
+        with:
+          name: auth-jar
         
       - name: Configurar SSH
         run: |
