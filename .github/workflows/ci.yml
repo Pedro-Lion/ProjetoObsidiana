@@ -1,44 +1,75 @@
-name: CI #NOME DA AÇÃO
+name: CI - Executar build e upload de artefatos
 
 on:
-  push: #EVENTO QUE IRÁ DISPARAR A AÇÃO
-    branches:
-      - clean-arch #BRANCH QUE IRÁ DISPARAR A AÇÃO
+  push:
+    branches: [ main ]
 
-  pull_request: #Executa quando alguém abre PR para a branch principal
-    branches:
-      - main
+jobs:
+  build: 
+    runs-on: ubuntu-latest
 
-jobs: #TRABALHOS A SEREM EXECUTADOS
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
 
-  build: #NOME DO TRABALHO, PODE SER QUALQUER UM
-
-    runs-on: ubuntu-latest #OS A SER UTILIZADO
-
-    steps: #PASSOS A SEREM EXECUTADOS
-
-      - name: Baixar código #NOME DO PASSO, NESSE CASO, CLONAR O REPOSITORIO
-        uses: actions/checkout@v4 #ACTION ESCOLHIDA PARA CLONAR O REPOSITORIO
-
-      - name: Instalar Node
+      - name: Instalar Node 20
         uses: actions/setup-node@v4
-        with: #CONFIGURAÇÕES DA ACTION
-          node-version: 20 #VERSÃO DO NODE
+        with:
+          node-version: 20
 
-      - name: Set up JDK 17
+      - name: Instalar JDK 21
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin' #DISTRIBUIÇÃO DO JDK
-          java-version: '17'
-        
-      # - name: Build with Maven #BUILDAR COM MAVEN
-      #   run: mvn -B package -DskipTests
+          distribution: 'temurin'
+          java-version: '21'
 
-      - name: Instalar dependências
+      - name: Front-end - Instalar dependências
+        working-directory: front-end
         run: npm install
 
-      - name: Rodar testes
-        run: npm test
+      - name: Front-end - Criar .env e executar build
+        working-directory: front-end
+        run: |
+          cat > .env << 'EOF'
+          VITE_API_BASE_URL=https://obsidianamm.sytes.net/api
+          VITE_APP_BASE_URL=https://obsidianamm.sytes.net
+          EOF
 
-      - name: Build
-        run: npm run build
+          npm run build
+
+      - name: Front-end - Fazer zip
+        working-directory: front-end
+        run: zip dist.zip -r ./dist/
+
+      - name: Front-end - Enviar zip como artefato
+        working-directory: front-end
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: ./dist.zip
+
+      - name: Back-end - Executar build e renomear JAR
+        working-directory: back-end
+        run: |
+          mvn -B package -DskipTests -Dfile.encoding=UTF-8 -Dproject.build.sourceEncoding=UTF-8
+          cd target/
+          mv *.jar app.jar
+
+      - name: Back-end - Publicar JAR como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: back-end/target/app.jar
+
+      - name: Auth microservice - Executar build e renomear JAR
+        working-directory: microservicos/Autenticacao/auth-microservice
+        run: |
+          mvn -B package -DskipTests -Dfile.encoding=UTF-8 -Dproject.build.sourceEncoding=UTF-8
+          cd target/
+          mv *.jar auth.jar
+
+      - name: Auth microservice - Publicar JAR como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: auth-jar
+          path: microservicos/Autenticacao/auth-microservice/target/auth.jar
