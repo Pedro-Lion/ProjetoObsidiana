@@ -46,8 +46,12 @@ public class OrcamentoDTO {
     public String getTitulo() { return titulo; }
     public void setTitulo(String titulo) { this.titulo = titulo; }
 
-    public String getObservacoes() { return observacoes; }
-    public void setObservacoes(String observacoes) { this.observacoes = observacoes; }
+    public String getObservacoes() {
+        return observacoes;
+    }
+    public void setObservacoes(String observacoes) {
+        this.observacoes = observacoes;
+    }
 
     public Date getDataInicio() { return dataInicio;}
     public void setDataInicio(Date dataInicio) { this.dataInicio = dataInicio; }
