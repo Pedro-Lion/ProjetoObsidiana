@@ -23,7 +23,7 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
     // LEFT JOIN garante que orçamentos sem serviços/equipamentos também aparecem quando o termo
     // bate nos campos do próprio orçamento.
     // DISTINCT evita duplicatas quando múltiplos serviços ou equipamentos do mesmo orçamento casam.
-    // Campos do orçamento: local do evento, descrição, status, valor total, datas.
+    // Campos do orçamento: título, local do evento, observações, status, valor total, datas.
     // Campos do serviço: nome, descrição.
     // Campos do equipamento: nome, categoria, marca.
     @Query(
@@ -35,7 +35,7 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
             LEFT JOIN equipamento            e   ON oeq.equipamento_id = e.id
             WHERE LOWER(COALESCE(o.titulo,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(o.local_evento, ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
-               OR LOWER(COALESCE(o.descricao,    ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.observacoes,  ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(o.status,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
                OR CAST(COALESCE(o.valor_total, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
                OR CAST(o.data_inicio  AS CHAR)             LIKE CONCAT('%', :busca, '%')
@@ -54,7 +54,7 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
             LEFT JOIN equipamento            e   ON oeq.equipamento_id = e.id
             WHERE LOWER(COALESCE(o.titulo,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(o.local_evento, ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
-               OR LOWER(COALESCE(o.descricao,    ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.observacoes,  ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
                OR LOWER(COALESCE(o.status,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
                OR CAST(COALESCE(o.valor_total, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
                OR CAST(o.data_inicio  AS CHAR)             LIKE CONCAT('%', :busca, '%')

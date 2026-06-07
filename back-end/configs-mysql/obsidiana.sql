@@ -28,6 +28,9 @@ CREATE TABLE IF NOT EXISTS orcamento (
     valor_total DOUBLE,
     id_calendario VARCHAR(255)
 );
+-- Migração em base existente (caso o banco já tenha dados):
+--   ALTER TABLE orcamento ADD COLUMN titulo VARCHAR(255) AFTER data_termino;
+--   ALTER TABLE orcamento CHANGE descricao observacoes TEXT;
 
 CREATE TABLE IF NOT EXISTS profissional (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

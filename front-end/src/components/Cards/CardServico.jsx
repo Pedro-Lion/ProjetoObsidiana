@@ -43,12 +43,9 @@ export function CardServico({
   const equipamentos = dados.equipamentos.map((e) => (
     <li
       key={e.id}
-      className="p-2.5 flex justify-between items-center bg-indigo-50 border border-indigo-100 rounded-md text-xl text-slate-700"
+      className="p-2.5 flex justify-between items-center bg-indigo-50 border border-indigo-100 rounded-md text-xl text-slate-600"
     >
-      <Foto tamanho="3.5" icone="bi bi-camera text-[2rem]" />
       <span className="ml-3">{e.nome}</span>
-      {/* Categoria em tom mais suave por ser informação secundária */}
-      <span className="m-auto text-slate-500">{e.categoria}</span>
       <span>{formatarValor(e.valorPorHora)}</span>
     </li>
   ));
@@ -75,8 +72,8 @@ export function CardServico({
       <div className="p-4 border-b border-indigo-100">
         <div className="flex justify-between">
           {/* Nome do serviço em indigo, alinhado com a cor dos headings do projeto */}
-          <span className="text-4xl font-medium text-indigo-400">{dados.nome}</span>
-          <span className="text-2xl text-slate-700">
+          <span className="text-2xl font-medium text-indigo-400">{dados.nome}</span>
+          <span className="text-2xl text-slate-600 font-medium">
             {formatarValor(dados.valorPorHora + valorEquipamentos)}
           </span>
         </div>
@@ -84,13 +81,13 @@ export function CardServico({
         <p className="mt-4 text-xl text-slate-700">{dados.descricao}</p>
       </div>
 
-      <div className="p-3 text-2xl text-slate-700 flex justify-between">
+      <div className="p-3 text-xl text-slate-400 flex justify-between">
         <span>
-          <b>{dados.equipamentos.length} </b>
-          {dados.equipamentos.length > 1 ? "equipamentos" : "equipamento"}
+          {dados.equipamentos.length}
+          {dados.equipamentos.length > 1 ? " equipamentos" : " equipamento"}
         </span>
 
-        <span>{formatarValor(valorEquipamentos)}</span>
+        {/* <span>{formatarValor(valorEquipamentos)}</span> */}
       </div>
 
       {/* flex-1 faz a lista ocupar todo o espaço restante, empurrando o footer de botões para o final do card */}

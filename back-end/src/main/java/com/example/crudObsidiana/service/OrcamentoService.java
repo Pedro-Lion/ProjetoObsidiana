@@ -11,8 +11,11 @@ import com.example.crudObsidiana.repository.ServicoRepository;
 import com.example.crudObsidiana.observer.OrcamentoObserver;
 import com.example.crudObsidiana.observer.OrcamentoSubject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +56,11 @@ public class OrcamentoService implements OrcamentoSubject {
 
     @Autowired
     private UsoEquipamentoRepository usoEquipamentoRepository;
+
+    // EntityManager para montar a query paginada com ORDER BY dinâmico (whitelist)
+    // — Spring Data não aplica Sort automaticamente em @Query nativas (sobretudo com DISTINCT).
+    @PersistenceContext
+    private EntityManager entityManager;
 
     // ---------------------------------------------------------------------
     // CALCULAR DURAÇÃO DO EVENTO
@@ -112,14 +120,80 @@ public class OrcamentoService implements OrcamentoSubject {
     }
 
     // ---------------------------------------------------------------------
-    // LISTAR COM PAGINAÇÃO E BUSCA
+    // LISTAR COM PAGINAÇÃO, BUSCA E ORDENAÇÃO
     // ---------------------------------------------------------------------
-    public Page<Orcamento> listarPaginado(int page, int size, String busca) {
+    // Whitelist de campos ordenáveis → nome da COLUNA no banco (snake_case).
+    // Obrigatório para evitar SQL injection no `ORDER BY ?#{#pageable}` da query nativa.
+    private static final java.util.Map<String, String> COLUNAS_ORDENAVEIS = java.util.Map.of(
+            "titulo",       "titulo",
+            "localEvento",  "local_evento",
+            "dataInicio",   "data_inicio",
+            "valorTotal",   "valor_total",
+            "status",       "status"
+    );
+
+    public Page<Orcamento> listarPaginado(int page, int size, String busca, String ordenarPor, String direcao) {
+        // Resolve coluna SQL pela whitelist — único caminho de injeção possível, já bloqueado.
+        String colunaSql = COLUNAS_ORDENAVEIS.getOrDefault(ordenarPor, "titulo");
+        String dir = "desc".equalsIgnoreCase(direcao) ? "DESC" : "ASC";
+
+        // Mesma SQL da @Query findByBusca, mas montada aqui para conseguir ORDER BY dinâmico.
+        // DISTINCT preserva 1 linha por orçamento mesmo com vários serviços/equipamentos casando a busca.
+        // Concatenação direta evita String.formatted/printf, que interpretaria os '%' do LIKE como diretivas.
+        String sql = """
+            SELECT DISTINCT o.* FROM orcamento o
+            LEFT JOIN orcamento_servicos    os  ON o.id = os.orcamento_id
+            LEFT JOIN servico               s   ON os.servico_id = s.id
+            LEFT JOIN orcamento_equipamentos oeq ON o.id = oeq.orcamento_id
+            LEFT JOIN equipamento            e   ON oeq.equipamento_id = e.id
+            WHERE LOWER(COALESCE(o.titulo,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.local_evento, ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.observacoes,  ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.status,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR CAST(COALESCE(o.valor_total, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
+               OR CAST(o.data_inicio  AS CHAR)             LIKE CONCAT('%', :busca, '%')
+               OR CAST(o.data_termino AS CHAR)             LIKE CONCAT('%', :busca, '%')
+               OR LOWER(COALESCE(s.nome,     ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(s.descricao,''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.nome,     ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.categoria,''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.marca,    ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+            """ + " ORDER BY " + colunaSql + " " + dir;
+
+        String countSql = """
+            SELECT COUNT(DISTINCT o.id) FROM orcamento o
+            LEFT JOIN orcamento_servicos    os  ON o.id = os.orcamento_id
+            LEFT JOIN servico               s   ON os.servico_id = s.id
+            LEFT JOIN orcamento_equipamentos oeq ON o.id = oeq.orcamento_id
+            LEFT JOIN equipamento            e   ON oeq.equipamento_id = e.id
+            WHERE LOWER(COALESCE(o.titulo,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.local_evento, ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.observacoes,  ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(o.status,       ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR CAST(COALESCE(o.valor_total, 0) AS CHAR) LIKE CONCAT('%', :busca, '%')
+               OR CAST(o.data_inicio  AS CHAR)             LIKE CONCAT('%', :busca, '%')
+               OR CAST(o.data_termino AS CHAR)             LIKE CONCAT('%', :busca, '%')
+               OR LOWER(COALESCE(s.nome,     ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(s.descricao,''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.nome,     ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.categoria,''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+               OR LOWER(COALESCE(e.marca,    ''))  LIKE LOWER(CONCAT('%', :busca, '%'))
+            """;
+
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Orcamento> paginaResult = busca.isBlank()
-                ? orcamentoRepository.findAll(pageable)
-                : orcamentoRepository.findByBusca(busca, pageable);
+        @SuppressWarnings("unchecked")
+        List<Orcamento> conteudo = entityManager.createNativeQuery(sql, Orcamento.class)
+                .setParameter("busca", busca)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize())
+                .getResultList();
+
+        long total = ((Number) entityManager.createNativeQuery(countSql)
+                .setParameter("busca", busca)
+                .getSingleResult()).longValue();
+
+        Page<Orcamento> paginaResult = new PageImpl<>(conteudo, pageable, total);
 
         // Aplica calcularDuracaoEvento em cada item, igual ao listarTodos()
         paginaResult.getContent().forEach(o -> o.setDuracaoEvento(calcularDuracaoEvento(o)));
@@ -139,7 +213,7 @@ public class OrcamentoService implements OrcamentoSubject {
                 dto.getDataTermino(),
                 dto.getTitulo(),
                 dto.getLocalEvento(),
-                dto.getDescricao(),
+                dto.getObservacoes(),
                 dto.getStatus(),
                 dto.getValorTotal(),
                 dto.getIdCalendar()
@@ -218,7 +292,7 @@ public class OrcamentoService implements OrcamentoSubject {
           dto.getDataTermino(),
           dto.getTitulo(),
           dto.getLocalEvento(),
-          dto.getDescricao(),
+          dto.getObservacoes(),
           dto.getStatus(),
           dto.getValorTotal(),
           dto.getIdCalendar()

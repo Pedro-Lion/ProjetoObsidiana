@@ -79,7 +79,15 @@ export function Orcamentos() {
     try {
       const request = await api.get("/orcamento/paginado", {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-        params: { page: pagina, size: ITENS_POR_PAGINA, busca: termo },
+        params: {
+          page: pagina,
+          size: ITENS_POR_PAGINA,
+          busca: termo,
+          // Ordenação server-side: garante que itens de outras páginas migrem corretamente
+          // ao trocar campo/direção, em vez de só reordenar a página atual no client.
+          ordenarPor,
+          direcao: direcaoOrdem,
+        },
       });
       if (request.status === 200) {
         const paginaData = request.data;
@@ -111,6 +119,18 @@ export function Orcamentos() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  // Refaz a busca imediatamente quando a ordenação muda (sem debounce — ação intencional).
+  // useRef impede que esse efeito dispare também no mount, onde o useEffect de busca já roda.
+  const pularPrimeiraOrdenacao = useRef(true);
+  useEffect(() => {
+    if (pularPrimeiraOrdenacao.current) {
+      pularPrimeiraOrdenacao.current = false;
+      return;
+    }
+    buscarOrcamentos(0, search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ordenarPor, direcaoOrdem]);
+
   // Limpa o highlight após a animação/scroll (~2.2s)
   useEffect(() => {
     if (!highlightId) return;
@@ -136,7 +156,7 @@ export function Orcamentos() {
         const camposOrcamento = [
           o.titulo,
           o.localEvento,
-          o.descricao,
+          o.observacoes,
           o.status,
           o.valorTotal?.toString(),
         ];
@@ -169,31 +189,9 @@ export function Orcamentos() {
       }
 
       return true;
-    })
-    // Ordenação local aplicada sobre os resultados filtrados
-    .sort((a, b) => {
-      let va, vb;
-      if (ordenarPor === "titulo") {
-        va = a.titulo?.toLowerCase() ?? "";
-        vb = b.titulo?.toLowerCase() ?? "";
-      } else if (ordenarPor === "localEvento") {
-        va = a.localEvento?.toLowerCase() ?? "";
-        vb = b.localEvento?.toLowerCase() ?? "";
-      } else if (ordenarPor === "dataInicio") {
-        va = a.dataInicio ? new Date(a.dataInicio).getTime() : 0;
-        vb = b.dataInicio ? new Date(b.dataInicio).getTime() : 0;
-      } else if (ordenarPor === "valorTotal") {
-        va = a.valorTotal ?? 0;
-        vb = b.valorTotal ?? 0;
-      } else if (ordenarPor === "status") {
-        va = a.status?.toLowerCase() ?? "";
-        vb = b.status?.toLowerCase() ?? "";
-      } else {
-        return 0;
-      }
-      if (direcaoOrdem === "asc") return va > vb ? 1 : va < vb ? -1 : 0;
-      return va < vb ? 1 : va > vb ? -1 : 0;
     });
+  // Ordenação é aplicada no back-end (ORDER BY no SQL antes da paginação),
+  // então não há mais .sort() local — o servidor já devolve os itens na ordem correta.
 
   async function deletar(orcamento) {
     setModalTitulo("Confirmar exclusão");
@@ -318,7 +316,7 @@ export function Orcamentos() {
         />
         <SelectBordaLabel
           titulo="Direção"
-          className="w-40"
+          className="w-auto"
           value={direcaoOrdem}
           onChange={(e) => setDirecaoOrdem(e.target.value)}
           options={[
@@ -330,14 +328,14 @@ export function Orcamentos() {
         <InputBordaLabel
           type="date"
           titulo="De"
-          className="w-40"
+          className="w-auto"
           value={filtroDataDe}
           onInput={(e) => setFiltroDataDe(e.target.value)}
         />
         <InputBordaLabel
           type="date"
           titulo="Até"
-          className="w-40"
+          className="w-auto"
           value={filtroDataAte}
           onInput={(e) => setFiltroDataAte(e.target.value)}
         />

@@ -48,7 +48,15 @@ export function Profissionais() {
     try {
       const request = await api.get("/profissional/paginado", {
         headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
-        params: { page: pagina, size: ITENS_POR_PAGINA, busca: termo },
+        params: {
+          page: pagina,
+          size: ITENS_POR_PAGINA,
+          busca: termo,
+          // Ordenação server-side: garante que itens de outras páginas migrem corretamente
+          // ao trocar campo/direção, em vez de só reordenar a página atual no client.
+          ordenarPor,
+          direcao: direcaoOrdem,
+        },
       });
       if (request.status === 200) {
         const paginaData = request.data;
@@ -80,6 +88,18 @@ export function Profissionais() {
     }, 400);
     return () => clearTimeout(timer);
   }, [search]);
+
+  // Refaz a busca imediatamente quando a ordenação muda (sem debounce — ação intencional).
+  // useRef impede que esse efeito dispare também no mount, onde o useEffect de busca já roda.
+  const pularPrimeiraOrdenacao = useRef(true);
+  useEffect(() => {
+    if (pularPrimeiraOrdenacao.current) {
+      pularPrimeiraOrdenacao.current = false;
+      return;
+    }
+    getProfissionais(0, search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ordenarPor, direcaoOrdem]);
 
   // Limpa o highlight após a animação terminar (~2.2s)
   useEffect(() => {
@@ -143,22 +163,9 @@ export function Profissionais() {
       const termo = search.toLowerCase();
       const campos = [p.nome, p.disponibilidade, p.contato, p.categoria, p.funcao];
       return campos.filter(Boolean).some((c) => c.toLowerCase().includes(termo));
-    })
-    // Ordenação local aplicada sobre os resultados filtrados
-    .sort((a, b) => {
-      let va, vb;
-      if (ordenarPor === "nome") {
-        va = a.nome?.toLowerCase() ?? "";
-        vb = b.nome?.toLowerCase() ?? "";
-      } else if (ordenarPor === "categoria") {
-        va = a.categoria?.toLowerCase() ?? "";
-        vb = b.categoria?.toLowerCase() ?? "";
-      } else {
-        return 0;
-      }
-      if (direcaoOrdem === "asc") return va > vb ? 1 : va < vb ? -1 : 0;
-      return va < vb ? 1 : va > vb ? -1 : 0;
     });
+  // Ordenação é aplicada no back-end (ORDER BY no SQL antes da paginação),
+  // então não há mais .sort() local — o servidor já devolve os itens na ordem correta.
 
   return (
     <>
@@ -197,7 +204,7 @@ export function Profissionais() {
         />
         <SelectBordaLabel
           titulo="Direção"
-          className="w-40"
+          className="w-auto"
           value={direcaoOrdem}
           onChange={(e) => setDirecaoOrdem(e.target.value)}
           options={[

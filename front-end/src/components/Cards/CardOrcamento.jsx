@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BotaoPrimario } from "../Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../Buttons/BotaoSecundario";
 
@@ -11,7 +11,7 @@ export function CardOrcamento({
     titulo: "",
     localEvento: "",
     duracaoEvento: 0,
-    descricao: "",
+    observacoes: "",
     valorTotal: 0,
     servicos: [
       {
@@ -27,6 +27,13 @@ export function CardOrcamento({
   highlight = false,
 }) {
   const navigate = useNavigate();
+
+  // Estado local do colapsável de observações — começa fechado para manter o card limpo
+  const [mostrarObservacoes, setMostrarObservacoes] = useState(false);
+
+  // Aba ativa do quadro inferior (lista de serviços vs equipamentos).
+  // Começa em "servicos" para preservar o comportamento histórico do card.
+  const [abaAtiva, setAbaAtiva] = useState("servicos");
 
   // Rola suavemente para o item quando ele é destacado após cadastro/edição
   const containerRef = useRef(null);
@@ -47,18 +54,26 @@ export function CardOrcamento({
   // Fallback para 0 caso ainda não tenha sido calculado.
   const valorTotal = dados.valorTotal ?? 0;
 
+  // Formato: "dd/mm/aa às HH:MM" usando o horário de início do evento.
+  // Ex.: "07/06/26 às 14:30". Usamos pt-BR para garantir 24h e dia/mês/ano.
   function formatarData() {
     if (!dados.dataInicio) return "N/A";
 
-    const dataSemNormalizacao = Intl.DateTimeFormat("pt-br", {
-      day: "numeric",
-      month: "short",
-    }).format(new Date(dados.dataInicio));
+    const dt = new Date(dados.dataInicio);
 
-    let dataNormalizada = dataSemNormalizacao.replace(" de ", " ");
-    dataNormalizada = dataNormalizada.slice(0, dataNormalizada.length - 1);
+    const dataParte = new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+    }).format(dt);
 
-    return dataNormalizada;
+    const horaParte = new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(dt);
+
+    return `${dataParte} às ${horaParte}`;
   }
 
   // Formata decimal em horas legível: 3 → "3h", 3.5 → "3h30", 1.25 → "1h15"
@@ -104,13 +119,37 @@ export function CardOrcamento({
   }
   const estilosStatus = definirEstilosStatus();
 
-  const servicos = dados.servicos.map((s) => (
+  const servicos = (dados.servicos ?? []).map((s) => (
     <li key={s.id} className="w-full p-3 flex justify-between bg-indigo-50 border border-indigo-100 rounded-md text-xl text-slate-600">
-      <span className="font-medium">{s.nome}</span>
+      <span className="font-normal">{s.nome}</span>
       {/* Exibe o valor total do serviço: valorPorHora × horas */}
       {formatarValor((s.valorPorHora ?? 0) * (s.horas ?? 0))}
     </li>
   ));
+
+  // Mapa id-do-equipamento → quantidadeUsada, derivado de usosEquipamentos.
+  // É o que liga a relação many-to-many "equipamentos" (só ids/dados básicos)
+  // ao quanto foi efetivamente alugado em cada orçamento. Fallback para 1
+  // quando o uso não está informado, evitando subtotal zerado por dados parciais.
+  const usosPorEquipamento = (dados.usosEquipamentos ?? []).reduce((acc, uso) => {
+    const id = uso?.equipamento?.id;
+    if (id != null) acc[id] = uso.quantidadeUsada ?? 1;
+    return acc;
+  }, {});
+
+  const equipamentos = (dados.equipamentos ?? []).map((e) => {
+    const qtd = usosPorEquipamento[e.id] ?? 1;
+    const subtotal = (e.valorPorHora ?? 0) * qtd;
+    return (
+      <li key={e.id} className="w-full p-3 flex justify-between bg-indigo-50 border border-indigo-100 rounded-md text-xl text-slate-600">
+        <span className="font-normal">{qtd}× {e.nome}</span>
+        {formatarValor(subtotal)}
+      </li>
+    );
+  });
+
+  const numServicos = dados.servicos?.length ?? 0;
+  const numEquipamentos = dados.equipamentos?.length ?? 0;
 
   return (
     // overflow-hidden garante que a faixa superior respeite o border-radius do card
@@ -123,7 +162,7 @@ export function CardOrcamento({
 
         {/* Título do orçamento como destaque principal do card */}
         <div className="flex justify-between items-start gap-3 mb-2.5">
-          <span className="text-3xl font-medium text-indigo-400 line-clamp-2">
+          <span className="text-2xl font-medium text-indigo-400 line-clamp-2">
             {dados.titulo || "Sem título"}
           </span>
 
@@ -140,26 +179,93 @@ export function CardOrcamento({
         </div>
 
         {/* Data, local e duração em tom suave — informações de apoio ao título */}
-        <ul className="list-disc list-inside text-slate-700">
-          <li className="mb-1">{dataFormatada}</li>
-          <li className="mb-1">{dados.localEvento}</li>
-          <li>Duração: {duracaoFormatada}</li>
+        <ul className="list-disc list-inside text-slate-700 text-xl flex flex-col">
+          <span className="font-medium">{dataFormatada}</span>
+          <span>Duração: {duracaoFormatada}</span>
+          <span className="">{dados.localEvento}</span>
         </ul>
+
+        {/*
+          Colapsável de observações — só aparece se houver texto, mantendo o card
+          limpo quando não há nada a mostrar. Quando aberto, limita a altura com
+          overflow-y-auto para não estourar o card de altura fixa.
+        */}
+        {dados.observacoes && (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => setMostrarObservacoes((v) => !v)}
+              className="text-lg text-indigo-400 hover:text-indigo-600 transition flex items-center gap-1"
+            >
+              {mostrarObservacoes ? "Ocultar observações" : "Ver observações"}
+              <i className={`bi ${mostrarObservacoes ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+            </button>
+            {mostrarObservacoes && (
+              <p className="mt-2 text-lg text-slate-600 max-h-24 overflow-y-auto whitespace-pre-wrap">
+                {dados.observacoes}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="p-3 text-2xl text-slate-700 flex justify-between">
-        <span>
-          <b>{dados.servicos.length} </b>
-          {dados.servicos.length > 1 ? "serviços" : "serviço"}
-        </span>
+      {/*
+        Cabeçalho do quadro inferior: abas planas (estilo igual aos botões
+        Editar/Excluir do footer — texto + sublinhado no ativo, sem pill).
+        Valor total fica à direita, na mesma linha, para preservar altura.
+      */}
+      <div className="px-3 pt-3 flex items-center justify-between gap-2 border-b border-indigo-50">
+        <div className="flex">
+          <button
+            type="button"
+            onClick={() => setAbaAtiva("servicos")}
+            className={`px-3 pb-2 text-xl font-normal transition border-b-2 ${
+              abaAtiva === "servicos"
+                ? "text-indigo-500 border-indigo-500"
+                : "text-slate-500 border-transparent hover:text-indigo-500"
+            }`}
+          >
+            Serviços
+          </button>
+          <button
+            type="button"
+            onClick={() => setAbaAtiva("equipamentos")}
+            className={`px-3 pb-2 text-xl font-normal transition border-b-2 ${
+              abaAtiva === "equipamentos"
+                ? "text-indigo-500 border-indigo-500"
+                : "text-slate-500 border-transparent hover:text-indigo-500"
+            }`}
+          >
+            Equipamentos
+          </button>
+        </div>
 
         {/* Total do orçamento (serviços + equipamentos), salvo no banco */}
-        <span className="font-semibold text-slate-700">{formatarValor(valorTotal)}</span>
+        <span className="text-2xl font-semibold text-slate-700 pb-2">{formatarValor(valorTotal)}</span>
       </div>
 
-      {/* flex-1 faz a lista ocupar todo o espaço restante, empurrando o footer de botões para o final do card */}
-      <ul className="flex-1 px-3 flex flex-col gap-3 overflow-y-auto">
-        {servicos}
+      {/* Contagem da aba ativa — funciona como subtítulo discreto da lista abaixo. */}
+      <div className="px-3 pt-2 pb-1 text-lg text-slate-400">
+        {abaAtiva === "servicos"
+          ? `${numServicos} ${numServicos === 1 ? "serviço" : "serviços"}`
+          : `${numEquipamentos} ${numEquipamentos === 1 ? "equipamento" : "equipamentos"}`}
+      </div>
+
+      {/*
+        flex-1 faz a lista ocupar todo o espaço restante, empurrando o footer
+        de botões para o final do card. Renderiza a lista da aba ativa.
+        Estado vazio ("Sem itens") evita um quadro em branco confuso.
+      */}
+      <ul className="flex-1 px-3 pb-2 flex flex-col gap-3 overflow-y-auto">
+        {abaAtiva === "servicos" ? (
+          servicos.length > 0
+            ? servicos
+            : <li className="text-xl text-slate-400 italic px-3 py-2">Sem serviços</li>
+        ) : (
+          equipamentos.length > 0
+            ? equipamentos
+            : <li className="text-xl text-slate-400 italic px-3 py-2">Sem equipamentos</li>
+        )}
       </ul>
 
       {/* Footer com botões de largura total separados por borda vertical */}

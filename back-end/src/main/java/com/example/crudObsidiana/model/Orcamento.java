@@ -27,9 +27,9 @@ public class Orcamento {
     @Column(name = "local_evento")
     private String localEvento;
 
-    @Schema(description = "Descrição geral do orçamento")
+    @Schema(description = "Observações gerais do orçamento")
     @Column(columnDefinition = "TEXT")
-    private String descricao;
+    private String observacoes;
 
     @Schema(description = "Status atual do orçamento")
     private String status;
@@ -83,7 +83,7 @@ public class Orcamento {
             Date dataTermino,
             String titulo,
             String localEvento,
-            String descricao,
+            String observacoes,
             String status,
             Double valorTotal,
             String idCalendar
@@ -92,7 +92,7 @@ public class Orcamento {
         this.dataTermino = dataTermino;
         this.titulo = titulo;
         this.localEvento = localEvento;
-        this.descricao = descricao;
+        this.observacoes = observacoes;
         this.status = status;
         this.valorTotal = valorTotal;
         this.idCalendar = idCalendar;
@@ -117,8 +117,8 @@ public class Orcamento {
     public String getLocalEvento() { return localEvento; }
     public void setLocalEvento(String localEvento) { this.localEvento = localEvento; }
 
-    public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public String getObservacoes() { return observacoes; }
+    public void setObservacoes(String observacoes) { this.observacoes = observacoes; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
