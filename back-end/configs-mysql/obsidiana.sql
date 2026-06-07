@@ -21,12 +21,17 @@ CREATE TABLE IF NOT EXISTS orcamento (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     data_inicio DATETIME,
     data_termino DATETIME,
+    titulo VARCHAR(255),
     local_evento VARCHAR(255),
-    descricao VARCHAR(255),
+    -- observacoes era 'descricao' VARCHAR(255); virou TEXT para acompanhar o @Column(columnDefinition = "TEXT") no model
+    observacoes TEXT,
     status VARCHAR(100),
     valor_total DOUBLE,
     id_calendario VARCHAR(255)
 );
+-- Migração em base existente (caso o banco já tenha dados):
+--   ALTER TABLE orcamento ADD COLUMN titulo VARCHAR(255) AFTER data_termino;
+--   ALTER TABLE orcamento CHANGE descricao observacoes TEXT;
 
 CREATE TABLE IF NOT EXISTS profissional (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -169,9 +174,9 @@ INSERT INTO
 
 -- ORCAMENTO
 INSERT INTO
-    orcamento (data_inicio, data_termino, local_evento, descricao, status, valor_total)
+    orcamento (data_inicio, data_termino, titulo, local_evento, observacoes, status, valor_total)
     VALUE
-    (CURRENT_DATE(), DATE_ADD(NOW(), INTERVAL 4 HOUR), 'São Paulo', 'Gravação de frigorífico industrial', 'Em análise', 0.0);
+    (CURRENT_DATE(), DATE_ADD(NOW(), INTERVAL 4 HOUR), 'Gravação frigorífico', 'São Paulo', 'Gravação de frigorífico industrial', 'Em análise', 0.0);
 
 -- ORCAMENTO_EQUIPAMENTOS
 INSERT INTO
