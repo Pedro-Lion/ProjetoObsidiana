@@ -43,7 +43,7 @@ jobs:
 
       - name: Front-end - Enviar zip como artefato
         working-directory: front-end
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-dist
           path: ./dist.zip
@@ -56,7 +56,7 @@ jobs:
           mv *.jar app.jar
 
       - name: Back-end - Publicar JAR como artefato
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: backend-jar
           path: back-end/target/app.jar
@@ -69,7 +69,7 @@ jobs:
           mv *.jar auth.jar
 
       - name: Auth microservice - Publicar JAR como artefato
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: auth-jar
           path: microservicos/Autenticacao/auth-microservice/target/auth.jar
