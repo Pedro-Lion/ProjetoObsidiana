@@ -54,18 +54,26 @@ export function CardOrcamento({
   // Fallback para 0 caso ainda não tenha sido calculado.
   const valorTotal = dados.valorTotal ?? 0;
 
+  // Formato: "dd/mm/aa às HH:MM" usando o horário de início do evento.
+  // Ex.: "07/06/26 às 14:30". Usamos pt-BR para garantir 24h e dia/mês/ano.
   function formatarData() {
     if (!dados.dataInicio) return "N/A";
 
-    const dataSemNormalizacao = Intl.DateTimeFormat("pt-br", {
-      day: "numeric",
-      month: "short",
-    }).format(new Date(dados.dataInicio));
+    const dt = new Date(dados.dataInicio);
 
-    let dataNormalizada = dataSemNormalizacao.replace(" de ", " ");
-    dataNormalizada = dataNormalizada.slice(0, dataNormalizada.length - 1);
+    const dataParte = new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+    }).format(dt);
 
-    return dataNormalizada;
+    const horaParte = new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(dt);
+
+    return `${dataParte} às ${horaParte}`;
   }
 
   // Formata decimal em horas legível: 3 → "3h", 3.5 → "3h30", 1.25 → "1h15"
@@ -113,7 +121,7 @@ export function CardOrcamento({
 
   const servicos = (dados.servicos ?? []).map((s) => (
     <li key={s.id} className="w-full p-3 flex justify-between bg-indigo-50 border border-indigo-100 rounded-md text-xl text-slate-600">
-      <span className="font-medium">{s.nome}</span>
+      <span className="font-normal">{s.nome}</span>
       {/* Exibe o valor total do serviço: valorPorHora × horas */}
       {formatarValor((s.valorPorHora ?? 0) * (s.horas ?? 0))}
     </li>
@@ -134,7 +142,7 @@ export function CardOrcamento({
     const subtotal = (e.valorPorHora ?? 0) * qtd;
     return (
       <li key={e.id} className="w-full p-3 flex justify-between bg-indigo-50 border border-indigo-100 rounded-md text-xl text-slate-600">
-        <span className="font-medium">{qtd}× {e.nome}</span>
+        <span className="font-normal">{qtd}× {e.nome}</span>
         {formatarValor(subtotal)}
       </li>
     );
@@ -154,7 +162,7 @@ export function CardOrcamento({
 
         {/* Título do orçamento como destaque principal do card */}
         <div className="flex justify-between items-start gap-3 mb-2.5">
-          <span className="text-3xl font-medium text-indigo-400 line-clamp-2">
+          <span className="text-2xl font-medium text-indigo-400 line-clamp-2">
             {dados.titulo || "Sem título"}
           </span>
 
@@ -171,10 +179,10 @@ export function CardOrcamento({
         </div>
 
         {/* Data, local e duração em tom suave — informações de apoio ao título */}
-        <ul className="list-disc list-inside text-slate-700">
-          <li className="mb-1">{dataFormatada}</li>
-          <li className="mb-1">{dados.localEvento}</li>
-          <li>Duração: {duracaoFormatada}</li>
+        <ul className="list-disc list-inside text-slate-700 text-xl flex flex-col">
+          <span className="font-medium">{dataFormatada}</span>
+          <span>Duração: {duracaoFormatada}</span>
+          <span className="">{dados.localEvento}</span>
         </ul>
 
         {/*
@@ -211,7 +219,7 @@ export function CardOrcamento({
           <button
             type="button"
             onClick={() => setAbaAtiva("servicos")}
-            className={`px-3 pb-2 text-xl font-medium transition border-b-2 ${
+            className={`px-3 pb-2 text-xl font-normal transition border-b-2 ${
               abaAtiva === "servicos"
                 ? "text-indigo-500 border-indigo-500"
                 : "text-slate-500 border-transparent hover:text-indigo-500"
@@ -222,7 +230,7 @@ export function CardOrcamento({
           <button
             type="button"
             onClick={() => setAbaAtiva("equipamentos")}
-            className={`px-3 pb-2 text-xl font-medium transition border-b-2 ${
+            className={`px-3 pb-2 text-xl font-normal transition border-b-2 ${
               abaAtiva === "equipamentos"
                 ? "text-indigo-500 border-indigo-500"
                 : "text-slate-500 border-transparent hover:text-indigo-500"
