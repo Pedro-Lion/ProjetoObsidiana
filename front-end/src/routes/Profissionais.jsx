@@ -204,7 +204,7 @@ export function Profissionais() {
         />
         <SelectBordaLabel
           titulo="Direção"
-          className="w-40"
+          className="w-auto"
           value={direcaoOrdem}
           onChange={(e) => setDirecaoOrdem(e.target.value)}
           options={[

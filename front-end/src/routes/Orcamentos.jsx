@@ -316,7 +316,7 @@ export function Orcamentos() {
         />
         <SelectBordaLabel
           titulo="Direção"
-          className="w-40"
+          className="w-auto"
           value={direcaoOrdem}
           onChange={(e) => setDirecaoOrdem(e.target.value)}
           options={[
@@ -328,14 +328,14 @@ export function Orcamentos() {
         <InputBordaLabel
           type="date"
           titulo="De"
-          className="w-40"
+          className="w-auto"
           value={filtroDataDe}
           onInput={(e) => setFiltroDataDe(e.target.value)}
         />
         <InputBordaLabel
           type="date"
           titulo="Até"
-          className="w-40"
+          className="w-auto"
           value={filtroDataAte}
           onInput={(e) => setFiltroDataAte(e.target.value)}
         />
