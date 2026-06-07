@@ -81,46 +81,53 @@ public class SampleDataLoader implements CommandLineRunner {
         //  EQUIPAMENTOS
         // ========================
         if (equipamentoRepository.count() == 0) {
+            // Dados realistas de um locador de equipamentos audiovisuais.
+            // Arrays paralelos: nome[i] usa categoria[i], marca[i] e modelo[i].
+            String[] nomesEq = {
+                    "Câmera Canon EOS R6",         "Câmera Sony A7 III",          "Câmera Panasonic GH6",
+                    "Câmera Blackmagic Pocket 6K", "Câmera GoPro Hero 12",        "Lente Canon RF 24-70mm f/2.8",
+                    "Lente Sigma Art 35mm f/1.4",  "Iluminação Aputure 600d Pro", "Iluminação Godox SL-150W",
+                    "Softbox Octabox 90cm",        "Painel LED Nanlite PavoTube", "Refletor HMI Arri M18",
+                    "Microfone shotgun Rode NTG4+", "Microfone lapela Sennheiser EW100 G4", "Gravador de áudio Zoom H6",
+                    "Tripé Manfrotto 055XPRO3",    "Slider Edelkrone SliderPLUS Pro", "Estabilizador DJI Ronin RS3",
+                    "Drone DJI Mavic 3",           "Drone DJI Mini 4 Pro"
+            };
+            String[] categoriasEq = {
+                    "Câmeras",    "Câmeras",    "Câmeras",
+                    "Câmeras",    "Câmeras",    "Lentes",
+                    "Lentes",     "Iluminação", "Iluminação",
+                    "Iluminação", "Iluminação", "Iluminação",
+                    "Áudio",      "Áudio",      "Áudio",
+                    "Suporte",    "Suporte",    "Suporte",
+                    "Drones",     "Drones"
+            };
+            String[] marcasEq = {
+                    "Canon",      "Sony",       "Panasonic",
+                    "Blackmagic", "GoPro",      "Canon",
+                    "Sigma",      "Aputure",    "Godox",
+                    "Godox",      "Nanlite",    "Arri",
+                    "Rode",       "Sennheiser", "Zoom",
+                    "Manfrotto",  "Edelkrone",  "DJI",
+                    "DJI",        "DJI"
+            };
+            String[] modelosEq = {
+                    "EOS R6",     "ILCE-7M3",   "GH6",
+                    "BMPCC 6K",   "Hero 12",    "RF 24-70 II",
+                    "Art 35 1.4", "600d Pro",   "SL-150W",
+                    "S-90",       "PavoTube 30C", "M18",
+                    "NTG4+",      "EW100 G4",   "H6",
+                    "055XPRO3",   "SliderPLUS Pro", "Ronin RS3",
+                    "Mavic 3",    "Mini 4 Pro"
+            };
 
-//            Equipamento eq1 = new Equipamento();
-//            eq1.setNome("Câmera Canon EOS R6");
-//            eq1.setCategoria("Câmeras");
-//            eq1.setMarca("Canon");
-//            eq1.setModelo("R6");
-//            eq1.setNumeroSerie("CAN-R6-001");
-//            eq1.setQuantidadeTotal(3);
-//            eq1.setQuantidadeDisponivel(3);
-//            eq1.setValorPorHora(150.0);
-//            eq1 = equipamentoRepository.save(eq1);
-//
-//            Equipamento eq2 = new Equipamento();
-//            eq2.setNome("Ilha de Luz LED 3x3");
-//            eq2.setCategoria("Iluminação");
-//            eq2.setMarca("Godox");
-//            eq2.setModelo("LED-3x3");
-//            eq2.setNumeroSerie("GDX-300");
-//            eq2.setQuantidadeTotal(5);
-//            eq2.setQuantidadeDisponivel(5);
-//            eq2.setValorPorHora(40.0);
-//            eq2 = equipamentoRepository.save(eq2);
-//
-//            Equipamento eq3 = new Equipamento();
-//            eq3.setNome("Tripé");
-//            eq3.setCategoria("Suporte");
-//            eq3.setMarca("Tripex");
-//            eq3.setModelo("Novo");
-//            eq3.setNumeroSerie("DEL-E14");
-//            eq3.setQuantidadeTotal(50);
-//            eq3.setQuantidadeDisponivel(50);
-//            eq3.setValorPorHora(40.0);
-//            eq3 = equipamentoRepository.save(eq3);
-            for (int i = 1; i <= 20; i++) {
+            for (int i = 0; i < nomesEq.length; i++) {
                 Equipamento eq = new Equipamento();
-                eq.setNome("Equipamento " + i);
-                eq.setCategoria(i % 2 == 0 ? "Áudio" : "Vídeo");
-                eq.setMarca("Marca " + i);
-                eq.setModelo("Modelo X" + i);
-                eq.setNumeroSerie("SERIE-" + i);
+                eq.setNome(nomesEq[i]);
+                eq.setCategoria(categoriasEq[i]);
+                eq.setMarca(marcasEq[i]);
+                eq.setModelo(modelosEq[i]);
+                // Número de série mantém um padrão sintético — não é exibido como destaque.
+                eq.setNumeroSerie("SN-" + marcasEq[i].toUpperCase().replace(" ", "") + "-" + String.format("%03d", i + 1));
                 eq.setQuantidadeTotal(5 + i);
                 eq.setValorPorHora(50.0 + (i * 10));
 
@@ -138,23 +145,50 @@ public class SampleDataLoader implements CommandLineRunner {
             List<Equipamento> equipamentos = equipamentoRepository.findAll();
             equipamentos.removeLast();
 
-//            Servico serv = new Servico();
-//            serv.setNome("Cobertura de Evento - Foto/Vídeo");
-//            serv.setDescricao("Serviço com câmera e iluminação.");
-//            serv.setHoras(1);
-//            serv.setValorPorHora(200.0);
-//            serv.setEquipamentos(equipamentos);
-//
-//            servicoRepository.save(serv);
+            // Serviços típicos de uma produtora audiovisual.
+            String[] nomesServ = {
+                    "Cobertura fotográfica de casamento",   "Captação de vídeo institucional",
+                    "Edição de vídeo publicitário",         "Produção de podcast em estúdio",
+                    "Cobertura de evento corporativo",      "Filmagem de clipe musical",
+                    "Pós-produção e color grading",         "Cobertura jornalística",
+                    "Filmagem com drone",                   "Sessão fotográfica de produto",
+                    "Live streaming multicâmera",           "Vídeo aéreo cinematográfico",
+                    "Cobertura de aniversário infantil",    "Sessão fotográfica de moda",
+                    "Documentário institucional",           "Cobertura fotográfica de formatura",
+                    "Filmagem de palestra e treinamento",   "Vídeo em time-lapse",
+                    "Edição de teaser e trailer",           "Vídeo de imóvel para corretora"
+            };
+            String[] descsServ = {
+                    "Cobertura completa da cerimônia e festa, com edição entregue em 30 dias.",
+                    "Roteirização, captação e finalização de vídeo institucional curto (até 3 min).",
+                    "Edição profissional de peça publicitária com motion graphics e trilha sonora.",
+                    "Captação de áudio e vídeo multicâmera em estúdio acústico.",
+                    "Registro fotográfico e vídeo do evento, com entrega expressa de teaser em 48h.",
+                    "Direção de fotografia, captação e edição de videoclipe musical.",
+                    "Tratamento de cor, correção e finalização para vídeos já editados.",
+                    "Cobertura ao vivo com transmissão e arquivo final disponibilizado.",
+                    "Imagens aéreas com drone homologado, com piloto ANAC.",
+                    "Ensaio fotográfico de produtos em estúdio com fundo branco.",
+                    "Transmissão ao vivo com até 4 câmeras, switcher e gerador de caracteres.",
+                    "Captação aérea cinematográfica com estabilização avançada.",
+                    "Cobertura lúdica e dinâmica de festas infantis (ensaios e festa).",
+                    "Ensaio editorial de moda em locação ou estúdio.",
+                    "Documentário curto para apresentação institucional.",
+                    "Cobertura completa da cerimônia de colação de grau e festa.",
+                    "Captação multicâmera de palestras, treinamentos e workshops.",
+                    "Captação em time-lapse de obras, eventos ou paisagens.",
+                    "Edição de teasers, trailers e cortes para redes sociais.",
+                    "Vídeo curto de apresentação de imóveis para anúncios e portais."
+            };
 
-            for (int i = 1; i <= 20; i++) {
+            for (int i = 0; i < nomesServ.length; i++) {
                 Servico serv = new Servico();
-                serv.setNome("Serviço " + i);
-                serv.setDescricao("Descrição do serviço " + i);
+                serv.setNome(nomesServ[i]);
+                serv.setDescricao(descsServ[i]);
                 serv.setHoras(2 + i);
                 serv.setValorPorHora(100.0 + (i * 20));
 
-                // associa 2 equipamentos por serviço
+                // associa equipamentos disponíveis ao serviço
                 serv.setEquipamentos(equipamentos);
 
                 servicoRepository.save(serv);
@@ -172,11 +206,35 @@ public class SampleDataLoader implements CommandLineRunner {
             // Categorias de profissionais de audiovisual para variar os dados de exemplo
             String[] categorias = {"Fotógrafo", "Videógrafo", "Editor", "Diretor de Arte", "Operador de Drone"};
 
-            for (int i = 1; i <= 20; i++) {
+            // Nomes brasileiros plausíveis e e-mails coerentes (primeiro nome + sobrenome principal).
+            String[][] profs = {
+                    {"Ana Carolina Souza",   "ana.souza@email.com"},
+                    {"Bruno Almeida",        "bruno.almeida@email.com"},
+                    {"Camila Ferreira",      "camila.ferreira@email.com"},
+                    {"Daniel Oliveira",      "daniel.oliveira@email.com"},
+                    {"Eduarda Castro",       "eduarda.castro@email.com"},
+                    {"Felipe Ribeiro",       "felipe.ribeiro@email.com"},
+                    {"Gabriela Nunes",       "gabriela.nunes@email.com"},
+                    {"Henrique Martins",     "henrique.martins@email.com"},
+                    {"Isabela Cardoso",      "isabela.cardoso@email.com"},
+                    {"João Pedro Silva",     "joao.silva@email.com"},
+                    {"Karina Lima",          "karina.lima@email.com"},
+                    {"Lucas Mendes",         "lucas.mendes@email.com"},
+                    {"Mariana Costa",        "mariana.costa@email.com"},
+                    {"Nathália Barros",      "nathalia.barros@email.com"},
+                    {"Otávio Pereira",       "otavio.pereira@email.com"},
+                    {"Patrícia Rocha",       "patricia.rocha@email.com"},
+                    {"Rafael Gomes",         "rafael.gomes@email.com"},
+                    {"Sofia Andrade",        "sofia.andrade@email.com"},
+                    {"Thiago Borges",        "thiago.borges@email.com"},
+                    {"Vinícius Carvalho",    "vinicius.carvalho@email.com"}
+            };
+
+            for (int i = 0; i < profs.length; i++) {
                 Profissional p = new Profissional(
-                        "Profissional " + i,
+                        profs[i][0],
                         i % 2 == 0 ? "Disponível" : "Ocupado",
-                        "profissional" + i + "@email.com"
+                        profs[i][1]
                 );
 
                 // Rotaciona entre as categorias usando o índice do loop
@@ -206,8 +264,57 @@ public class SampleDataLoader implements CommandLineRunner {
 
             equipamentosExistentes.removeLast();
 
-            for (int i = 1; i <= 20; i++) {
-                Random random = new Random();
+            // Títulos plausíveis de eventos audiovisuais.
+            String[] titulosOrc = {
+                    "Casamento Silva & Oliveira",       "Aniversário 50 anos Carla",
+                    "Conferência TechBR 2026",          "Lançamento produto NovaTech",
+                    "Cobertura formatura UFMG",         "Workshop de fotografia avançada",
+                    "Evento corporativo Banco Alfa",    "Festival gastronômico do Rio",
+                    "Show beneficente Hospital Sírio",  "Casamento Marina & Diego",
+                    "Sessão de book maternidade",       "Vídeo institucional Empresa X",
+                    "Cobertura de bodas de prata",      "Inauguração loja conceito",
+                    "Documentário ONG Esperança",       "Aniversário 15 anos Beatriz",
+                    "Cobertura de sessão legislativa",  "Filmagem de prédio comercial",
+                    "Evento de moda Verão 2026",        "Convenção anual Cooperativa"
+            };
+            // Locais plausíveis: cidade + UF.
+            String[] locaisOrc = {
+                    "São Paulo, SP",      "Rio de Janeiro, RJ", "Belo Horizonte, MG",
+                    "Curitiba, PR",       "Porto Alegre, RS",   "Salvador, BA",
+                    "Recife, PE",         "Fortaleza, CE",      "Brasília, DF",
+                    "Manaus, AM",         "Florianópolis, SC",  "Goiânia, GO",
+                    "Natal, RN",          "Vitória, ES",        "Campinas, SP",
+                    "Niterói, RJ",        "João Pessoa, PB",    "São Luís, MA",
+                    "Cuiabá, MT",         "Belém, PA"
+            };
+            // Observações curtas e variadas.
+            String[] obsOrc = {
+                    "Cerimônia ao ar livre, cerca de 200 convidados. Cliente solicitou álbum impresso.",
+                    "Festa em salão fechado, 80 convidados. Pediu cobertura em estilo documental.",
+                    "Auditório com 500 lugares, palestra principal de 2 horas.",
+                    "Lançamento com coletiva de imprensa e tour pelo showroom.",
+                    "Cobertura da cerimônia e da festa pós-formatura. Entrega expressa em 7 dias.",
+                    "Workshop presencial de 2 dias, com captação de bastidores.",
+                    "Encontro de lideranças, sala de conferências em hotel 5 estrelas.",
+                    "Cobertura de 3 dias, vários ambientes e shows simultâneos.",
+                    "Show com 6 atrações musicais, transmissão simultânea em redes sociais.",
+                    "Cerimônia religiosa e festa em buffet, atenção especial à decoração.",
+                    "Ensaio em estúdio externo, com luz natural ao final da tarde.",
+                    "Roteiro pré-aprovado pelo cliente, narração em off em estúdio.",
+                    "Renovação de votos em ambiente intimista, somente família e padrinhos.",
+                    "Coquetel de inauguração para imprensa e clientes VIP.",
+                    "Documentário de 15 minutos sobre projeto social, entrega em 60 dias.",
+                    "Festa temática com mudança de figurino, valsa coreografada.",
+                    "Cobertura jornalística da sessão pública, sem áudio dos parlamentares.",
+                    "Tour fotográfico e em vídeo das salas para anúncio comercial.",
+                    "Desfile com 12 modelos, 3 trocas de figurino e backstage.",
+                    "Convenção de 2 dias com palestras, premiações e jantar de gala."
+            };
+
+            // Random fora do loop: usar um único Random é mais eficiente e gera melhor distribuição.
+            Random random = new Random();
+
+            for (int i = 0; i < titulosOrc.length; i++) {
                 // intervalo: hoje até 60 dias no futuro
                 long agora = System.currentTimeMillis();
                 long dias60 = 1000L * 60 * 60 * 24 * 60;
@@ -223,9 +330,9 @@ public class SampleDataLoader implements CommandLineRunner {
                 Orcamento orc = new Orcamento(
                         dataInicio,
                         dataTermino,
-                        "Orçamento exemplo " + i, // titulo
-                        "Cidade " + i, // localEvento
-                        "Evento exemplo " + i, // observacoes
+                        titulosOrc[i], // titulo
+                        locaisOrc[i],  // localEvento
+                        obsOrc[i],     // observacoes
                         statusPossiveis.get(random.nextInt(statusPossiveis.size())), // status inicial
                         0.0, // valorTotal (será calculado pelo serviço quando necessário)
                         null // idCalendar só é usado após orçamento ser aprovado
