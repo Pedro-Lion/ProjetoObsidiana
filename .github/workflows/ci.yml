@@ -2,7 +2,7 @@ name: CI - Executar build e upload de artefatos
 
 on:
   push:
-    branches: [ main, teste-cicd ]
+    branches: [ teste-cicd ]
 
 jobs:
   build: 
