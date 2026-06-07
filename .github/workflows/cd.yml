@@ -2,7 +2,7 @@ name: CD - Fazer deploy dos artefatos para EC2
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, teste-cicd ]
 
 jobs:
   deploy:
