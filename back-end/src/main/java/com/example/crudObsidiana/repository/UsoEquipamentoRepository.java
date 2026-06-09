@@ -26,7 +26,7 @@ public interface UsoEquipamentoRepository extends JpaRepository<UsoEquipamento, 
         u.fk_equipamento AS id_equipamento,
         e.quantidade_total,
         SUM(u.quantidade_usada) AS quantidade_usada,
-        GROUP_CONCAT(o.observacoes) AS orcamentos
+        GROUP_CONCAT(o.titulo) AS orcamentos
         FROM uso_equipamento u
         JOIN equipamento e ON e.id = u.fk_equipamento
         JOIN orcamento o ON o.id = u.fk_orcamento
@@ -43,7 +43,7 @@ public interface UsoEquipamentoRepository extends JpaRepository<UsoEquipamento, 
         u.fk_equipamento AS id_equipamento,
         e.quantidade_total,
         SUM(u.quantidade_usada) AS quantidade_usada,
-        GROUP_CONCAT(o.observacoes) AS orcamentos
+        GROUP_CONCAT(o.titulo) AS orcamentos
         FROM uso_equipamento u
         JOIN equipamento e ON e.id = u.fk_equipamento
         JOIN orcamento o ON o.id = u.fk_orcamento
