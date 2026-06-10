@@ -36,4 +36,12 @@ public class FileStorageService {
         }
         return Files.readAllBytes(caminho);
     }
+
+    // Apaga o arquivo do disco se existir. Retorna true se removeu, false se já não existia.
+    // Não lança quando o arquivo está ausente — a chamada de DELETE é idempotente do ponto de vista do controller.
+    public boolean deletarArquivo(String nomeArquivo) throws IOException {
+        if (nomeArquivo == null || nomeArquivo.isEmpty()) return false;
+        Path caminho = Paths.get(pastaUpload).resolve(nomeArquivo);
+        return Files.deleteIfExists(caminho);
+    }
 } // FIM CLASSE
