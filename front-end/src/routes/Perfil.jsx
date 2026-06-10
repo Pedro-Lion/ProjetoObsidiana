@@ -31,6 +31,9 @@ export function Perfil() {
   const senhaRef = useRef("");
   const confirmarRef = useRef("");
   const [arquivoFoto, setArquivoFoto] = useState(null);
+  // Marca que o usuário clicou em "Remover foto atual" no modo edição.
+  // A remoção só vai pro back quando ele confirmar com "Salvar alterações" — se cancelar, restauramos o preview.
+  const [removerFotoPendente, setRemoverFotoPendente] = useState(false);
 
   // userId vem do claim "userId" do JWT (gerado em TokenService.generateToken)
   const [userId, setUserId] = useState(null);
@@ -73,20 +76,36 @@ export function Perfil() {
 
     if (token) {
       const payload = decodeToken(token);
+      // E-mail só fica no cache local enquanto o /me não responde — depois é sobrescrito pela fonte da verdade
       setEmail(emailSalvo || payload.sub || payload.email || "");
     }
+    // Mostra o nome do cache imediatamente para evitar flash de "—", mas será sobrescrito pelo /me
     if (nomeSalvo) setNome(nomeSalvo);
 
     // O JWT emitido pelo auth-microservice só tem o e-mail no subject (sem userId),
     // então buscamos o usuário em /usuario/me para descobrir o id antes de pedir a foto.
+    // O /me também é a fonte da verdade para nome e e-mail (persistem após logout/cache clear).
     (async () => {
       try {
         const resp = await api.get("/usuario/me", {
           headers: { Authorization: "Bearer " + token },
         });
-        const id = resp?.data?.id ?? null;
+        const data = resp?.data || {};
+        const id = data.id ?? null;
         setUserId(id);
-        await carregarFotoDoServidor(id);
+        // Atualiza nome/e-mail a partir do back (sobrepõe o que veio do sessionStorage)
+        if (data.nome) {
+          setNome(data.nome);
+          sessionStorage.setItem("perfil_nome", data.nome);
+        }
+        if (data.email) {
+          setEmail(data.email);
+          sessionStorage.setItem("perfil_email", data.email);
+        }
+        // Só tenta baixar a imagem se o back disser que ela existe — evita 404 silencioso
+        if (data.nomeArquivoImagem) {
+          await carregarFotoDoServidor(id);
+        }
       } catch (e) {
         // Sem usuário autenticado ou erro de rede: mantém placeholder
       }
@@ -106,17 +125,28 @@ export function Perfil() {
     senhaRef.current = "";
     confirmarRef.current = "";
     setArquivoFoto(null);
+    setRemoverFotoPendente(false);
     setErro("");
     setModo("edit");
   }
 
   function cancelarEdicao() {
     setErro("");
+    setArquivoFoto(null);
+    // Se o usuário tinha clicado em "Remover foto atual" mas cancelou, restauramos o preview
+    // a partir do blob original que NÃO foi revogado (essa é a razão de removerFoto() não revogar mais).
+    if (removerFotoPendente && fotoObjectUrlRef.current) {
+      setFotoUrl(fotoObjectUrlRef.current);
+    }
+    setRemoverFotoPendente(false);
     setModo("view");
   }
 
   function handleFotoChange(e) {
-    setArquivoFoto(e.target.files?.[0] ?? null);
+    const arquivo = e.target.files?.[0] ?? null;
+    setArquivoFoto(arquivo);
+    // Se o usuário marcou pra remover e depois escolheu um arquivo novo, o upload vence — cancela a remoção pendente
+    if (arquivo) setRemoverFotoPendente(false);
   }
 
   async function salvar() {
@@ -128,12 +158,29 @@ export function Perfil() {
       return;
     }
 
-    // Persiste nome (continua só em sessionStorage por enquanto — não foi parte do pedido de imagem)
     const novoNome = nomeRef.current.trim() || nome;
+
+    // Persiste nome e (opcionalmente) senha no back via PUT /api/usuario/{id}
+    // Antes esses dados ficavam apenas em sessionStorage e sumiam após logout/clearCache —
+    // agora a fonte da verdade é o banco; o sessionStorage vira só cache de exibição imediata.
+    if (userId) {
+      try {
+        const payload = { nome: novoNome };
+        if (novaSenha) payload.senha = novaSenha;
+        await api.put(`/usuario/${userId}`, payload, {
+          headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+        });
+      } catch (e) {
+        setErro("Não foi possível salvar os dados. Tente novamente.");
+        return;
+      }
+    }
+
     sessionStorage.setItem("perfil_nome", novoNome);
     setNome(novoNome);
 
-    // Persiste foto no back-end via POST /api/usuario/{id}/imagem (mesmo padrão de equipamento/profissional)
+    // Persiste foto no back-end. Prioridade: upload vence remoção pendente
+    // (se o usuário marcou pra remover e depois escolheu um arquivo novo, sobe o novo).
     if (arquivoFoto && userId) {
       try {
         const formData = new FormData();
@@ -143,8 +190,26 @@ export function Perfil() {
         });
         // Recarrega a foto a partir do back para refletir o que foi efetivamente salvo
         await carregarFotoDoServidor(userId);
+        setRemoverFotoPendente(false);
       } catch (e) {
         setErro("Não foi possível salvar a foto. Tente novamente.");
+        return;
+      }
+    } else if (removerFotoPendente && userId) {
+      // Só agora (após confirmação no Salvar) é que a remoção efetivamente vai pro back.
+      try {
+        await api.delete(`/usuario/${userId}/imagem`, {
+          headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+        });
+        // Agora sim podemos revogar o blob original — ele já não corresponde a nada no servidor.
+        if (fotoObjectUrlRef.current) {
+          try { URL.revokeObjectURL(fotoObjectUrlRef.current); } catch (e) { /* ignore */ }
+          fotoObjectUrlRef.current = null;
+        }
+        setFotoUrl(null);
+        setRemoverFotoPendente(false);
+      } catch (e) {
+        setErro("Não foi possível remover a foto. Tente novamente.");
         return;
       }
     }
@@ -158,19 +223,12 @@ export function Perfil() {
   }
 
   function removerFoto() {
-    // Não existe DELETE de imagem no back ainda — esta ação apenas limpa a exibição local.
-    // A imagem persistida no servidor continua disponível até ser sobrescrita por novo upload.
-    sessionStorage.removeItem("perfil_foto");
-    if (fotoObjectUrlRef.current) {
-      try { URL.revokeObjectURL(fotoObjectUrlRef.current); } catch (e) { /* ignore */ }
-      fotoObjectUrlRef.current = null;
-    }
+    // Marca a remoção como pendente — só vai pro back quando o usuário clicar em "Salvar alterações".
+    // Importante: NÃO revogamos fotoObjectUrlRef aqui, porque se o usuário cancelar precisamos restaurar o preview.
+    // A revogação acontece no salvar() (caso a remoção seja confirmada) ou no unmount via cleanup do useEffect.
+    setRemoverFotoPendente(true);
     setFotoUrl(null);
     setArquivoFoto(null);
-    // foto: null sinaliza para App.jsx limpar o avatar sem refazer fetch
-    window.dispatchEvent(new CustomEvent("perfil-atualizado", {
-      detail: { nome, foto: null },
-    }));
   }
 
   const { instance } = useMsal();

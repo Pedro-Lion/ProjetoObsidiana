@@ -20,21 +20,11 @@ export function App() {
   // Guarda o objectURL do blob da foto para conseguir revogá-lo ao trocar
   const fotoObjectUrlRef = useRef(null);
 
-  // Busca a foto persistida no back (fonte da verdade).
-  // Resolve o userId via GET /usuario/me porque o JWT do auth-microservice só carrega o e-mail.
-  const carregarFotoDoServidor = useCallback(async () => {
+  // Baixa o binário da imagem e cria um objectURL pra usar no <img src>.
+  // Recebe o userId pronto — o caller decide se vale a pena chamar isso (usando nomeArquivoImagem do /me).
+  const carregarFotoDoServidor = useCallback(async (userId) => {
     const token = sessionStorage.getItem("token");
-    if (!token) return;
-    let userId = null;
-    try {
-      const meResp = await api.get("/usuario/me", {
-        headers: { Authorization: "Bearer " + token },
-      });
-      userId = meResp?.data?.id ?? null;
-    } catch (e) {
-      return;
-    }
-    if (!userId) return;
+    if (!token || !userId) return;
     try {
       // cache: no-store + timestamp evita 304 do browser depois de trocar a foto
       const resp = await fetch(`${API_BASE}/usuario/${userId}/imagem?v=${Date.now()}`, {
@@ -44,7 +34,9 @@ export function App() {
       });
       if (!resp.ok) return;
       const ctype = resp.headers.get("content-type") || "";
-      if (!ctype.startsWith("image/")) return;
+      // Aceita qualquer content-type que pareça imagem; se vier octet-stream (tipoImagem nulo no back),
+      // ainda assim deixamos o <img> tentar renderizar — antes ficávamos sem foto por causa desse filtro.
+      if (!ctype.startsWith("image/") && ctype !== "application/octet-stream") return;
       const blob = await resp.blob();
       const objectUrl = URL.createObjectURL(blob);
       // Revoga o blob anterior antes de trocar
@@ -58,10 +50,32 @@ export function App() {
     }
   }, []);
 
-  const carregarPerfil = useCallback(() => {
+  // Carrega nome+foto a partir do /usuario/me (fonte da verdade).
+  // Antes o nome vinha só do sessionStorage e a foto era buscada sempre — agora consultamos o /me primeiro
+  // e só pedimos a imagem se o back disser que existe (nomeArquivoImagem != null), evitando 404 silencioso.
+  const carregarPerfil = useCallback(async () => {
+    const token = sessionStorage.getItem("token");
+    if (!token) return;
+    // Cache local pra evitar flash de "Usuário" antes do /me responder
     const nomeSalvo = sessionStorage.getItem("perfil_nome");
-    setNomeUsuario(nomeSalvo || "Usuário");
-    carregarFotoDoServidor();
+    if (nomeSalvo) setNomeUsuario(nomeSalvo);
+    try {
+      const meResp = await api.get("/usuario/me", {
+        headers: { Authorization: "Bearer " + token },
+      });
+      const data = meResp?.data || {};
+      if (data.nome) {
+        setNomeUsuario(data.nome);
+        sessionStorage.setItem("perfil_nome", data.nome);
+      } else {
+        setNomeUsuario("Usuário");
+      }
+      if (data.id && data.nomeArquivoImagem) {
+        await carregarFotoDoServidor(data.id);
+      }
+    } catch (e) {
+      // Sem usuário autenticado ou erro de rede: mantém placeholder
+    }
   }, [carregarFotoDoServidor]);
 
   useEffect(() => {
@@ -85,7 +99,9 @@ export function App() {
         }
         setFotoUsuario(null);
       } else {
-        carregarFotoDoServidor();
+        // Recarrega perfil inteiro (nome + foto) a partir do /me — assinatura nova de carregarFotoDoServidor exige userId,
+        // então chamamos o carregarPerfil que já resolve isso.
+        carregarPerfil();
       }
     };
     window.addEventListener("perfil-atualizado", onPerfilAtualizado);
