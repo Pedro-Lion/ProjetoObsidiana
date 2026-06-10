@@ -122,10 +122,14 @@ export function Equipamentos() {
   }
 
   // Debounce: busca no backend 400ms após parar de digitar.
-  // Na primeira execução (search ainda vazio), verifica se há highlightId vindo do formulário
-  // de edição via rota e carrega a página correta em vez de sempre começar na página 0.
+  // O efeito de inicialização já cobre o mount; este useRef evita que o debounce
+  // dispare uma busca duplicada nessa primeira renderização.
+  const pularPrimeiraBusca = useRef(true);
   useEffect(() => {
-    if (!search) return;
+    if (pularPrimeiraBusca.current) {
+      pularPrimeiraBusca.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
       buscarEquipamentos(0, search);
     }, 400);
