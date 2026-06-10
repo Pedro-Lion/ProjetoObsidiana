@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { BotaoPrimario } from "../Buttons/BotaoPrimario";
 import { BotaoSecundario } from "../Buttons/BotaoSecundario";
+import { gerarOrcamentoPDF } from "../../features/orcamento/utils/gerarOrcamentoPDF.js";
 
 export function CardOrcamento({
   dados = {
@@ -34,6 +35,26 @@ export function CardOrcamento({
   // Aba ativa do quadro inferior (lista de serviços vs equipamentos).
   // Começa em "servicos" para preservar o comportamento histórico do card.
   const [abaAtiva, setAbaAtiva] = useState("servicos");
+
+  // Estado de loading do botão "Exportar PDF". Geração é rápida (~200ms),
+  // mas o feedback visual evita cliques duplos e mostra ao usuário que
+  // algo está acontecendo enquanto o blob é montado.
+  const [gerandoPDF, setGerandoPDF] = useState(false);
+
+  // Dispara a geração e download do PDF deste orçamento.
+  // Try/finally garante que o estado de loading sempre seja resetado,
+  // mesmo se houver erro (ex.: logo indisponível).
+  async function exportarPDF() {
+    if (gerandoPDF) return;
+    setGerandoPDF(true);
+    try {
+      await gerarOrcamentoPDF(dados);
+    } catch (err) {
+      console.error("Erro ao gerar PDF do orçamento:", err);
+    } finally {
+      setGerandoPDF(false);
+    }
+  }
 
   // Rola suavemente para o item quando ele é destacado após cadastro/edição
   const containerRef = useRef(null);
@@ -186,12 +207,17 @@ export function CardOrcamento({
         </ul>
 
         {/*
-          Colapsável de observações — só aparece se houver texto, mantendo o card
-          limpo quando não há nada a mostrar. Quando aberto, limita a altura com
-          overflow-y-auto para não estourar o card de altura fixa.
+          Linha de ações secundárias do cabeçalho do card:
+            • "Ver observações" à esquerda — só aparece se houver texto
+              (mantendo o card limpo quando não há nada a mostrar).
+            • "Exportar" à direita — sempre presente, alinhado com o link
+              de observações em altura, peso e cor para indicar paridade
+              visual entre os dois.
+          justify-between empurra "Exportar" para a direita mesmo quando
+          "Ver observações" não está presente.
         */}
-        {dados.observacoes && (
-          <div className="mt-3">
+        <div className="mt-3 flex items-center justify-between gap-2">
+          {dados.observacoes ? (
             <button
               type="button"
               onClick={() => setMostrarObservacoes((v) => !v)}
@@ -200,12 +226,34 @@ export function CardOrcamento({
               {mostrarObservacoes ? "Ocultar observações" : "Ver observações"}
               <i className={`bi ${mostrarObservacoes ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
             </button>
-            {mostrarObservacoes && (
-              <p className="mt-2 text-lg text-slate-600 max-h-24 overflow-y-auto whitespace-pre-wrap">
-                {dados.observacoes}
-              </p>
-            )}
-          </div>
+          ) : (
+            // Placeholder vazio para que o "Exportar" permaneça à direita
+            // mesmo sem o link de observações ao lado.
+            <span />
+          )}
+
+          {/* Link de exportar PDF — mesmo peso visual de "Ver observações" */}
+          <button
+            type="button"
+            onClick={exportarPDF}
+            disabled={gerandoPDF}
+            title="Exportar PDF"
+            aria-label="Exportar este orçamento como PDF"
+            className="text-lg text-indigo-400 hover:text-indigo-600 transition flex items-center gap-1 disabled:opacity-50 disabled:cursor-wait"
+          >
+            {/* Troca o ícone por um spinner enquanto o PDF é gerado */}
+            <i className={`bi ${gerandoPDF ? "bi-arrow-repeat animate-spin" : "bi-file-earmark-pdf"}`}></i>
+            {gerandoPDF ? "Gerando..." : "Exportar"}
+          </button>
+        </div>
+
+        {/* Texto das observações fica fora do flex acima para ocupar toda a
+            largura quando expandido. Limita altura com overflow-y-auto para
+            não estourar o card de altura fixa. */}
+        {dados.observacoes && mostrarObservacoes && (
+          <p className="mt-2 text-lg text-slate-600 max-h-24 overflow-y-auto whitespace-pre-wrap">
+            {dados.observacoes}
+          </p>
         )}
       </div>
 
