@@ -1,8 +1,20 @@
+server:
+  port: 8082
+
 spring:
   application:
     name: spring-rabbitmq
+  docker:
+    compose:
+      enabled: false        # ← desabilita leitura do compose.yaml
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:myuser}
+    password: ${RABBITMQ_PASS:secret}
+
 broker:
   exchange:
-    name: example.fanout.exchange
+    name: ${RABBITMQ_EXCHANGE_NAME:example.fanout.exchange}
   queue:
-    name: example.queue
+    name: ${RABBITMQ_QUEUE_NAME:example.queue}

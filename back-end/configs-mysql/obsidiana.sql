@@ -21,10 +21,9 @@ CREATE TABLE IF NOT EXISTS orcamento (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     data_inicio DATETIME,
     data_termino DATETIME,
-    titulo VARCHAR(255),
+    titulo varchar(255),
     local_evento VARCHAR(255),
-    -- observacoes era 'descricao' VARCHAR(255); virou TEXT para acompanhar o @Column(columnDefinition = "TEXT") no model
-    observacoes TEXT,
+    observacoes VARCHAR(255),
     status VARCHAR(100),
     valor_total DOUBLE,
     id_calendario VARCHAR(255)
@@ -176,7 +175,7 @@ INSERT INTO
 INSERT INTO
     orcamento (data_inicio, data_termino, titulo, local_evento, observacoes, status, valor_total)
     VALUE
-    (CURRENT_DATE(), DATE_ADD(NOW(), INTERVAL 4 HOUR), 'Gravação frigorífico', 'São Paulo', 'Gravação de frigorífico industrial', 'Em análise', 0.0);
+    (CURRENT_DATE(), DATE_ADD(NOW(), INTERVAL 4 HOUR), 'Gravação de frigorífico industrial', 'São Paulo', 'Levar casaco', 'Em análise', 0.0);
 
 -- ORCAMENTO_EQUIPAMENTOS
 INSERT INTO

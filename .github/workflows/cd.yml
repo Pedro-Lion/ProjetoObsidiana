@@ -1,0 +1,126 @@
+name: CD - Fazer deploy dos artefatos para EC2
+
+on:
+  workflow_run:
+    workflows: ["CI - Executar build e upload de artefatos"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - name: Download artefato front-dist
+        uses: actions/download-artifact@v4
+        with:
+          name: front-dist
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Download artefato backend-jar
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Download artefato auth-jar
+        uses: actions/download-artifact@v4
+        with:
+          name: auth-jar
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+        
+      - name: Configurar SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/chave.pem
+          chmod 600 ~/.ssh/chave.pem
+          
+          cat > ~/.ssh/config << 'EOF'
+          Host ec2-webserver
+            HostName ${{ secrets.EC2_WEBSERVER_IP }}
+            User ${{ secrets.EC2_USER }}
+            IdentityFile ~/.ssh/chave.pem
+            StrictHostKeyChecking no
+          
+          Host ec2-app-01
+            HostName ${{ secrets.EC2_APP_01_PRIVATE_IP }}
+            User ${{ secrets.EC2_USER }}
+            IdentityFile ~/.ssh/chave.pem
+            ProxyJump ec2-webserver
+            StrictHostKeyChecking no
+
+          Host ec2-app-02
+            HostName ${{ secrets.EC2_APP_02_PRIVATE_IP }}
+            User ${{ secrets.EC2_USER }}
+            IdentityFile ~/.ssh/chave.pem
+            ProxyJump ec2-webserver
+            StrictHostKeyChecking no
+
+          Host ec2-auth
+            HostName ${{ secrets.EC2_AUTH_PRIVATE_IP }}
+            User ${{ secrets.EC2_USER }}
+            IdentityFile ~/.ssh/chave.pem
+            ProxyJump ec2-webserver
+            StrictHostKeyChecking no
+          EOF
+
+      - name: Instancia webserver - Transferir dist.zip
+        run: scp dist.zip ec2-webserver:~/alb/dist.zip
+
+      - name: Instancia webserver - Atualizar dist interno, rebuildar imagem e reiniciar container
+        run: |
+          ssh ec2-webserver << 'EOF'
+          cd $HOME/alb
+
+          rm -rf dist
+          unzip dist.zip
+          rm dist.zip
+
+          sudo docker compose down -v
+          sudo docker build --no-cache -t obsidiana-alb:01 .
+          sudo docker compose up -d
+          EOF
+
+      - name: Instancia app-01 - Transferir app.jar
+        run: scp app.jar ec2-app-01:~/app/app.jar
+
+      - name: Instancia app-01 - Rebuildar imagem e reiniciar container
+        run: |
+          ssh ec2-app-01 << 'EOF'
+          cd $HOME/app
+          sudo docker compose down -v
+          sudo docker build --no-cache -t obsidiana-app:01 .
+          sudo docker compose up -d
+          EOF
+
+      - name: Instancia app-02 - Transferir app.jar
+        run: scp app.jar ec2-app-02:~/app/app.jar
+
+      - name: Instancia app-02 - Rebuildar imagem e reiniciar container
+        run: |
+          ssh ec2-app-02 << 'EOF'
+          cd $HOME/app
+          sudo docker compose down -v
+          sudo docker build --no-cache -t obsidiana-app:01 .
+          sudo docker compose up -d
+          EOF
+
+      - name: Instancia auth - Transferir app.jar
+        run: scp auth.jar ec2-auth:~/app/auth.jar
+
+      - name: Instancia auth - Rebuildar imagem e reiniciar container
+        run: |
+          ssh ec2-auth << 'EOF'
+          cd $HOME/app
+          sudo docker compose down -v
+          sudo docker build --no-cache -t obsidiana-app:01 .
+          sudo docker compose up -d
+          EOF
+
+      - name: Limpar SSH
+        if: always()
+        run: rm -rf ~/.ssh
