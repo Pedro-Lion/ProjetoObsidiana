@@ -5,8 +5,8 @@ services:
     ports:
       - "5672:5672"    # porta AMQP (sua aplicação Java conecta aqui)
       - "15672:15672"  # painel de administração web
-    environment:
-      
+    env_file:
+      - ".env"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     restart: unless-stopped
