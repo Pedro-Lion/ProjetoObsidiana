@@ -259,7 +259,7 @@ public class OrcamentoService implements OrcamentoSubject {
             // Após salvar o orçamento, tem que popular o usoEquipamento
             usoEquipamentoRepository.saveAll(usos);
 
-            // notifyObservers(salvoComStatus, statusAnterior, "Confirmado");
+            notifyObservers(salvoComStatus, statusAnterior, "Confirmado");
 
             // Enviar com campo de duração para usar no front
             salvoComStatus.setDuracaoEvento(calcularDuracaoEvento(salvoComStatus));
@@ -330,7 +330,7 @@ public class OrcamentoService implements OrcamentoSubject {
 
             // OK: persistir status e notificar observers
             Orcamento salvo = orcamentoRepository.save(orcamentoAtualizar);
-            // notifyObservers(salvo, statusAnterior, "Confirmado");
+            notifyObservers(salvo, statusAnterior, "Confirmado");
 
             // Enviar com campo de duração para usar no front
             salvo.setDuracaoEvento(calcularDuracaoEvento(salvo));
