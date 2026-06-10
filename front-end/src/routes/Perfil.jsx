@@ -73,20 +73,36 @@ export function Perfil() {
 
     if (token) {
       const payload = decodeToken(token);
+      // E-mail só fica no cache local enquanto o /me não responde — depois é sobrescrito pela fonte da verdade
       setEmail(emailSalvo || payload.sub || payload.email || "");
     }
+    // Mostra o nome do cache imediatamente para evitar flash de "—", mas será sobrescrito pelo /me
     if (nomeSalvo) setNome(nomeSalvo);
 
     // O JWT emitido pelo auth-microservice só tem o e-mail no subject (sem userId),
     // então buscamos o usuário em /usuario/me para descobrir o id antes de pedir a foto.
+    // O /me também é a fonte da verdade para nome e e-mail (persistem após logout/cache clear).
     (async () => {
       try {
         const resp = await api.get("/usuario/me", {
           headers: { Authorization: "Bearer " + token },
         });
-        const id = resp?.data?.id ?? null;
+        const data = resp?.data || {};
+        const id = data.id ?? null;
         setUserId(id);
-        await carregarFotoDoServidor(id);
+        // Atualiza nome/e-mail a partir do back (sobrepõe o que veio do sessionStorage)
+        if (data.nome) {
+          setNome(data.nome);
+          sessionStorage.setItem("perfil_nome", data.nome);
+        }
+        if (data.email) {
+          setEmail(data.email);
+          sessionStorage.setItem("perfil_email", data.email);
+        }
+        // Só tenta baixar a imagem se o back disser que ela existe — evita 404 silencioso
+        if (data.nomeArquivoImagem) {
+          await carregarFotoDoServidor(id);
+        }
       } catch (e) {
         // Sem usuário autenticado ou erro de rede: mantém placeholder
       }
@@ -128,8 +144,24 @@ export function Perfil() {
       return;
     }
 
-    // Persiste nome (continua só em sessionStorage por enquanto — não foi parte do pedido de imagem)
     const novoNome = nomeRef.current.trim() || nome;
+
+    // Persiste nome e (opcionalmente) senha no back via PUT /api/usuario/{id}
+    // Antes esses dados ficavam apenas em sessionStorage e sumiam após logout/clearCache —
+    // agora a fonte da verdade é o banco; o sessionStorage vira só cache de exibição imediata.
+    if (userId) {
+      try {
+        const payload = { nome: novoNome };
+        if (novaSenha) payload.senha = novaSenha;
+        await api.put(`/usuario/${userId}`, payload, {
+          headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+        });
+      } catch (e) {
+        setErro("Não foi possível salvar os dados. Tente novamente.");
+        return;
+      }
+    }
+
     sessionStorage.setItem("perfil_nome", novoNome);
     setNome(novoNome);
 
@@ -157,9 +189,20 @@ export function Perfil() {
     setModo("view");
   }
 
-  function removerFoto() {
-    // Não existe DELETE de imagem no back ainda — esta ação apenas limpa a exibição local.
-    // A imagem persistida no servidor continua disponível até ser sobrescrita por novo upload.
+  async function removerFoto() {
+    // Apaga a foto no back via DELETE /api/usuario/{id}/imagem e limpa a exibição local.
+    // Antes a remoção era só visual e a foto voltava no próximo fetch (porque o back ainda guardava nomeArquivoImagem).
+    if (userId) {
+      try {
+        await api.delete(`/usuario/${userId}/imagem`, {
+          headers: { Authorization: "Bearer " + sessionStorage.getItem("token") },
+        });
+      } catch (e) {
+        setErro("Não foi possível remover a foto. Tente novamente.");
+        return;
+      }
+    }
+
     sessionStorage.removeItem("perfil_foto");
     if (fotoObjectUrlRef.current) {
       try { URL.revokeObjectURL(fotoObjectUrlRef.current); } catch (e) { /* ignore */ }
