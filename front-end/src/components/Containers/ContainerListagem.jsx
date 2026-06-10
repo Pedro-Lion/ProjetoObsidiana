@@ -35,7 +35,7 @@ export function ContainerListagem({ dados = {}, onClickEdit = () => {}, onClickD
         {dados.categoria || "—"}
         </label>
         <label className="text-slate-700 md:text-[1.2rem] leading-snug whitespace-nowrap">
-          <b>{dados.quantidadeDisponivel ?? dados.quantidadeTotal ?? 0}</b> disponíveis de <b>{dados.quantidadeTotal}</b>
+          <b>{dados.quantidadeTotal}</b> unidades
         </label>
       </div>
 

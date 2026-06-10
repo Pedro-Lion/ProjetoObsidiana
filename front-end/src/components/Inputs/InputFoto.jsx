@@ -65,7 +65,7 @@ export function InputFoto({
                    p-[0.25rem] bg-gradient-to-b from-fuchsia-300 via-violet-500 to-sky-200`}>
                 {preview!=null ? (
                     <>
-                        <img src={preview} className="object-cover w-full h-full rounded-full bg-red-600 backdrop-blur-lg" />
+                        <img src={preview} className="object-cover w-full h-full rounded-full backdrop-blur-lg" />
                     </>
                 ) : (
                     <div className="rounded-full h-full w-full

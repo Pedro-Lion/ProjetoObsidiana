@@ -3,6 +3,7 @@ package com.example.crudObsidiana.controller;
 import com.example.crudObsidiana.dto.LoginRequestDTO;
 import com.example.crudObsidiana.dto.RegisterRequestDTO;
 import com.example.crudObsidiana.dto.ResponseDTO;
+import com.example.crudObsidiana.dto.UpdateUsuarioRequestDTO;
 import com.example.crudObsidiana.model.Usuario;
 import com.example.crudObsidiana.repository.UsuarioRepository;
 import com.example.crudObsidiana.security.TokenService;
@@ -107,6 +108,44 @@ public class UsuarioController {
     return ResponseEntity.ok(usuario);
   }
 
+  // Atualiza nome e/ou senha do usuário autenticado.
+  // Só permite atualizar o próprio usuário (id no path tem que bater com o usuário do SecurityContext)
+  // — assim evitamos que um usuário atualize o perfil de outro só trocando o id na URL.
+  @Operation(summary = "Atualiza nome e/ou senha do usuário")
+  @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso",
+          content = @Content(mediaType = "application/json", schema = @Schema(implementation = Usuario.class)))
+  @PutMapping("/{id}")
+  public ResponseEntity<Usuario> atualizar(
+          @PathVariable Long id,
+          @RequestBody UpdateUsuarioRequestDTO body,
+          org.springframework.security.core.Authentication authentication) {
+
+    if (authentication == null || !(authentication.getPrincipal() instanceof Usuario)) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+    Usuario autenticado = (Usuario) authentication.getPrincipal();
+    // Bloqueio simples de IDOR: o path tem que bater com o usuário logado
+    if (!autenticado.getId().equals(id)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    java.util.Optional<Usuario> opt = repository.findById(id);
+    if (opt.isEmpty()) return ResponseEntity.notFound().build();
+    Usuario usuario = opt.get();
+
+    // Atualiza nome só se vier um valor não-vazio (evita apagar o nome existente por engano)
+    if (body.nome() != null && !body.nome().isBlank()) {
+      usuario.setNome(body.nome().trim());
+    }
+    // Atualiza senha só se vier preenchida — mesmo padrão do cadastro: passa pelo PasswordEncoder
+    if (body.senha() != null && !body.senha().isBlank()) {
+      usuario.setSenha(passwordEncoder.encode(body.senha()));
+    }
+
+    repository.save(usuario);
+    return ResponseEntity.ok(usuario);
+  }
+
   @PostMapping("/{id}/imagem")
   public ResponseEntity<?> uploadImagemUsuario(@PathVariable Long id,
                                                @RequestParam("arquivo") MultipartFile arquivo) {
@@ -127,6 +166,39 @@ public class UsuarioController {
     } catch (IOException e) {
       return ResponseEntity.internalServerError().body("Erro ao salvar arquivo: " + e.getMessage());
     }
+  }
+
+  // Remove a foto do usuário: apaga o arquivo do disco e zera os campos no banco.
+  // Mesmo check IDOR do PUT — só dá pra deletar a própria foto.
+  @Operation(summary = "Remove a foto do usuário")
+  @ApiResponse(responseCode = "204", description = "Foto removida com sucesso")
+  @DeleteMapping("/{id}/imagem")
+  public ResponseEntity<?> deletarImagemUsuario(@PathVariable Long id,
+                                                org.springframework.security.core.Authentication authentication) {
+    if (authentication == null || !(authentication.getPrincipal() instanceof Usuario)) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+    Usuario autenticado = (Usuario) authentication.getPrincipal();
+    if (!autenticado.getId().equals(id)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    java.util.Optional<Usuario> opt = repository.findById(id);
+    if (opt.isEmpty()) return ResponseEntity.notFound().build();
+    Usuario usuario = opt.get();
+
+    String nomeArquivo = usuario.getNomeArquivoImagem();
+    // Zera os metadados no banco primeiro — mesmo que o delete físico falhe, a foto deixa de aparecer pro front
+    usuario.setNomeArquivoImagem(null);
+    usuario.setTipoImagem(null);
+    usuario.setCaminhoImagem(null);
+    repository.save(usuario);
+
+    // Apaga o binário do disco. Erro aqui não impede a resposta 204 — o registro lógico já foi removido.
+    if (nomeArquivo != null && !nomeArquivo.isEmpty()) {
+      try { fileStorageService.deletarArquivo(nomeArquivo); } catch (IOException ignored) { /* não bloqueia */ }
+    }
+    return ResponseEntity.noContent().build();
   }
 
   @GetMapping("/{id}/imagem")
