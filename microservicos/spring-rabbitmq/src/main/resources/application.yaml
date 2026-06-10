@@ -10,8 +10,8 @@ spring:
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USER:myuser}
-    password: ${RABBITMQ_PASS:secret}
+    username: ${RABBITMQ_DEFAULT_USER:myuser}
+    password: ${RABBITMQ_DEFAULT_PASS:secret}
 
 broker:
   exchange:
