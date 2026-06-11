@@ -276,7 +276,7 @@ export function Orcamentos() {
           <InputBordaLabel
             type="text"
             titulo="Buscar"
-            placeholder="Local, descrição, status, serviço, equipamento..."
+            placeholder="Nome, local, descrição, status, serviço, equipamento..."
             value={search}
             onInput={(e) => setSearch(e.target.value)}
             className=""
